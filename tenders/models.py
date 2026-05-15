@@ -8,8 +8,8 @@ class Tender(models.Model):
     kode_rup = models.CharField(max_length=100, blank=True)
 
     # === NAMA ===
-    nama_paket = models.TextField()
-    nama_paket_rup = models.TextField(blank=True)
+    nama_paket = models.TextField(blank=True, null=True)
+    nama_paket_rup = models.TextField(blank=True, null=True)
 
     # === INSTANSI ===
     instansi = models.CharField(max_length=255)
@@ -27,7 +27,7 @@ class Tender(models.Model):
     nilai_pagu = models.BigIntegerField(null=True, blank=True)
 
     # === LOKASI ===
-    lokasi_pekerjaan = models.CharField(max_length=255, blank=True)
+    lokasi_pekerjaan = models.TextField(blank=True, null=True)
 
     # === JENIS ===
     jenis_pengadaan = models.CharField(max_length=255, blank=True)
@@ -39,7 +39,7 @@ class Tender(models.Model):
 
     # === DOKUMEN ===
     uraian_pekerjaan = models.URLField(max_length=1000, blank=True)
-    uraian_pekerjaan_nama_file = models.CharField(max_length=255, blank=True)
+    uraian_pekerjaan_nama_file = models.TextField(blank=True, null=True)
     detail_url = models.URLField(blank=True)
 
     # === META ===
