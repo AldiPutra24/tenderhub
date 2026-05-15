@@ -1,9 +1,15 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from .models import Tender
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .models import TenderBookmark
+
+def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    return render(request, "index.html")
 
 def dashboard(request):
     tenders = Tender.objects.all()
