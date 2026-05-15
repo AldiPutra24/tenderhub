@@ -6,7 +6,7 @@ from .models import VendorProfile
 class VendorRegisterForm(forms.Form):
     full_name = forms.CharField(label="Nama Lengkap", max_length=150)
     whatsapp_number = forms.CharField(label="Nomor WA", max_length=30)
-    institution_email = forms.EmailField(label="Email Instansi")
+    institution_email = forms.EmailField(label="Email Aktif")
 
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
     password_confirm = forms.CharField(label="Konfirmasi Password", widget=forms.PasswordInput)

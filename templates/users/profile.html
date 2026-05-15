@@ -73,7 +73,7 @@
                         {% if form.whatsapp_number.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.whatsapp_number.errors|striptags }}</p>{% endif %}
                     </div>
                     <div>
-                        <label for="id_institution_email" class="mb-1.5 block text-sm font-medium text-slate-700">Email Instansi</label>
+                        <label for="id_institution_email" class="mb-1.5 block text-sm font-medium text-slate-700">Email Aktif</label>
                         <input id="id_institution_email" name="institution_email" type="email" value="{{ form.institution_email.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
                         {% if form.institution_email.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.institution_email.errors|striptags }}</p>{% endif %}
                     </div>
