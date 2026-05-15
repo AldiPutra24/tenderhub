@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Vendor - TenderHub{% endblock %}
+
+{% block body %}
+<main class="min-h-screen bg-slate-50">
+    <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+        <header class="flex items-center justify-between py-3">
+            <a href="{% url 'login' %}" class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">TH</div>
+                <div>
+                    <p class="text-sm font-semibold text-slate-950">TenderHub</p>
+                    <p class="text-xs text-slate-500">AI Procurement Intelligence Platform</p>
+                </div>
+            </a>
+            <a href="{% url 'login' %}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                Login
+            </a>
+        </header>
+
+        <section class="grid flex-1 items-start gap-8 py-8 lg:grid-cols-[0.78fr_1.22fr] lg:py-12">
+            <aside class="lg:sticky lg:top-8">
+                <p class="mb-3 inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                    Vendor onboarding
+                </p>
+                <h1 class="max-w-xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                    Bangun profil vendor untuk rekomendasi tender yang lebih akurat.
+                </h1>
+                <p class="mt-4 max-w-lg text-base leading-7 text-slate-600">
+                    Data perusahaan, lokasi operasional, dan preferensi tender membantu AI TenderHub memahami peluang yang paling relevan.
+                </p>
+
+                <div class="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <p class="text-sm font-semibold text-slate-950">Profil vendor</p>
+                        <p class="mt-1 text-sm text-slate-500">Identitas personal dan perusahaan.</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <p class="text-sm font-semibold text-slate-950">Lokasi operasional</p>
+                        <p class="mt-1 text-sm text-slate-500">Indonesia atau internasional.</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <p class="text-sm font-semibold text-slate-950">Akses dashboard</p>
+                        <p class="mt-1 text-sm text-slate-500">Langsung masuk setelah daftar.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <form method="post"
+                  x-data="{ locationType: '{{ form.location_type.value|default:'indonesia' }}' }"
+                  class="rounded-2xl border border-slate-200 bg-white shadow-soft">
+                {% csrf_token %}
+
+                <div class="border-b border-slate-100 px-5 py-5 sm:px-7">
+                    <h2 class="text-xl font-semibold tracking-tight text-slate-950">Daftar Vendor</h2>
+                    <p class="mt-1 text-sm text-slate-500">Lengkapi informasi berikut untuk membuat akun TenderHub.</p>
+                </div>
+
+                <div class="space-y-8 px-5 py-6 sm:px-7">
+                    {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {{ form.non_field_errors|striptags }}
+                    </div>
+                    {% endif %}
+
+                    <section>
+                        <div class="mb-4 flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-950">Informasi Personal</h3>
+                                <p class="text-sm text-slate-500">Kontak utama untuk akun vendor.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="id_full_name" class="mb-1.5 block text-sm font-medium text-slate-700">Nama Lengkap</label>
+                                <input id="id_full_name" name="full_name" type="text" value="{{ form.full_name.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Nama penanggung jawab">
+                                {% if form.full_name.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.full_name.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label for="id_whatsapp_number" class="mb-1.5 block text-sm font-medium text-slate-700">Nomor WA</label>
+                                <input id="id_whatsapp_number" name="whatsapp_number" type="text" value="{{ form.whatsapp_number.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="+62 812 0000 0000">
+                                {% if form.whatsapp_number.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.whatsapp_number.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="id_institution_email" class="mb-1.5 block text-sm font-medium text-slate-700">Email Instansi</label>
+                                <input id="id_institution_email" name="institution_email" type="email" value="{{ form.institution_email.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="nama@perusahaan.co.id">
+                                {% if form.institution_email.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.institution_email.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="mb-4 flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17M8.5 10h.01M12 10h.01M15.5 10h.01M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-950">Informasi Perusahaan</h3>
+                                <p class="text-sm text-slate-500">Profil bisnis untuk pemetaan tender.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="id_company_name" class="mb-1.5 block text-sm font-medium text-slate-700">Nama Perusahaan</label>
+                                <input id="id_company_name" name="company_name" type="text" value="{{ form.company_name.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="PT Tender Maju Bersama">
+                                {% if form.company_name.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.company_name.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label for="id_business_field" class="mb-1.5 block text-sm font-medium text-slate-700">Bidang Usaha</label>
+                                <input id="id_business_field" name="business_field" type="text" value="{{ form.business_field.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Konstruksi, IT, barang, konsultansi">
+                                {% if form.business_field.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.business_field.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="mb-4 flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-5.25 7-11.25a7 7 0 1 0-14 0C5 15.75 12 21 12 21Z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-950">Lokasi Operasional</h3>
+                                <p class="text-sm text-slate-500">Dipakai untuk preferensi wilayah tender.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="md:col-span-2">
+                                <label for="id_location_type" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Lokasi</label>
+                                <select id="id_location_type" name="location_type" x-model="locationType" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                                    <option value="indonesia" {% if form.location_type.value == "indonesia" or not form.location_type.value %}selected{% endif %}>Indonesia</option>
+                                    <option value="international" {% if form.location_type.value == "international" %}selected{% endif %}>Internasional</option>
+                                </select>
+                                {% if form.location_type.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.location_type.errors|striptags }}</p>{% endif %}
+                            </div>
+
+                            <div x-show="locationType === 'indonesia'" x-transition>
+                                <label for="id_province" class="mb-1.5 block text-sm font-medium text-slate-700">Provinsi</label>
+                                <input id="id_province" name="province" type="text" value="{{ form.province.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Jawa Timur">
+                                {% if form.province.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.province.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div x-show="locationType === 'indonesia'" x-transition>
+                                <label for="id_city_or_regency" class="mb-1.5 block text-sm font-medium text-slate-700">Kota/Kabupaten</label>
+                                <input id="id_city_or_regency" name="city_or_regency" type="text" value="{{ form.city_or_regency.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Surabaya">
+                                {% if form.city_or_regency.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.city_or_regency.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div class="md:col-span-2" x-show="locationType === 'international'" x-transition>
+                                <label for="id_country" class="mb-1.5 block text-sm font-medium text-slate-700">Negara</label>
+                                <input id="id_country" name="country" type="text" value="{{ form.country.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Singapore">
+                                {% if form.country.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.country.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="mb-4 flex items-center gap-3">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.75 10.25v-2a4.25 4.25 0 0 1 8.5 0v2M6.5 10.25h11A1.75 1.75 0 0 1 19.25 12v6.25A1.75 1.75 0 0 1 17.5 20h-11a1.75 1.75 0 0 1-1.75-1.75V12a1.75 1.75 0 0 1 1.75-1.75Z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-950">Akun & Password</h3>
+                                <p class="text-sm text-slate-500">Gunakan password yang kuat untuk akun utama.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label for="id_password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                                <input id="id_password" name="password" type="password" autocomplete="new-password" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Minimal 8 karakter">
+                                {% if form.password.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.password.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div>
+                                <label for="id_password_confirm" class="mb-1.5 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
+                                <input id="id_password_confirm" name="password_confirm" type="password" autocomplete="new-password" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Ulangi password">
+                                {% if form.password_confirm.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.password_confirm.errors|striptags }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="sticky bottom-0 flex items-center justify-between gap-4 rounded-b-2xl border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
+                    <p class="hidden text-sm text-slate-500 sm:block">Akun akan otomatis login setelah pendaftaran berhasil.</p>
+                    <button type="submit" class="ml-auto inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+                        Buat Akun Vendor
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,25 @@
+<button
+    hx-post="/bookmark/{{ t.id }}/"
+    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    {% if remove_card %}
+        hx-target="#tender-card-{{ t.id }}"
+    {% else %}
+        hx-target="#bookmark-button-{{ t.id }}"
+    {% endif %}
+    hx-swap="outerHTML"
+    id="bookmark-button-{{ t.id }}"
+    class="inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition focus:outline-none focus:ring-4 {% if saved %}border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-100{% else %}border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-950 focus:ring-slate-200{% endif %}"
+    aria-label="{% if saved %}Hapus dari tender tersimpan{% else %}Simpan tender{% endif %}">
+
+    {% if saved %}
+    <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1L12 17.6l-5.25 3.25V4.75Z"/>
+    </svg>
+    Disimpan
+    {% else %}
+    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1l-5.25-3.25-5.25 3.25V4.75Z"/>
+    </svg>
+    Simpan
+    {% endif %}
+</button>

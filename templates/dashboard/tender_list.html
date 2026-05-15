@@ -1,0 +1,95 @@
+<div class="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+    {% for t in tenders %}
+    <article id="tender-card-{{ t.id }}"
+             class="group flex min-h-[330px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-soft">
+        <div class="mb-4 flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.kode_tender }}</p>
+                <h3 class="mt-2 line-clamp-3 text-base font-semibold leading-6 text-slate-950">
+                    {{ t.nama_paket|truncatechars:115 }}
+                </h3>
+            </div>
+            <div class="shrink-0">
+                {% if t.id in saved_ids %}
+                    {% include "dashboard/bookmark_button.html" with saved=True remove_card=remove_card %}
+                {% else %}
+                    {% include "dashboard/bookmark_button.html" with saved=False remove_card=remove_card %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="space-y-3 text-sm">
+            <div class="flex gap-3">
+                <svg class="mt-0.5 h-4 w-4 flex-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17"/>
+                </svg>
+                <p class="min-w-0 flex-1 truncate font-medium text-slate-700">{{ t.instansi }}</p>
+            </div>
+
+            <div class="flex gap-3">
+                <svg class="mt-0.5 h-4 w-4 flex-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-5.25 7-11.25a7 7 0 1 0-14 0C5 15.75 12 21 12 21Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
+                </svg>
+                <p class="min-w-0 flex-1 truncate text-slate-600">{{ t.lokasi_pekerjaan|default:"Lokasi belum tersedia" }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-2xl bg-slate-50 p-3">
+                    <p class="text-xs font-medium text-slate-500">Nilai HPS</p>
+                    <p class="mt-1 truncate text-sm font-semibold text-slate-950">Rp {{ t.nilai_hps|default:"-" }}</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-3">
+                    <p class="text-xs font-medium text-slate-500">Jenis</p>
+                    <p class="mt-1 truncate text-sm font-semibold text-slate-950">{{ t.jenis_pengadaan|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+            {% if t.status == "OPEN" %}
+            <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">OPEN</span>
+            {% elif t.status == "ONGOING" %}
+            <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">ONGOING</span>
+            {% elif t.status == "FINISH" %}
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">FINISH</span>
+            {% elif t.status == "FAILED" %}
+            <span class="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">FAILED</span>
+            {% else %}
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ t.status|default:"UNKNOWN" }}</span>
+            {% endif %}
+
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m12 3 2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.28l-5.2 2.74.99-5.8-4.21-4.1 5.82-.85L12 3Z"/>
+                </svg>
+                AI Match: 82%
+            </span>
+        </div>
+
+        <div class="mt-auto flex items-center justify-between gap-3 pt-5">
+            <p class="truncate text-xs text-slate-500">{{ t.metode_pengadaan|default:"Metode belum tersedia" }}</p>
+            <button type="button"
+                    class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
+                    hx-get="/tender/{{ t.id }}/"
+                    hx-target="#modal-content"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">
+                Detail
+            </button>
+        </div>
+    </article>
+    {% empty %}
+    <div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>
+            </svg>
+        </div>
+        <h3 class="mt-4 text-base font-semibold text-slate-950">Tidak ada tender ditemukan</h3>
+        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+            Coba ubah kata kunci atau status filter untuk melihat peluang tender lainnya.
+        </p>
+    </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TenderHub{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-sm font-medium text-slate-500">Tender intelligence</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Dashboard Tender</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Pantau peluang pengadaan pemerintah dan simpan tender prioritas untuk dianalisis lebih lanjut.
+            </p>
+        </div>
+        <div class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-sm font-medium text-slate-700">Data tender aktif dipantau</span>
+        </div>
+    </div>
+
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Total Tender</p>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.75h14M5 12h14M5 17.25h9"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{{ tenders|length }}</p>
+            <p class="mt-1 text-sm text-slate-500">Tender termuat di dashboard</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Tender Aktif</p>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">OPEN</p>
+            <p class="mt-1 text-sm text-slate-500">Gunakan filter untuk melihat status</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Tender Disimpan</p>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1l-5.25-3.25-5.25 3.25V4.75Z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{{ saved_ids|length }}</p>
+            <p class="mt-1 text-sm text-slate-500">Masuk daftar prioritas Anda</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Tender Match Tinggi</p>
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m12 3 2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.28l-5.2 2.74.99-5.8-4.21-4.1 5.82-.85L12 3Z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">82%</p>
+            <p class="mt-1 text-sm text-slate-500">Placeholder skor AI tertinggi</p>
+        </div>
+    </section>
+
+    <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <aside class="lg:sticky lg:top-24 lg:self-start">
+            <form id="tender-filter-form" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="mb-4">
+                    <h2 class="text-sm font-semibold text-slate-950">Filter Tender</h2>
+                    <p class="mt-1 text-sm text-slate-500">Cari berdasarkan paket dan status.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="tender-search" class="mb-1.5 block text-sm font-medium text-slate-700">Search</label>
+                        <div class="relative">
+                            <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>
+                            </svg>
+                            <input id="tender-search"
+                                   type="text"
+                                   name="q"
+                                   placeholder="Nama paket tender..."
+                                   class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                   hx-get="/tenders/"
+                                   hx-target="#tender-list"
+                                   hx-include="#tender-filter-form"
+                                   hx-trigger="keyup changed delay:500ms"
+                                   hx-indicator="#tender-loading">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="status-filter" class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+                        <select id="status-filter"
+                                name="status"
+                                class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                hx-get="/tenders/"
+                                hx-target="#tender-list"
+                                hx-include="#tender-filter-form"
+                                hx-indicator="#tender-loading">
+                            <option value="">Semua Status</option>
+                            <option value="OPEN">OPEN</option>
+                            <option value="ONGOING">ONGOING</option>
+                            <option value="FINISH">FINISH</option>
+                            <option value="FAILED">FAILED</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-5 border-t border-slate-100 pt-4">
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Quick filters</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" name="status" value="OPEN" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"OPEN"}' hx-indicator="#tender-loading" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">OPEN</button>
+                        <button type="button" name="status" value="ONGOING" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"ONGOING"}' hx-indicator="#tender-loading" class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">ONGOING</button>
+                        <button type="button" name="status" value="FINISH" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"FINISH"}' hx-indicator="#tender-loading" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">FINISH</button>
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <section class="min-w-0">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-950">Peluang Tender</h2>
+                    <p class="text-sm text-slate-500">Kartu tender siap dibuka lewat modal HTMX.</p>
+                </div>
+                <div id="tender-loading" class="htmx-indicator hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 shadow-sm sm:flex">
+                    <span class="h-2 w-2 animate-pulse rounded-full bg-slate-400"></span>
+                    Memuat...
+                </div>
+            </div>
+
+            <div id="tender-list">
+                {% include "dashboard/tender_list.html" %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+<div>
+
+    <h2 class="text-lg font-bold mb-2">
+        {{ t.nama_paket }}
+    </h2>
+
+    <p class="text-sm text-gray-600">
+        {{ t.instansi }}
+    </p>
+
+    <div class="mt-2 text-sm">
+        {{ t.lokasi_pekerjaan }}
+    </div>
+
+    <div class="mt-2 text-sm">
+        HPS: {{ t.nilai_hps }}
+    </div>
+
+    <div class="mt-2 text-sm">
+        Peserta: {{ t.peserta_count }}
+    </div>
+
+    <div class="mt-2 text-sm">
+        Sumber Dana: {{ t.sumber_dana }}
+    </div>
+
+    <div class="mt-2 text-sm">
+        {{ t.jenis_pengadaan }} - {{ t.metode_pengadaan }}
+    </div>
+
+    <div class="mt-2">
+        <span class="px-2 py-1 bg-blue-100 rounded text-xs">
+            {{ t.status }}
+        </span>
+    </div>
+    
+    {% if t.detail_url %}
+    <a href="{{ t.detail_url }}" target="_blank"
+       class="inline-block mt-4 bg-gray-900 text-white px-4 py-2 rounded">
+       Buka di SPSE
+    </a>
+    {% endif %}
+</div>

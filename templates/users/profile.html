@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Vendor - TenderHub{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+            <p class="text-sm font-medium text-slate-500">Settings</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Profil Vendor</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Profil Anda membantu AI merekomendasikan tender yang lebih relevan.
+            </p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div class="mb-2 flex items-center justify-between gap-6">
+                <p class="text-sm font-medium text-slate-700">Kelengkapan profil</p>
+                <p class="text-sm font-semibold text-slate-950">
+                    {% if profile.preferred_procurement_types and profile.preferred_locations and profile.min_project_value and profile.max_project_value %}100%{% elif profile.preferred_procurement_types or profile.preferred_locations or profile.min_project_value or profile.max_project_value %}75%{% else %}55%{% endif %}
+                </p>
+            </div>
+            <div class="h-2 w-56 overflow-hidden rounded-full bg-slate-100">
+                <div class="h-full rounded-full bg-slate-950 {% if profile.preferred_procurement_types and profile.preferred_locations and profile.min_project_value and profile.max_project_value %}w-full{% elif profile.preferred_procurement_types or profile.preferred_locations or profile.min_project_value or profile.max_project_value %}w-3/4{% else %}w-[55%]{% endif %}"></div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" x-data="{ locationType: '{{ form.location_type.value|default:'indonesia' }}' }" class="grid gap-6 lg:grid-cols-[260px_1fr]">
+        {% csrf_token %}
+
+        <aside class="lg:sticky lg:top-24 lg:self-start">
+            <nav class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                <a href="#informasi-vendor" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Informasi Vendor
+                </a>
+                <a href="#preferensi-tender" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Preferensi Tender
+                </a>
+                <a href="#range-nilai" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Range Nilai Proyek
+                </a>
+                <a href="#lokasi-favorit" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Lokasi Favorit
+                </a>
+            </nav>
+        </aside>
+
+        <div class="space-y-5">
+            {% if form.non_field_errors %}
+            <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {{ form.non_field_errors|striptags }}
+            </div>
+            {% endif %}
+
+            <section id="informasi-vendor" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-slate-950">Informasi Vendor</h2>
+                    <p class="mt-1 text-sm text-slate-500">Data utama perusahaan dan kontak penanggung jawab.</p>
+                </div>
+                <div class="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+                    <div>
+                        <label for="id_full_name" class="mb-1.5 block text-sm font-medium text-slate-700">Nama Lengkap</label>
+                        <input id="id_full_name" name="full_name" type="text" value="{{ form.full_name.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                        {% if form.full_name.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.full_name.errors|striptags }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label for="id_whatsapp_number" class="mb-1.5 block text-sm font-medium text-slate-700">Nomor WA</label>
+                        <input id="id_whatsapp_number" name="whatsapp_number" type="text" value="{{ form.whatsapp_number.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                        {% if form.whatsapp_number.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.whatsapp_number.errors|striptags }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label for="id_institution_email" class="mb-1.5 block text-sm font-medium text-slate-700">Email Instansi</label>
+                        <input id="id_institution_email" name="institution_email" type="email" value="{{ form.institution_email.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                        {% if form.institution_email.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.institution_email.errors|striptags }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label for="id_company_name" class="mb-1.5 block text-sm font-medium text-slate-700">Nama Perusahaan</label>
+                        <input id="id_company_name" name="company_name" type="text" value="{{ form.company_name.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                        {% if form.company_name.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.company_name.errors|striptags }}</p>{% endif %}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="id_business_field" class="mb-1.5 block text-sm font-medium text-slate-700">Bidang Usaha</label>
+                        <input id="id_business_field" name="business_field" type="text" value="{{ form.business_field.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Contoh: konstruksi, pengadaan barang, konsultan IT">
+                        {% if form.business_field.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.business_field.errors|striptags }}</p>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section id="preferensi-tender" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-slate-950">Preferensi Tender</h2>
+                    <p class="mt-1 text-sm text-slate-500">Masukkan satu jenis pengadaan per baris.</p>
+                </div>
+                <div class="p-5 sm:p-6">
+                    <label for="id_preferred_procurement_types_text" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Pengadaan yang Diminati</label>
+                    <textarea id="id_preferred_procurement_types_text" name="preferred_procurement_types_text" rows="4" class="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Contoh:&#10;Pekerjaan Konstruksi&#10;Pengadaan Barang&#10;Jasa Konsultansi">{{ form.preferred_procurement_types_text.value|default_if_none:'' }}</textarea>
+                    {% if form.preferred_procurement_types_text.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.preferred_procurement_types_text.errors|striptags }}</p>{% endif %}
+                    <p class="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-500">Belum yakin? Mulai dari kategori tender yang paling sering Anda ikuti.</p>
+                </div>
+            </section>
+
+            <section id="range-nilai" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-slate-950">Range Nilai Proyek</h2>
+                    <p class="mt-1 text-sm text-slate-500">Rentang HPS membantu sistem memprioritaskan peluang yang realistis.</p>
+                </div>
+                <div class="grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+                    <div>
+                        <label for="id_min_project_value" class="mb-1.5 block text-sm font-medium text-slate-700">Minimal Nilai Proyek</label>
+                        <div class="flex h-11 overflow-hidden rounded-xl border border-slate-200 bg-white transition focus-within:border-slate-400 focus-within:ring-4 focus-within:ring-slate-200">
+                            <span class="inline-flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-500">Rp</span>
+                            <input id="id_min_project_value" name="min_project_value" type="number" step="0.01" value="{{ form.min_project_value.value|default_if_none:'' }}" class="min-w-0 flex-1 border-0 px-3.5 text-sm outline-none" placeholder="0">
+                        </div>
+                        {% if form.min_project_value.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.min_project_value.errors|striptags }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label for="id_max_project_value" class="mb-1.5 block text-sm font-medium text-slate-700">Maksimal Nilai Proyek</label>
+                        <div class="flex h-11 overflow-hidden rounded-xl border border-slate-200 bg-white transition focus-within:border-slate-400 focus-within:ring-4 focus-within:ring-slate-200">
+                            <span class="inline-flex items-center border-r border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-500">Rp</span>
+                            <input id="id_max_project_value" name="max_project_value" type="number" step="0.01" value="{{ form.max_project_value.value|default_if_none:'' }}" class="min-w-0 flex-1 border-0 px-3.5 text-sm outline-none" placeholder="1000000000">
+                        </div>
+                        {% if form.max_project_value.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.max_project_value.errors|striptags }}</p>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section id="lokasi-favorit" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-slate-950">Lokasi Favorit</h2>
+                    <p class="mt-1 text-sm text-slate-500">Atur wilayah operasional dan lokasi tender yang ingin diprioritaskan.</p>
+                </div>
+                <div class="space-y-4 p-5 sm:p-6">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label for="id_location_type" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Lokasi</label>
+                            <select id="id_location_type" name="location_type" x-model="locationType" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                                <option value="indonesia" {% if form.location_type.value == "indonesia" or not form.location_type.value %}selected{% endif %}>Indonesia</option>
+                                <option value="international" {% if form.location_type.value == "international" %}selected{% endif %}>Internasional</option>
+                            </select>
+                            {% if form.location_type.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.location_type.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div x-show="locationType === 'indonesia'" x-transition>
+                            <label for="id_province" class="mb-1.5 block text-sm font-medium text-slate-700">Provinsi</label>
+                            <input id="id_province" name="province" type="text" value="{{ form.province.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                            {% if form.province.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.province.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div x-show="locationType === 'indonesia'" x-transition>
+                            <label for="id_city_or_regency" class="mb-1.5 block text-sm font-medium text-slate-700">Kota/Kabupaten</label>
+                            <input id="id_city_or_regency" name="city_or_regency" type="text" value="{{ form.city_or_regency.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                            {% if form.city_or_regency.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.city_or_regency.errors|striptags }}</p>{% endif %}
+                        </div>
+                        <div class="sm:col-span-2" x-show="locationType === 'international'" x-transition>
+                            <label for="id_country" class="mb-1.5 block text-sm font-medium text-slate-700">Negara</label>
+                            <input id="id_country" name="country" type="text" value="{{ form.country.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                            {% if form.country.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.country.errors|striptags }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="id_preferred_locations_text" class="mb-1.5 block text-sm font-medium text-slate-700">Lokasi Tender yang Diminati</label>
+                        <textarea id="id_preferred_locations_text" name="preferred_locations_text" rows="4" class="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Contoh:&#10;Jawa Timur&#10;Nganjuk&#10;Surabaya">{{ form.preferred_locations_text.value|default_if_none:'' }}</textarea>
+                        {% if form.preferred_locations_text.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.preferred_locations_text.errors|striptags }}</p>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <div class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50/90 py-4 backdrop-blur">
+                <a href="/dashboard/" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                    Batal
+                </a>
+                <button type="submit" class="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

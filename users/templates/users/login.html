@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Login - TenderHub{% endblock %}
+
+{% block body %}
+<main class="min-h-screen bg-slate-50">
+    <div class="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
+        <section class="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(148,163,184,0.22),transparent_28%),radial-gradient(circle_at_70%_0%,rgba(59,130,246,0.18),transparent_26%)]"></div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950">
+                        TH
+                    </div>
+                    <div>
+                        <p class="text-base font-semibold">TenderHub</p>
+                        <p class="text-sm text-slate-400">AI Procurement Intelligence Platform</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative z-10 max-w-xl">
+                <p class="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+                    SPSE / LPSE / INAPROC intelligence workspace
+                </p>
+                <h1 class="text-4xl font-semibold tracking-tight text-white">
+                    Temukan tender pemerintah yang paling relevan untuk bisnis Anda.
+                </h1>
+                <p class="mt-5 text-base leading-7 text-slate-300">
+                    TenderHub membantu vendor menyaring peluang, menyimpan tender prioritas, dan membangun profil rekomendasi yang lebih presisi.
+                </p>
+            </div>
+
+            <div class="relative z-10 grid grid-cols-3 gap-3 text-sm">
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-2xl font-semibold">AI</p>
+                    <p class="mt-1 text-slate-400">Match scoring</p>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-2xl font-semibold">SPSE</p>
+                    <p class="mt-1 text-slate-400">Tender source</p>
+                </div>
+                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-2xl font-semibold">24/7</p>
+                    <p class="mt-1 text-slate-400">Monitoring</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-12">
+            <div class="w-full max-w-md">
+                <div class="mb-8 text-center lg:hidden">
+                    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">
+                        TH
+                    </div>
+                    <h1 class="text-2xl font-semibold tracking-tight text-slate-950">TenderHub</h1>
+                    <p class="mt-1 text-sm text-slate-500">AI Procurement Intelligence Platform</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+                    <div class="mb-7">
+                        <p class="text-sm font-medium text-slate-500">Masuk ke workspace</p>
+                        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Login Vendor</h2>
+                    </div>
+
+                    <form method="post" class="space-y-5">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {{ form.non_field_errors|striptags }}
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <label for="id_username" class="mb-1.5 block text-sm font-medium text-slate-700">Email Instansi</label>
+                            <input id="id_username"
+                                   name="username"
+                                   type="email"
+                                   autocomplete="email"
+                                   value="{{ form.username.value|default_if_none:'' }}"
+                                   class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                   placeholder="nama@perusahaan.co.id">
+                            {% if form.username.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.username.errors|striptags }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <div class="mb-1.5 flex items-center justify-between">
+                                <label for="id_password" class="block text-sm font-medium text-slate-700">Password</label>
+                                <span class="text-xs text-slate-400">Aman & terenkripsi</span>
+                            </div>
+                            <input id="id_password"
+                                   name="password"
+                                   type="password"
+                                   autocomplete="current-password"
+                                   class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                   placeholder="Masukkan password">
+                            {% if form.password.errors %}
+                            <p class="mt-1.5 text-sm text-red-600">{{ form.password.errors|striptags }}</p>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit"
+                                class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+                            Login
+                        </button>
+                    </form>
+
+                    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
+                        <p class="text-sm text-slate-600">
+                            Belum punya akun?
+                            <a href="{% url 'register' %}" class="font-semibold text-slate-950 underline-offset-4 hover:underline">Daftar sebagai vendor</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

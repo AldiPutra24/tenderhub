@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Tender Tersimpan - TenderHub{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-sm font-medium text-slate-500">Saved workspace</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Tender Tersimpan</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Kumpulan tender prioritas Anda untuk dipantau dan dianalisis lebih lanjut.
+            </p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Total tersimpan</p>
+            <p class="mt-1 text-2xl font-semibold text-slate-950">{{ tenders|length }}</p>
+        </div>
+    </div>
+
+    {% if tenders %}
+    {% include "dashboard/tender_list.html" with remove_card=True %}
+    {% else %}
+    <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1l-5.25-3.25-5.25 3.25V4.75Z"/>
+            </svg>
+        </div>
+        <h2 class="mt-4 text-base font-semibold text-slate-950">Belum ada tender tersimpan</h2>
+        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+            Simpan tender dari dashboard agar mudah dipantau kembali saat menyusun prioritas penawaran.
+        </p>
+        <a href="/dashboard/" class="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+            Lihat Dashboard
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
