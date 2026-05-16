@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Tender
 from .models import Tender, TenderBookmark
 
 @admin.register(Tender)
@@ -9,7 +8,9 @@ class TenderAdmin(admin.ModelAdmin):
         "kode_tender",
         "nama_paket",
         "instansi",
+        "klpd_instansi",
         "status",
+        "tanggal_pembuatan",
         "tahapan",
         "jenis_pengadaan",
         "metode_pengadaan",
@@ -23,10 +24,8 @@ class TenderAdmin(admin.ModelAdmin):
     list_filter = (
         "status",
         "jenis_pengadaan",
-        "metode_pengadaan",
-        "sumber_dana",
-        "tahun_anggaran",
-        "instansi",
+        "klpd_instansi",
+        "tanggal_pembuatan",
     )
 
     search_fields = (
@@ -35,6 +34,7 @@ class TenderAdmin(admin.ModelAdmin):
         "nama_paket",
         "nama_paket_rup",
         "instansi",
+        "klpd_instansi",
         "satuankerja",
         "lokasi_pekerjaan",
     )
@@ -49,8 +49,10 @@ class TenderAdmin(admin.ModelAdmin):
                 "kode_tender",
                 "nama_paket",
                 "instansi",
+                "klpd_instansi",
                 "tahapan",
                 "status",
+                "tanggal_pembuatan",
             )
         }),
         ("RUP & Sumber Dana", {
@@ -82,11 +84,6 @@ class TenderAdmin(admin.ModelAdmin):
                 "uraian_pekerjaan",
                 "uraian_pekerjaan_nama_file",
                 "uraian_file_link",
-            )
-        }),
-        ("Tanggal", {
-            "fields": (
-                "tanggal_pembuatan",
             )
         }),
     )

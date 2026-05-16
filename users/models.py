@@ -52,15 +52,9 @@ class VendorProfile(models.Model):
         null=True
     )
 
-    preferred_procurement_types = models.JSONField(
-        default=list,
-        blank=True
-    )
+    preferred_procurement_types = models.TextField(blank=True, default="")
 
-    preferred_locations = models.JSONField(
-        default=list,
-        blank=True
-    )
+    preferred_locations = models.TextField(blank=True, default="")
 
     def __str__(self):
         return self.company_name

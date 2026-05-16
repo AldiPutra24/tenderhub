@@ -1,43 +1,155 @@
-<div>
+{% load tender_format %}
 
-    <h2 class="text-lg font-bold mb-2">
-        {{ t.nama_paket }}
-    </h2>
+<div class="space-y-5">
+    <section>
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {{ t.kode_tender }}
+            </span>
+            {% if t.status == "OPEN" %}
+            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">OPEN</span>
+            {% elif t.status == "ONGOING" %}
+            <span class="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">ONGOING</span>
+            {% elif t.status == "FINISH" %}
+            <span class="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">FINISH</span>
+            {% elif t.status == "FAILED" %}
+            <span class="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">FAILED</span>
+            {% else %}
+            <span class="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ t.status|default:"UNKNOWN" }}</span>
+            {% endif %}
+        </div>
 
-    <p class="text-sm text-gray-600">
-        {{ t.instansi }}
-    </p>
+        <h2 class="text-xl font-semibold leading-7 tracking-tight text-slate-950">
+            {{ t.nama_paket }}
+        </h2>
+        <p class="mt-2 text-sm font-medium text-slate-600">
+            {{ t.klpd_instansi|default:t.instansi }}
+        </p>
+    </section>
 
-    <div class="mt-2 text-sm">
-        {{ t.lokasi_pekerjaan }}
-    </div>
+    <section class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <p class="text-sm font-semibold text-slate-950">AI Tender Insight</p>
+                <p class="mt-1 text-xs text-slate-500">Rule-based demo scoring untuk prioritas awal vendor.</p>
+            </div>
 
-    <div class="mt-2 text-sm">
-        HPS: {{ t.nilai_hps }}
-    </div>
+            {% if t.match_data.requires_login or t.match_data.requires_profile %}
+            <span class="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                {{ t.match_data.label }}
+            </span>
+            {% elif t.match_data.level == "High" %}
+            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                {{ t.match_data.label }}
+            </span>
+            {% elif t.match_data.level == "Medium" %}
+            <span class="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                {{ t.match_data.label }}
+            </span>
+            {% else %}
+            <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
+                {{ t.match_data.label }}
+            </span>
+            {% endif %}
+        </div>
 
-    <div class="mt-2 text-sm">
-        Peserta: {{ t.peserta_count }}
-    </div>
+        <div class="grid gap-3 sm:grid-cols-[140px_1fr]">
+            <div class="rounded-2xl bg-white p-4 shadow-sm">
+                <p class="text-xs font-medium text-slate-500">Score</p>
+                <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                    {% if t.match_data.requires_login %}
+                        --
+                    {% else %}
+                        {{ t.match_data.score }}%
+                    {% endif %}
+                </p>
+            </div>
 
-    <div class="mt-2 text-sm">
-        Sumber Dana: {{ t.sumber_dana }}
-    </div>
+            <div class="rounded-2xl bg-white p-4 shadow-sm">
+                {% if t.match_data.requires_login %}
+                <p class="text-sm font-medium text-slate-700">Login untuk melihat AI Match.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Masuk sebagai vendor untuk melihat skor kecocokan tender berdasarkan profil perusahaan.
+                </p>
+                {% elif t.match_data.requires_profile %}
+                <p class="text-sm font-medium text-slate-700">Lengkapi profil vendor untuk rekomendasi lebih akurat.</p>
+                <p class="mt-2 text-sm leading-6 text-slate-500">
+                    Tambahkan bidang usaha, preferensi jenis pengadaan, wilayah target, dan range nilai proyek.
+                </p>
+                {% else %}
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-950">Alasan cocok</p>
+                        <ul class="mt-2 space-y-2">
+                            {% for reason in t.match_data.reasons %}
+                            <li class="flex gap-2 text-sm leading-5 text-slate-600">
+                                <span class="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-emerald-500"></span>
+                                <span>{{ reason }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="text-sm leading-5 text-slate-500">Belum ada sinyal kecocokan yang kuat.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
 
-    <div class="mt-2 text-sm">
-        {{ t.jenis_pengadaan }} - {{ t.metode_pengadaan }}
-    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-950">Catatan</p>
+                        <ul class="mt-2 space-y-2">
+                            {% for item in t.match_data.missing %}
+                            <li class="flex gap-2 text-sm leading-5 text-slate-600">
+                                <span class="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-slate-300"></span>
+                                <span>{{ item }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="text-sm leading-5 text-slate-500">Tidak ada catatan kelemahan utama.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
 
-    <div class="mt-2">
-        <span class="px-2 py-1 bg-blue-100 rounded text-xs">
-            {{ t.status }}
-        </span>
-    </div>
-    
+    <section class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Lokasi</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.lokasi_pekerjaan|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Nilai HPS</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">Rp {{ t.nilai_hps|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Tanggal Pembuatan</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.tanggal_pembuatan|tanggal_indonesia }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Peserta</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.peserta_count|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">K/L/PD/Instansi</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.klpd_instansi|default:t.instansi|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Sumber Dana</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.sumber_dana|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
+            <p class="text-xs font-medium text-slate-500">Jenis & Metode Pengadaan</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">
+                {{ t.jenis_pengadaan|default:"-" }}{% if t.metode_pengadaan %} - {{ t.metode_pengadaan }}{% endif %}
+            </p>
+        </div>
+    </section>
+
     {% if t.detail_url %}
-    <a href="{{ t.detail_url }}" target="_blank"
-       class="inline-block mt-4 bg-gray-900 text-white px-4 py-2 rounded">
-       Buka di SPSE
+    <a href="{{ t.detail_url }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+        Buka di SPSE
     </a>
     {% endif %}
 </div>

@@ -67,8 +67,10 @@
                     </svg>
                 </div>
             </div>
-            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">82%</p>
-            <p class="mt-1 text-sm text-slate-500">Placeholder skor AI tertinggi</p>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
+                {% if best_match_score is not None %}{{ best_match_score }}%{% else %}-{% endif %}
+            </p>
+            <p class="mt-1 text-sm text-slate-500">Skor tertinggi dari hasil saat ini</p>
         </div>
     </section>
 
@@ -77,12 +79,12 @@
             <form id="tender-filter-form" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div class="mb-4">
                     <h2 class="text-sm font-semibold text-slate-950">Filter Tender</h2>
-                    <p class="mt-1 text-sm text-slate-500">Cari berdasarkan paket dan status.</p>
+                    <p class="mt-1 text-sm text-slate-500">Cari, filter, dan urutkan peluang tender.</p>
                 </div>
 
                 <div class="space-y-4">
                     <div>
-                        <label for="tender-search" class="mb-1.5 block text-sm font-medium text-slate-700">Search</label>
+                        <label for="tender-search" class="mb-1.5 block text-sm font-medium text-slate-700">Cari tender</label>
                         <div class="relative">
                             <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>
@@ -90,6 +92,7 @@
                             <input id="tender-search"
                                    type="text"
                                    name="q"
+                                   value="{{ selected_filters.q }}"
                                    placeholder="Nama paket tender..."
                                    class="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
                                    hx-get="/tenders/"
@@ -110,10 +113,63 @@
                                 hx-include="#tender-filter-form"
                                 hx-indicator="#tender-loading">
                             <option value="">Semua Status</option>
-                            <option value="OPEN">OPEN</option>
-                            <option value="ONGOING">ONGOING</option>
-                            <option value="FINISH">FINISH</option>
-                            <option value="FAILED">FAILED</option>
+                            <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
+                            <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
+                            <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
+                            <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="jenis-pengadaan-filter" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Pengadaan</label>
+                        <select id="jenis-pengadaan-filter"
+                                name="jenis_pengadaan"
+                                class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                hx-get="/tenders/"
+                                hx-target="#tender-list"
+                                hx-include="#tender-filter-form"
+                                hx-trigger="change"
+                                hx-indicator="#tender-loading">
+                            <option value="">Semua Jenis</option>
+                            {% for option in filter_options.jenis_pengadaan %}
+                            <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="klpd-filter" class="mb-1.5 block text-sm font-medium text-slate-700">K/L/PD/Instansi</label>
+                        <select id="klpd-filter"
+                                name="klpd_instansi"
+                                class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                hx-get="/tenders/"
+                                hx-target="#tender-list"
+                                hx-include="#tender-filter-form"
+                                hx-trigger="change"
+                                hx-indicator="#tender-loading">
+                            <option value="">Semua Instansi</option>
+                            {% for option in filter_options.klpd_instansi %}
+                            <option value="{{ option }}" {% if selected_filters.klpd_instansi == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="sort-filter" class="mb-1.5 block text-sm font-medium text-slate-700">Urutkan</label>
+                        <select id="sort-filter"
+                                name="sort"
+                                class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                hx-get="/tenders/"
+                                hx-target="#tender-list"
+                                hx-include="#tender-filter-form"
+                                hx-trigger="change"
+                                hx-indicator="#tender-loading">
+                            <option value="created_desc" {% if selected_filters.sort == "created_desc" %}selected{% endif %}>Terbaru</option>
+                            <option value="created_asc" {% if selected_filters.sort == "created_asc" %}selected{% endif %}>Terlama</option>
+                            <option value="match_desc" {% if selected_filters.sort == "match_desc" %}selected{% endif %}>AI Match Tertinggi</option>
+                            <option value="match_asc" {% if selected_filters.sort == "match_asc" %}selected{% endif %}>AI Match Terendah</option>
+                            <option value="hps_desc" {% if selected_filters.sort == "hps_desc" %}selected{% endif %}>Nilai HPS Tertinggi</option>
+                            <option value="hps_asc" {% if selected_filters.sort == "hps_asc" %}selected{% endif %}>Nilai HPS Terendah</option>
                         </select>
                     </div>
                 </div>
@@ -121,9 +177,9 @@
                 <div class="mt-5 border-t border-slate-100 pt-4">
                     <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Quick filters</p>
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" name="status" value="OPEN" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"OPEN"}' hx-indicator="#tender-loading" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">OPEN</button>
-                        <button type="button" name="status" value="ONGOING" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"ONGOING"}' hx-indicator="#tender-loading" class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">ONGOING</button>
-                        <button type="button" name="status" value="FINISH" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-search" hx-vals='{"status":"FINISH"}' hx-indicator="#tender-loading" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">FINISH</button>
+                        <button type="button" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-filter-form" hx-vals='{"status":"OPEN"}' hx-indicator="#tender-loading" class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">OPEN</button>
+                        <button type="button" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-filter-form" hx-vals='{"status":"ONGOING"}' hx-indicator="#tender-loading" class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">ONGOING</button>
+                        <button type="button" hx-get="/tenders/" hx-target="#tender-list" hx-include="#tender-filter-form" hx-vals='{"status":"FINISH"}' hx-indicator="#tender-loading" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">FINISH</button>
                     </div>
                 </div>
             </form>

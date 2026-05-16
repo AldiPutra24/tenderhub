@@ -1,6 +1,6 @@
 import json
 import pandas as pd
-from datetime import datetime
+from datetime import date, datetime
 
 from django.core.management.base import BaseCommand
 from tenders.models import Tender
@@ -22,7 +22,7 @@ def clean_num(value):
     if pd.isna(value) or value == "":
         return None
     try:
-        return float(value)
+        return int(float(value))
     except Exception:
         return None
 
@@ -50,6 +50,9 @@ def clean_date(value):
     if pd.isna(value) or value == "":
         return None
 
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+
     if isinstance(value, datetime):
         return value.date()
 
@@ -71,12 +74,15 @@ def clean_date(value):
     }
 
     for indo, eng in bulan_map.items():
-        value = value.replace(indo, eng)
+        value = value.replace(indo, eng).replace(indo.lower(), eng)
 
-    try:
-        return datetime.strptime(value, "%d %B %Y").date()
-    except Exception:
-        return None
+    for date_format in ("%d %B %Y", "%d %b %Y", "%Y-%m-%d", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(value, date_format).date()
+        except Exception:
+            continue
+
+    return None
 
 class Command(BaseCommand):
     help = "Import tender data from Excel or CSV"
@@ -92,7 +98,6 @@ class Command(BaseCommand):
         else:
             df = pd.read_csv(file_path)
 
-        # penting: bersihkan spasi nama kolom
         df.columns = df.columns.str.strip()
 
         total = 0
@@ -109,7 +114,10 @@ class Command(BaseCommand):
                 kode_tender=kode,
                 defaults={
                     "nama_paket": clean_text(row.get("Nama Paket")),
-                    "instansi": clean_text(row.get("Instansi")),
+                    "instansi": clean_text(
+                        row.get("Instansi") or row.get("K/L/PD/Instansi Lainnya")
+                    ),
+                    "klpd_instansi": clean_text(row.get("K/L/PD/Instansi Lainnya")),
                     "tahapan": clean_text(row.get("Tahapan")),
                     "status": clean_text(row.get("Status")),
 

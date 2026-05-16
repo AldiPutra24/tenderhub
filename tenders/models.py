@@ -13,6 +13,7 @@ class Tender(models.Model):
 
     # === INSTANSI ===
     instansi = models.CharField(max_length=255)
+    klpd_instansi = models.CharField(max_length=255, blank=True, default="")
     satuankerja = models.CharField(max_length=255, blank=True)
 
     # === STATUS ===

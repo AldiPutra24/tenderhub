@@ -101,27 +101,23 @@ class VendorProfileForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.instance:
-            self.fields["preferred_procurement_types_text"].initial = "\n".join(
-                self.instance.preferred_procurement_types or []
+            self.fields["preferred_procurement_types_text"].initial = (
+                self.instance.preferred_procurement_types or ""
             )
-            self.fields["preferred_locations_text"].initial = "\n".join(
-                self.instance.preferred_locations or []
+            self.fields["preferred_locations_text"].initial = (
+                self.instance.preferred_locations or ""
             )
 
     def save(self, commit=True):
         instance = super().save(commit=False)
 
-        instance.preferred_procurement_types = [
-            x.strip()
-            for x in self.cleaned_data.get("preferred_procurement_types_text", "").splitlines()
-            if x.strip()
-        ]
+        instance.preferred_procurement_types = self.cleaned_data.get(
+            "preferred_procurement_types_text", ""
+        ).strip()
 
-        instance.preferred_locations = [
-            x.strip()
-            for x in self.cleaned_data.get("preferred_locations_text", "").splitlines()
-            if x.strip()
-        ]
+        instance.preferred_locations = self.cleaned_data.get(
+            "preferred_locations_text", ""
+        ).strip()
 
         if commit:
             instance.save()
