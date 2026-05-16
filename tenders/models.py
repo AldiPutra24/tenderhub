@@ -5,57 +5,62 @@ from django.contrib.auth.models import User
 class Tender(models.Model):
     # === IDENTITAS ===
     kode_tender = models.CharField(max_length=50, unique=True)
-    kode_rup = models.CharField(max_length=100, blank=True)
+    kode_rup = models.CharField(max_length=100, blank=True, null=True, default="")
 
     # === NAMA ===
     nama_paket = models.TextField(blank=True, null=True)
     nama_paket_rup = models.TextField(blank=True, null=True)
 
     # === INSTANSI ===
-    instansi = models.CharField(max_length=255)
-    klpd_instansi = models.CharField(max_length=255, blank=True, default="")
-    satuankerja = models.CharField(max_length=255, blank=True)
+    instansi = models.CharField(max_length=255, blank=True, null=True, default="")
+    klpd_instansi = models.CharField(max_length=255, blank=True, null=True, default="")
+    satuankerja = models.CharField(max_length=255, blank=True, null=True, default="")
 
     # === STATUS ===
-    tahapan = models.CharField(max_length=255)
-    status = models.CharField(max_length=50)
+    tahapan = models.CharField(max_length=255, blank=True, null=True, default="")
+    status = models.CharField(max_length=50, blank=True, null=True, default="")
 
     # === KEUANGAN ===
-    sumber_dana = models.CharField(max_length=255, blank=True)
-    tahun_anggaran = models.CharField(max_length=50, blank=True)
+    sumber_dana = models.CharField(max_length=255, blank=True, null=True, default="")
+    tahun_anggaran = models.CharField(max_length=50, blank=True, null=True, default="")
 
-    nilai_hps = models.BigIntegerField(null=True, blank=True)
-    nilai_pagu = models.BigIntegerField(null=True, blank=True)
+    nilai_hps = models.BigIntegerField(blank=True, null=True)
+    nilai_pagu = models.BigIntegerField(blank=True, null=True)
 
     # === LOKASI ===
     lokasi_pekerjaan = models.TextField(blank=True, null=True)
 
     # === JENIS ===
-    jenis_pengadaan = models.CharField(max_length=255, blank=True)
-    metode_pengadaan = models.CharField(max_length=255, blank=True)
-    jenis_kontrak = models.CharField(max_length=255, blank=True)
+    jenis_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
+    metode_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
+    jenis_kontrak = models.CharField(max_length=255, blank=True, null=True, default="")
 
     # === KOMPETISI ===
-    peserta_count = models.IntegerField(null=True, blank=True)
+    peserta_count = models.IntegerField(blank=True, null=True)
 
     # === DOKUMEN ===
-    uraian_pekerjaan = models.URLField(max_length=1000, blank=True)
+    uraian_pekerjaan = models.URLField(max_length=1000, blank=True, null=True, default="")
     uraian_pekerjaan_nama_file = models.TextField(blank=True, null=True)
-    detail_url = models.URLField(blank=True)
+    detail_url = models.URLField(max_length=1000, blank=True, null=True, default="")
 
     # === META ===
-    tanggal_pembuatan = models.DateField(null=True, blank=True)
+    tanggal_pembuatan = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.kode_tender} - {self.nama_paket}"
-    
+        nama = self.nama_paket or "-"
+        return f"{self.kode_tender} - {nama}"
+
+
 class TenderBookmark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tender = models.ForeignKey(Tender, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'tender')
+        unique_together = ("user", "tender")
+
+    def __str__(self):
+        return f"{self.user} - {self.tender}"
