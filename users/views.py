@@ -44,7 +44,16 @@ def register_view(request):
 
 @login_required
 def profile_view(request):
-    profile = request.user.vendor_profile
+    profile, created = VendorProfile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "full_name": request.user.get_full_name() or request.user.username,
+            "institution_email": request.user.email or request.user.username,
+            "company_name": "",
+            "whatsapp_number": "",
+            "business_field": "",
+        }
+    )
 
     if request.method == "POST":
         form = VendorProfileForm(request.POST, instance=profile)
@@ -58,4 +67,5 @@ def profile_view(request):
     return render(request, "users/profile.html", {
         "form": form,
         "profile": profile,
+        "created": created,
     })
