@@ -1,4 +1,4 @@
-# TenderHub Deployment
+# GPFE PROC HUB Deployment
 
 This project is configured for Render Web Service hosting with a Neon PostgreSQL production database.
 
@@ -35,9 +35,9 @@ gunicorn core.wsgi:application
 5. Add Render environment variables:
    - `SECRET_KEY`: a strong Django secret key.
    - `DEBUG`: `False`.
-   - `ALLOWED_HOSTS`: your Render hostname, for example `tenderhub.onrender.com`.
+   - `ALLOWED_HOSTS`: your Render hostname, for example `gpfe-proc-hub.onrender.com`.
    - `DATABASE_URL`: the Neon connection string.
-   - `CSRF_TRUSTED_ORIGINS`: your Render origin, for example `https://tenderhub.onrender.com`.
+   - `CSRF_TRUSTED_ORIGINS`: your Render origin, for example `https://gpfe-proc-hub.onrender.com`.
 6. Deploy the Render service.
 7. Create a superuser:
 

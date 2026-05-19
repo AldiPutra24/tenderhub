@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Daftar Vendor - TenderHub{% endblock %}
+{% block title %}GPFE PROC HUB{% endblock %}
 
 {% block body %}
 <main class="min-h-screen bg-slate-50">
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header class="flex items-center justify-between py-3">
             <a href="{% url 'login' %}" class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">TH</div>
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">GP</div>
                 <div>
-                    <p class="text-sm font-semibold text-slate-950">TenderHub</p>
+                    <p class="text-sm font-semibold text-slate-950">GPFE PROC HUB</p>
                     <p class="text-xs text-slate-500">AI Procurement Intelligence Platform</p>
                 </div>
             </a>
@@ -24,10 +24,10 @@
                     Vendor onboarding
                 </p>
                 <h1 class="max-w-xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                    Bangun profil vendor untuk rekomendasi tender yang lebih akurat.
+                    Daftar Vendor GPFE PROC HUB
                 </h1>
                 <p class="mt-4 max-w-lg text-base leading-7 text-slate-600">
-                    Data perusahaan, lokasi operasional, dan preferensi tender membantu AI TenderHub memahami peluang yang paling relevan.
+                    Bangun profil vendor untuk mendapatkan rekomendasi tender yang lebih relevan.
                 </p>
 
                 <div class="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
@@ -52,8 +52,8 @@
                 {% csrf_token %}
 
                 <div class="border-b border-slate-100 px-5 py-5 sm:px-7">
-                    <h2 class="text-xl font-semibold tracking-tight text-slate-950">Daftar Vendor</h2>
-                    <p class="mt-1 text-sm text-slate-500">Lengkapi informasi berikut untuk membuat akun TenderHub.</p>
+                    <h2 class="text-xl font-semibold tracking-tight text-slate-950">Daftar Vendor GPFE PROC HUB</h2>
+                    <p class="mt-1 text-sm text-slate-500">Lengkapi informasi berikut untuk membuat akun GPFE PROC HUB.</p>
                 </div>
 
                 <div class="space-y-8 px-5 py-6 sm:px-7">

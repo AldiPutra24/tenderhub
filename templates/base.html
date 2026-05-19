@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}TenderHub{% endblock %}</title>
+    <meta name="application-name" content="GPFE PROC HUB">
+    <meta property="og:title" content="GPFE PROC HUB">
+    <title>{% block title %}GPFE PROC HUB{% endblock %}</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -46,11 +48,11 @@
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
         <div class="flex h-16 items-center gap-3 border-b border-slate-100 px-5">
             <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm">
-                TH
+                GP
             </div>
             <div>
-                <p class="text-sm font-semibold tracking-tight text-slate-950">TenderHub</p>
-                <p class="text-xs text-slate-500">AI Procurement Intelligence</p>
+                <p class="text-sm font-semibold tracking-tight text-slate-950">GPFE PROC HUB</p>
+                <p class="text-xs text-slate-500">AI Procurement Intelligence Platform</p>
             </div>
         </div>
 
@@ -186,5 +188,8 @@
     </div>
 </div>
 {% endblock %}
+    <footer class="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs font-medium text-slate-500 sm:px-6 lg:px-8">
+        &copy; 2026 GPFE PROC HUB
+    </footer>
 </body>
 </html>
