@@ -136,15 +136,7 @@
         <div class="mt-auto flex items-center justify-between gap-3 pt-5">
             <p class="truncate text-xs text-slate-500">{{ t.metode_pengadaan|default:"Metode belum tersedia" }}</p>
             <div class="flex shrink-0 items-center gap-2">
-                {% if t.detail_url %}
-                <a href="{% url 'open_lpse_detail' t.kode_tender %}"
-                   target="_blank"
-                   rel="noopener"
-                   referrerpolicy="origin"
-                   class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200">
-                    Buka di LPSE
-                </a>
-                {% elif t.lpse_detail_url %}
+                {% if t.detail_url or t.lpse_detail_url or t.lpse_slug %}
                 <a href="{% url 'open_lpse_detail' t.kode_tender %}"
                    target="_blank"
                    rel="noopener"
