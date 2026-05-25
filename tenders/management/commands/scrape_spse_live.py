@@ -881,8 +881,11 @@ class Command(BaseCommand):
 
     def request_with_retry(self, method, url, **kwargs):
         last_error = None
+        max_attempts = MAX_RETRIES
+        if self.rotate_proxy and self.proxy_urls:
+            max_attempts = max(MAX_RETRIES, len(self.proxy_urls))
 
-        for attempt in range(1, MAX_RETRIES + 1):
+        for attempt in range(1, max_attempts + 1):
             try:
                 response = self.session.request(method, url, timeout=REQUEST_TIMEOUT_SECONDS, **kwargs)
                 response.raise_for_status()
@@ -890,22 +893,26 @@ class Command(BaseCommand):
             except requests.HTTPError as exc:
                 last_error = exc
                 status_code = exc.response.status_code if exc.response is not None else None
-                if status_code in (403, 429) and self.rotate_proxy_after_failure(f"http_{status_code}"):
+                if (
+                    attempt < max_attempts
+                    and status_code in (403, 429)
+                    and self.rotate_proxy_after_failure(f"http_{status_code}")
+                ):
                     continue
-                if attempt < MAX_RETRIES:
+                if attempt < max_attempts:
                     time.sleep(attempt)
             except (requests.Timeout, requests.ConnectionError) as exc:
                 last_error = exc
-                if self.rotate_proxy_after_failure(exc.__class__.__name__):
+                if attempt < max_attempts and self.rotate_proxy_after_failure(exc.__class__.__name__):
                     continue
-                if attempt < MAX_RETRIES:
+                if attempt < max_attempts:
                     time.sleep(attempt)
             except requests.RequestException as exc:
                 last_error = exc
-                if attempt < MAX_RETRIES:
+                if attempt < max_attempts:
                     time.sleep(attempt)
 
-        raise CommandError(f"{method} {url} failed after {MAX_RETRIES} attempts: {last_error}")
+        raise CommandError(f"{method} {url} failed after {max_attempts} attempts: {last_error}")
 
     def upsert_row(self, row, slug, lpse_name):
         if not isinstance(row, list) or len(row) < 11:
