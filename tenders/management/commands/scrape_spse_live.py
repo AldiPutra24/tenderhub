@@ -420,6 +420,10 @@ class Command(BaseCommand):
         parser.add_argument("--chrome-binary", help="Explicit Chrome/Chromium binary path for --browser-session")
         parser.add_argument("--browser-timeout", type=int, default=45, help="Seconds to wait for browser warm-up")
         parser.add_argument("--browser-debug-dir", help="Directory to save warm-up HTML/screenshot when browser mode fails")
+        parser.add_argument("--browser-headful", action="store_true", help="Run Chrome without headless mode. Use with xvfb-run on VPS.")
+        parser.add_argument("--browser-user-data-dir", help="Persistent Chrome user-data-dir to reuse SPSE/Cloudflare cookies")
+        parser.add_argument("--browser-wait-after-load", type=float, default=3, help="Extra seconds to wait after page load before token checks")
+        parser.add_argument("--browser-refresh-retries", type=int, default=2, help="Refresh count while browser is stuck on anti-bot waiting page")
 
     def handle(self, *args, **options):
         self.session = requests.Session()
@@ -436,6 +440,10 @@ class Command(BaseCommand):
         self.chrome_binary = options.get("chrome_binary")
         self.browser_timeout = options.get("browser_timeout") or 45
         self.browser_debug_dir = options.get("browser_debug_dir")
+        self.browser_headful = options.get("browser_headful")
+        self.browser_user_data_dir = options.get("browser_user_data_dir")
+        self.browser_wait_after_load = options.get("browser_wait_after_load") or 0
+        self.browser_refresh_retries = options.get("browser_refresh_retries") or 0
 
         if length <= 0:
             raise CommandError("--length must be greater than 0")
@@ -744,8 +752,10 @@ class Command(BaseCommand):
             self.stdout.write(f"CHROME BINARY {chrome_binary}")
 
         errors = []
-        for headless_arg in ("--headless=new", "--headless"):
+        browser_modes = [None] if self.browser_headful else ["--headless=new", "--headless"]
+        for headless_arg in browser_modes:
             driver = None
+            mode_label = headless_arg or "headful"
             try:
                 options = self.build_chrome_options(uc, chrome_binary, headless_arg)
                 chrome_major = self.get_chrome_major_version(chrome_binary)
@@ -766,12 +776,10 @@ class Command(BaseCommand):
                 WebDriverWait(driver, self.browser_timeout).until(
                     lambda browser: browser.execute_script("return document.readyState") == "complete"
                 )
-                WebDriverWait(driver, self.browser_timeout).until(
-                    lambda browser: TOKEN_RE.search(browser.page_source)
-                )
+                if self.browser_wait_after_load:
+                    time.sleep(self.browser_wait_after_load)
 
-                page_source = driver.page_source
-                token_match = TOKEN_RE.search(page_source)
+                token_match = self.wait_for_browser_token(driver, slug)
                 if not token_match:
                     raise CommandError("authenticityToken not found after browser warm-up")
 
@@ -794,8 +802,8 @@ class Command(BaseCommand):
                 return token_match.group(1)
             except (TimeoutException, WebDriverException, CommandError) as exc:
                 detail = self.describe_browser_exception(exc, driver)
-                errors.append(f"{headless_arg}: {detail}")
-                self.stderr.write(self.style.WARNING(f"BROWSER WARMUP FAILED mode={headless_arg} slug={slug}: {detail}"))
+                errors.append(f"{mode_label}: {detail}")
+                self.stderr.write(self.style.WARNING(f"BROWSER WARMUP FAILED mode={mode_label} slug={slug}: {detail}"))
                 self.dump_browser_debug(slug, driver)
             finally:
                 if driver:
@@ -807,7 +815,11 @@ class Command(BaseCommand):
         options = uc.ChromeOptions()
         if chrome_binary:
             options.binary_location = chrome_binary
-        options.add_argument(headless_arg)
+        if headless_arg:
+            options.add_argument(headless_arg)
+        if self.browser_user_data_dir:
+            Path(self.browser_user_data_dir).mkdir(parents=True, exist_ok=True)
+            options.add_argument(f"--user-data-dir={self.browser_user_data_dir}")
         options.add_argument("--window-size=1365,900")
         options.add_argument("--lang=id-ID,id,en-US,en")
         options.add_argument("--disable-blink-features=AutomationControlled")
@@ -823,6 +835,49 @@ class Command(BaseCommand):
         options.add_argument("--remote-debugging-port=0")
         options.add_argument(f"--user-agent={USER_AGENT}")
         return options
+
+    def wait_for_browser_token(self, driver, slug):
+        deadline = time.time() + self.browser_timeout
+        refreshes_left = self.browser_refresh_retries
+        last_title = ""
+
+        while time.time() < deadline:
+            page_source = driver.page_source or ""
+            token_match = TOKEN_RE.search(page_source)
+            if token_match:
+                return token_match
+
+            title = driver.title or ""
+            if title != last_title:
+                self.stdout.write(f"BROWSER PAGE title={title or '-'}")
+                last_title = title
+
+            if self.is_waiting_room_page(title, page_source) and refreshes_left > 0:
+                time.sleep(min(8, max(3, self.browser_wait_after_load)))
+                self.stdout.write(f"BROWSER CHALLENGE REFRESH slug={slug} remaining={refreshes_left}")
+                driver.refresh()
+                refreshes_left -= 1
+                try:
+                    WebDriverWait(driver, min(20, self.browser_timeout)).until(
+                        lambda browser: browser.execute_script("return document.readyState") == "complete"
+                    )
+                except Exception:
+                    pass
+                continue
+
+            time.sleep(1)
+
+        return None
+
+    def is_waiting_room_page(self, title, page_source):
+        text = f"{title}\n{page_source[:2000]}".casefold()
+        return (
+            "tunggu sebentar" in text
+            or "just a moment" in text
+            or "checking your browser" in text
+            or "cf-browser-verification" in text
+            or "challenge-platform" in text
+        )
 
     def find_chrome_binary(self):
         env_binary = os.getenv("CHROME_BIN") or os.getenv("GOOGLE_CHROME_BIN")
