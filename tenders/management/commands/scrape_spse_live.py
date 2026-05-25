@@ -1,7 +1,9 @@
 import json
+import os
 import platform
 import random
 import re
+import shutil
 import subprocess
 import time
 from datetime import datetime
@@ -415,6 +417,9 @@ class Command(BaseCommand):
         parser.add_argument("--detail-only", action="store_true", help="Enrich existing Tender rows without scraping DataTables")
         parser.add_argument("--limit-details", type=int, help="Limit detail enrichment count")
         parser.add_argument("--browser-session", action="store_true", help="Warm requests session with undetected headless Chrome before scraping each slug")
+        parser.add_argument("--chrome-binary", help="Explicit Chrome/Chromium binary path for --browser-session")
+        parser.add_argument("--browser-timeout", type=int, default=45, help="Seconds to wait for browser warm-up")
+        parser.add_argument("--browser-debug-dir", help="Directory to save warm-up HTML/screenshot when browser mode fails")
 
     def handle(self, *args, **options):
         self.session = requests.Session()
@@ -428,6 +433,9 @@ class Command(BaseCommand):
         sleep_min = options["sleep_min"]
         sleep_max = options["sleep_max"]
         self.browser_session_enabled = options.get("browser_session")
+        self.chrome_binary = options.get("chrome_binary")
+        self.browser_timeout = options.get("browser_timeout") or 45
+        self.browser_debug_dir = options.get("browser_debug_dir")
 
         if length <= 0:
             raise CommandError("--length must be greater than 0")
@@ -723,6 +731,7 @@ class Command(BaseCommand):
         self.stdout.write(f"BROWSER WARMUP slug={slug}")
         try:
             import undetected_chromedriver as uc
+            from selenium.common.exceptions import TimeoutException, WebDriverException
             from selenium.webdriver.support.ui import WebDriverWait
         except ImportError as exc:
             raise CommandError(
@@ -730,8 +739,75 @@ class Command(BaseCommand):
                 "Install requirements.txt first."
             ) from exc
 
+        chrome_binary = self.chrome_binary or self.find_chrome_binary()
+        if chrome_binary:
+            self.stdout.write(f"CHROME BINARY {chrome_binary}")
+
+        errors = []
+        for headless_arg in ("--headless=new", "--headless"):
+            driver = None
+            try:
+                options = self.build_chrome_options(uc, chrome_binary, headless_arg)
+                chrome_major = self.get_chrome_major_version(chrome_binary)
+                driver_kwargs = {"options": options, "use_subprocess": True}
+                if chrome_major:
+                    self.stdout.write(f"CHROME MAJOR {chrome_major}")
+                    driver_kwargs["version_main"] = chrome_major
+
+                driver = uc.Chrome(**driver_kwargs)
+                driver.execute_cdp_cmd("Network.setUserAgentOverride", {
+                    "userAgent": USER_AGENT,
+                    "acceptLanguage": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "platform": "Linux" if platform.system() != "Windows" else "Windows",
+                })
+                driver.set_window_size(1365, 900)
+                driver.get(list_url)
+
+                WebDriverWait(driver, self.browser_timeout).until(
+                    lambda browser: browser.execute_script("return document.readyState") == "complete"
+                )
+                WebDriverWait(driver, self.browser_timeout).until(
+                    lambda browser: TOKEN_RE.search(browser.page_source)
+                )
+
+                page_source = driver.page_source
+                token_match = TOKEN_RE.search(page_source)
+                if not token_match:
+                    raise CommandError("authenticityToken not found after browser warm-up")
+
+                user_agent = driver.execute_script("return navigator.userAgent") or USER_AGENT
+                self.session.headers.update({
+                    "User-Agent": user_agent,
+                    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                })
+
+                for cookie in driver.get_cookies():
+                    self.session.cookies.set(
+                        cookie.get("name"),
+                        cookie.get("value"),
+                        domain=cookie.get("domain"),
+                        path=cookie.get("path") or "/",
+                    )
+
+                self.stdout.write(f"SESSION READY slug={slug}")
+                self.stdout.write("USING REQUESTS SESSION")
+                return token_match.group(1)
+            except (TimeoutException, WebDriverException, CommandError) as exc:
+                detail = self.describe_browser_exception(exc, driver)
+                errors.append(f"{headless_arg}: {detail}")
+                self.stderr.write(self.style.WARNING(f"BROWSER WARMUP FAILED mode={headless_arg} slug={slug}: {detail}"))
+                self.dump_browser_debug(slug, driver)
+            finally:
+                if driver:
+                    driver.quit()
+
+        raise CommandError("browser warm-up failed; " + " | ".join(errors))
+
+    def build_chrome_options(self, uc, chrome_binary, headless_arg):
         options = uc.ChromeOptions()
-        options.add_argument("--headless=new")
+        if chrome_binary:
+            options.binary_location = chrome_binary
+        options.add_argument(headless_arg)
         options.add_argument("--window-size=1365,900")
         options.add_argument("--lang=id-ID,id,en-US,en")
         options.add_argument("--disable-blink-features=AutomationControlled")
@@ -739,81 +815,50 @@ class Command(BaseCommand):
         options.add_argument("--disable-extensions")
         options.add_argument("--disable-gpu")
         options.add_argument("--no-sandbox")
+        options.add_argument("--disable-setuid-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-first-run")
+        options.add_argument("--no-default-browser-check")
+        options.add_argument("--disable-background-networking")
+        options.add_argument("--remote-debugging-port=0")
         options.add_argument(f"--user-agent={USER_AGENT}")
+        return options
 
-        driver = None
-        try:
-            chrome_major = self.get_chrome_major_version()
-            driver_kwargs = {"options": options, "use_subprocess": True}
-            if chrome_major:
-                driver_kwargs["version_main"] = chrome_major
-            driver = uc.Chrome(**driver_kwargs)
-            driver.execute_cdp_cmd("Network.setUserAgentOverride", {
-                "userAgent": USER_AGENT,
-                "acceptLanguage": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-                "platform": "Windows",
-            })
-            driver.set_window_size(1365, 900)
-            driver.get(list_url)
+    def find_chrome_binary(self):
+        env_binary = os.getenv("CHROME_BIN") or os.getenv("GOOGLE_CHROME_BIN")
+        if env_binary and Path(env_binary).exists():
+            return env_binary
 
-            WebDriverWait(driver, 30).until(
-                lambda browser: browser.execute_script("return document.readyState") == "complete"
-            )
-            WebDriverWait(driver, 30).until(
-                lambda browser: TOKEN_RE.search(browser.page_source)
-            )
-
-            page_source = driver.page_source
-            token_match = TOKEN_RE.search(page_source)
-            if not token_match:
-                raise CommandError("authenticityToken not found after browser warm-up")
-
-            user_agent = driver.execute_script("return navigator.userAgent") or USER_AGENT
-            self.session.headers.update({
-                "User-Agent": user_agent,
-                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-            })
-
-            for cookie in driver.get_cookies():
-                self.session.cookies.set(
-                    cookie.get("name"),
-                    cookie.get("value"),
-                    domain=cookie.get("domain"),
-                    path=cookie.get("path") or "/",
-                )
-
-            self.stdout.write(f"SESSION READY slug={slug}")
-            self.stdout.write("USING REQUESTS SESSION")
-            return token_match.group(1)
-        finally:
-            if driver:
-                driver.quit()
-
-    def get_chrome_major_version(self):
-        commands = []
         if platform.system() == "Windows":
+            candidates = [
+                "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+            ]
+            for candidate in candidates:
+                if Path(candidate).exists():
+                    return candidate
+        else:
+            for command in ("google-chrome", "google-chrome-stable", "chromium-browser", "chromium"):
+                binary = shutil.which(command)
+                if binary:
+                    return binary
+        return None
+
+    def get_chrome_major_version(self, chrome_binary=None):
+        if chrome_binary and platform.system() == "Windows":
             commands = [
-                [
-                    "powershell",
-                    "-NoProfile",
-                    "-Command",
-                    "(Get-Item 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion",
-                ],
-                [
-                    "powershell",
-                    "-NoProfile",
-                    "-Command",
-                    "(Get-Item 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion",
-                ],
+                ["powershell", "-NoProfile", "-Command", f"(Get-Item '{chrome_binary}').VersionInfo.ProductVersion"],
+                [chrome_binary, "--version"],
+            ]
+        elif chrome_binary:
+            commands = [[chrome_binary, "--version"]]
+        elif platform.system() == "Windows":
+            commands = [
+                ["powershell", "-NoProfile", "-Command", "(Get-Item 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion"],
+                ["powershell", "-NoProfile", "-Command", "(Get-Item 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion"],
             ]
         else:
-            commands = [
-                ["google-chrome", "--version"],
-                ["google-chrome-stable", "--version"],
-                ["chromium-browser", "--version"],
-                ["chromium", "--version"],
-            ]
+            commands = [[command, "--version"] for command in ("google-chrome", "google-chrome-stable", "chromium-browser", "chromium")]
 
         for command in commands:
             try:
@@ -824,6 +869,38 @@ class Command(BaseCommand):
             if match:
                 return int(match.group(1))
         return None
+
+    def describe_browser_exception(self, exc, driver=None):
+        parts = [exc.__class__.__name__]
+        message = str(exc).strip()
+        if message:
+            parts.append(message[:1000])
+        if driver:
+            try:
+                parts.append(f"url={driver.current_url}")
+                parts.append(f"title={driver.title}")
+            except Exception:
+                pass
+        return " | ".join(parts)
+
+    def dump_browser_debug(self, slug, driver):
+        if not self.browser_debug_dir or not driver:
+            return
+        debug_dir = Path(self.browser_debug_dir)
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        stamp = int(time.time())
+        html_path = debug_dir / f"spse_{slug}_{stamp}.html"
+        png_path = debug_dir / f"spse_{slug}_{stamp}.png"
+        try:
+            html_path.write_text(driver.page_source, encoding="utf-8")
+            self.stderr.write(self.style.WARNING(f"Saved browser HTML: {html_path}"))
+        except Exception as exc:
+            self.stderr.write(self.style.WARNING(f"Could not save browser HTML: {exc}"))
+        try:
+            driver.save_screenshot(str(png_path))
+            self.stderr.write(self.style.WARNING(f"Saved browser screenshot: {png_path}"))
+        except Exception as exc:
+            self.stderr.write(self.style.WARNING(f"Could not save browser screenshot: {exc}"))
 
     def fetch_datatables_page(self, slug, tahun, list_url, token, draw, start, length):
         dt_url = self.build_dt_url(slug, tahun)
