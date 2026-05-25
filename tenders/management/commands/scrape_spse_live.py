@@ -1,6 +1,8 @@
 import json
+import platform
 import random
 import re
+import subprocess
 import time
 from datetime import datetime
 from html import unescape
@@ -412,6 +414,7 @@ class Command(BaseCommand):
         parser.add_argument("--enrich-detail", action="store_true", help="Fetch each tender detail page after list scrape")
         parser.add_argument("--detail-only", action="store_true", help="Enrich existing Tender rows without scraping DataTables")
         parser.add_argument("--limit-details", type=int, help="Limit detail enrichment count")
+        parser.add_argument("--browser-session", action="store_true", help="Warm requests session with undetected headless Chrome before scraping each slug")
 
     def handle(self, *args, **options):
         self.session = requests.Session()
@@ -424,6 +427,7 @@ class Command(BaseCommand):
         length = options["length"]
         sleep_min = options["sleep_min"]
         sleep_max = options["sleep_max"]
+        self.browser_session_enabled = options.get("browser_session")
 
         if length <= 0:
             raise CommandError("--length must be greater than 0")
@@ -485,6 +489,7 @@ class Command(BaseCommand):
                 sleep_max,
                 options.get("enrich_detail"),
                 options.get("limit_details"),
+                self.browser_session_enabled,
             )
             total_created += created
             total_updated += updated
@@ -573,11 +578,14 @@ class Command(BaseCommand):
 
         return {}
 
-    def scrape_slug(self, slug, lpse_name, tahun, max_pages, length, sleep_min, sleep_max, enrich_detail=False, limit_details=None):
+    def scrape_slug(self, slug, lpse_name, tahun, max_pages, length, sleep_min, sleep_max, enrich_detail=False, limit_details=None, browser_session=False):
         self.stdout.write(f"START slug={slug} tahun={tahun}")
         list_url = self.build_list_url(slug, tahun)
         try:
-            token = self.fetch_authenticity_token(list_url)
+            if browser_session:
+                token = self.browser_warmup(slug, list_url)
+            else:
+                token = self.fetch_authenticity_token(list_url, slug=slug)
         except Exception as exc:
             self.stderr.write(self.style.WARNING(f"Failed slug={slug}: {exc}"))
             return 0, 0, 0, 1
@@ -702,7 +710,7 @@ class Command(BaseCommand):
         query = urlencode({"rekanan": "", "tahun": tahun, "instansiId": ""})
         return f"{BASE_URL}/{slug}/dt/lelang?{query}"
 
-    def fetch_authenticity_token(self, list_url):
+    def fetch_authenticity_token(self, list_url, slug=""):
         self.stdout.write(f"GET {list_url}")
         response = self.request_with_retry("GET", list_url)
         match = TOKEN_RE.search(response.text)
@@ -710,6 +718,112 @@ class Command(BaseCommand):
             raise CommandError("authenticityToken not found on list page")
         self.stdout.write("Extracted authenticityToken")
         return match.group(1)
+
+    def browser_warmup(self, slug, list_url):
+        self.stdout.write(f"BROWSER WARMUP slug={slug}")
+        try:
+            import undetected_chromedriver as uc
+            from selenium.webdriver.support.ui import WebDriverWait
+        except ImportError as exc:
+            raise CommandError(
+                "Browser session requires undetected-chromedriver and selenium. "
+                "Install requirements.txt first."
+            ) from exc
+
+        options = uc.ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1365,900")
+        options.add_argument("--lang=id-ID,id,en-US,en")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--disable-infobars")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument(f"--user-agent={USER_AGENT}")
+
+        driver = None
+        try:
+            chrome_major = self.get_chrome_major_version()
+            driver_kwargs = {"options": options, "use_subprocess": True}
+            if chrome_major:
+                driver_kwargs["version_main"] = chrome_major
+            driver = uc.Chrome(**driver_kwargs)
+            driver.execute_cdp_cmd("Network.setUserAgentOverride", {
+                "userAgent": USER_AGENT,
+                "acceptLanguage": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+                "platform": "Windows",
+            })
+            driver.set_window_size(1365, 900)
+            driver.get(list_url)
+
+            WebDriverWait(driver, 30).until(
+                lambda browser: browser.execute_script("return document.readyState") == "complete"
+            )
+            WebDriverWait(driver, 30).until(
+                lambda browser: TOKEN_RE.search(browser.page_source)
+            )
+
+            page_source = driver.page_source
+            token_match = TOKEN_RE.search(page_source)
+            if not token_match:
+                raise CommandError("authenticityToken not found after browser warm-up")
+
+            user_agent = driver.execute_script("return navigator.userAgent") or USER_AGENT
+            self.session.headers.update({
+                "User-Agent": user_agent,
+                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+            })
+
+            for cookie in driver.get_cookies():
+                self.session.cookies.set(
+                    cookie.get("name"),
+                    cookie.get("value"),
+                    domain=cookie.get("domain"),
+                    path=cookie.get("path") or "/",
+                )
+
+            self.stdout.write(f"SESSION READY slug={slug}")
+            self.stdout.write("USING REQUESTS SESSION")
+            return token_match.group(1)
+        finally:
+            if driver:
+                driver.quit()
+
+    def get_chrome_major_version(self):
+        commands = []
+        if platform.system() == "Windows":
+            commands = [
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-Command",
+                    "(Get-Item 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion",
+                ],
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-Command",
+                    "(Get-Item 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe').VersionInfo.ProductVersion",
+                ],
+            ]
+        else:
+            commands = [
+                ["google-chrome", "--version"],
+                ["google-chrome-stable", "--version"],
+                ["chromium-browser", "--version"],
+                ["chromium", "--version"],
+            ]
+
+        for command in commands:
+            try:
+                output = subprocess.check_output(command, stderr=subprocess.DEVNULL, text=True, timeout=10)
+            except Exception:
+                continue
+            match = re.search(r"(\d+)\.", output)
+            if match:
+                return int(match.group(1))
+        return None
 
     def fetch_datatables_page(self, slug, tahun, list_url, token, draw, start, length):
         dt_url = self.build_dt_url(slug, tahun)
@@ -812,12 +926,38 @@ class Command(BaseCommand):
                 response = self.session.request(method, url, timeout=REQUEST_TIMEOUT_SECONDS, **kwargs)
                 response.raise_for_status()
                 return response
+            except requests.HTTPError as exc:
+                last_error = exc
+                status_code = exc.response.status_code if exc.response is not None else None
+                if (
+                    status_code == 403
+                    and getattr(self, "browser_session_enabled", False)
+                    and not getattr(self, "_browser_fallback_running", False)
+                ):
+                    slug = self.extract_slug_from_list_or_detail_url(url)
+                    if slug:
+                        self._browser_fallback_running = True
+                        try:
+                            self.browser_warmup(slug, self.build_list_url(slug, self.extract_year_from_url(url)))
+                        finally:
+                            self._browser_fallback_running = False
+                        continue
+                if attempt < MAX_RETRIES:
+                    time.sleep(attempt)
             except requests.RequestException as exc:
                 last_error = exc
                 if attempt < MAX_RETRIES:
                     time.sleep(attempt)
 
         raise CommandError(f"{method} {url} failed after {MAX_RETRIES} attempts: {last_error}")
+
+    def extract_slug_from_list_or_detail_url(self, url):
+        match = re.search(r"spse\.inaproc\.id/([^/]+)/(?:lelang|dt/lelang)", url or "")
+        return match.group(1) if match else ""
+
+    def extract_year_from_url(self, url):
+        match = re.search(r"[?&]tahun=(\d{4})", url or "")
+        return int(match.group(1)) if match else ""
 
     def upsert_row(self, row, slug, lpse_name):
         if not isinstance(row, list) or len(row) < 11:
