@@ -28,8 +28,8 @@
                     </svg>
                 </div>
             </div>
-            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{{ tenders|length }}</p>
-            <p class="mt-1 text-sm text-slate-500">Tender termuat di dashboard</p>
+            <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{{ total_count }}</p>
+            <p class="mt-1 text-sm text-slate-500">Tender sesuai filter saat ini</p>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -77,6 +77,7 @@
     <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside class="lg:sticky lg:top-24 lg:self-start">
             <form id="tender-filter-form" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <input type="hidden" name="page" value="1">
                 <div class="mb-4">
                     <h2 class="text-sm font-semibold text-slate-950">Filter Tender</h2>
                     <p class="mt-1 text-sm text-slate-500">Cari, filter, dan urutkan peluang tender.</p>
@@ -170,6 +171,22 @@
                             <option value="match_asc" {% if selected_filters.sort == "match_asc" %}selected{% endif %}>AI Match Terendah</option>
                             <option value="hps_desc" {% if selected_filters.sort == "hps_desc" %}selected{% endif %}>Nilai HPS Tertinggi</option>
                             <option value="hps_asc" {% if selected_filters.sort == "hps_asc" %}selected{% endif %}>Nilai HPS Terendah</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="per-page-filter" class="mb-1.5 block text-sm font-medium text-slate-700">Tampilkan</label>
+                        <select id="per-page-filter"
+                                name="per_page"
+                                class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                                hx-get="/tenders/"
+                                hx-target="#tender-list"
+                                hx-include="#tender-filter-form"
+                                hx-trigger="change"
+                                hx-indicator="#tender-loading">
+                            {% for option in allowed_per_page %}
+                            <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>

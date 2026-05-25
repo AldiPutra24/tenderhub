@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar LPSE - GPFE PROC HUB{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-sm font-medium text-slate-500">Direktori LPSE</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Daftar LPSE</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Ringkasan paket, nilai, status, dan aktivitas tender per LPSE.
+            </p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p class="text-xs font-medium text-slate-500">Total LPSE</p>
+            <p class="mt-1 text-xl font-semibold text-slate-950">{{ total_count }}</p>
+        </div>
+    </div>
+
+    <form id="lpse-filter-form" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-[1fr_220px_140px]">
+        <input type="hidden" name="page" value="1">
+        <div>
+            <label for="lpse-search" class="mb-1.5 block text-sm font-medium text-slate-700">Cari LPSE</label>
+            <input id="lpse-search"
+                   type="search"
+                   name="q"
+                   value="{{ selected.q }}"
+                   placeholder="Nama LPSE atau slug..."
+                   class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                   hx-get="{% url 'lpse_list' %}"
+                   hx-target="#lpse-list"
+                   hx-include="#lpse-filter-form"
+                   hx-trigger="keyup changed delay:400ms">
+        </div>
+        <div>
+            <label for="lpse-sort" class="mb-1.5 block text-sm font-medium text-slate-700">Urutkan</label>
+            <select id="lpse-sort"
+                    name="sort"
+                    class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                    hx-get="{% url 'lpse_list' %}"
+                    hx-target="#lpse-list"
+                    hx-include="#lpse-filter-form"
+                    hx-trigger="change">
+                {% for value, label in sort_options.items %}
+                <option value="{{ value }}" {% if selected.sort == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="lpse-per-page" class="mb-1.5 block text-sm font-medium text-slate-700">Tampilkan</label>
+            <select id="lpse-per-page"
+                    name="per_page"
+                    class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
+                    hx-get="{% url 'lpse_list' %}"
+                    hx-target="#lpse-list"
+                    hx-include="#lpse-filter-form"
+                    hx-trigger="change">
+                {% for option in allowed_per_page %}
+                <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <div id="lpse-list">
+        {% include "lpse/list_partial.html" %}
+    </div>
+</div>
+{% endblock %}

@@ -9,6 +9,8 @@ class TenderAdmin(admin.ModelAdmin):
         "nama_paket",
         "instansi",
         "klpd_instansi",
+        "lpse_kd",
+        "lpse_name",
         "status",
         "tanggal_pembuatan",
         "tahapan",
@@ -35,6 +37,7 @@ class TenderAdmin(admin.ModelAdmin):
         "nama_paket_rup",
         "instansi",
         "klpd_instansi",
+        "lpse_name",
         "satuankerja",
         "lokasi_pekerjaan",
     )
@@ -50,6 +53,8 @@ class TenderAdmin(admin.ModelAdmin):
                 "nama_paket",
                 "instansi",
                 "klpd_instansi",
+                "lpse_kd",
+                "lpse_name",
                 "tahapan",
                 "status",
                 "tanggal_pembuatan",
@@ -84,6 +89,8 @@ class TenderAdmin(admin.ModelAdmin):
                 "uraian_pekerjaan",
                 "uraian_pekerjaan_nama_file",
                 "uraian_file_link",
+                "detail_url",
+                "lpse_detail_url",
             )
         }),
     )

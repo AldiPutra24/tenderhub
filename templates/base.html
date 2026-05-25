@@ -73,6 +73,14 @@
                 Tender Tersimpan
             </a>
 
+            <a href="{% url 'lpse_list' %}"
+               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
+                <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17"/>
+                </svg>
+                Daftar LPSE
+            </a>
+
             <a href="{% url 'vendor_profile' %}"
                class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'vendor_profile' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

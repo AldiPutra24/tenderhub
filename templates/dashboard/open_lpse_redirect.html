@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="origin">
+    <title>Membuka Detail SPSE</title>
+    {% if list_url %}
+    <link rel="prefetch" href="{{ list_url }}">
+    {% endif %}
+    <script>
+        window.setTimeout(function () {
+            window.location.href = "{{ detail_url|escapejs }}";
+        }, 800);
+    </script>
+</head>
+<body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <main style="width:min(92vw,480px);border:1px solid #e2e8f0;border-radius:16px;background:#fff;padding:28px;box-shadow:0 18px 45px rgba(15,23,42,.08);">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#64748b;">GPFE PROC HUB</p>
+        <h1 style="margin:0;font-size:22px;line-height:1.3;">Membuka detail tender di SPSE...</h1>
+        <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:#475569;">
+            Tab ini akan otomatis menuju halaman detail tender resmi.
+        </p>
+        {% if list_url %}
+        <iframe src="{{ list_url }}" title="SPSE warm-up" aria-hidden="true" style="position:absolute;width:1px;height:1px;left:-9999px;border:0;"></iframe>
+        {% endif %}
+        <noscript>
+            <p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#475569;">
+                JavaScript tidak aktif. Buka halaman detail secara manual:
+            </p>
+        </noscript>
+        <a href="{{ detail_url }}"
+           rel="noopener"
+           referrerpolicy="origin"
+           style="display:inline-flex;margin-top:18px;height:40px;align-items:center;justify-content:center;border-radius:12px;background:#020617;padding:0 16px;color:#fff;text-decoration:none;font-size:14px;font-weight:700;">
+            Buka detail SPSE
+        </a>
+    </main>
+</body>
+</html>

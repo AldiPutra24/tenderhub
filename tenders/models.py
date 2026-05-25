@@ -43,6 +43,12 @@ class Tender(models.Model):
     uraian_pekerjaan_nama_file = models.TextField(blank=True, null=True)
     detail_url = models.URLField(max_length=1000, blank=True, null=True, default="")
 
+    # === LPSE ===
+    lpse_kd = models.IntegerField(blank=True, null=True)
+    lpse_slug = models.CharField(max_length=120, blank=True, default="")
+    lpse_name = models.CharField(max_length=255, blank=True, default="")
+    lpse_detail_url = models.URLField(blank=True, default="")
+
     # === META ===
     tanggal_pembuatan = models.DateField(blank=True, null=True)
 

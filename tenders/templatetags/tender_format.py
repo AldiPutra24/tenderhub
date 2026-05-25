@@ -26,3 +26,24 @@ def tanggal_indonesia(value):
         return "-"
 
     return f"{value.day} {MONTHS_ID.get(value.month, '')} {value.year}"
+
+
+@register.filter
+def rupiah(value):
+    if value in (None, ""):
+        return "Rp 0"
+    try:
+        amount = int(value)
+    except (TypeError, ValueError):
+        return "Rp 0"
+    return "Rp " + f"{amount:,}".replace(",", ".")
+
+
+@register.filter
+def percent_id(value):
+    if value in (None, ""):
+        return "-"
+    try:
+        return f"{float(value):.1f}%"
+    except (TypeError, ValueError):
+        return "-"

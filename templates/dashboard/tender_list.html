@@ -28,6 +28,15 @@
                 <p class="min-w-0 flex-1 truncate font-medium text-slate-700">{{ t.klpd_instansi|default:t.instansi }}</p>
             </div>
 
+            {% if t.lpse_name %}
+            <div class="flex gap-3">
+                <svg class="mt-0.5 h-4 w-4 flex-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 19.25h14.5M6.25 19.25V7.75l5.75-3 5.75 3v11.5M9 10.25h6M9 13.25h6M9 16.25h6"/>
+                </svg>
+                <p class="min-w-0 flex-1 truncate text-slate-600">{{ t.lpse_name }}</p>
+            </div>
+            {% endif %}
+
             <div class="flex gap-3">
                 <svg class="mt-0.5 h-4 w-4 flex-none text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-5.25 7-11.25a7 7 0 1 0-14 0C5 15.75 12 21 12 21Z"/>
@@ -126,14 +135,37 @@
 
         <div class="mt-auto flex items-center justify-between gap-3 pt-5">
             <p class="truncate text-xs text-slate-500">{{ t.metode_pengadaan|default:"Metode belum tersedia" }}</p>
-            <button type="button"
-                    class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
-                    hx-get="/tender/{{ t.id }}/"
-                    hx-target="#modal-content"
-                    hx-swap="innerHTML"
-                    hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">
-                Detail
-            </button>
+            <div class="flex shrink-0 items-center gap-2">
+                {% if t.detail_url %}
+                <a href="{% url 'open_lpse_detail' t.kode_tender %}"
+                   target="_blank"
+                   rel="noopener"
+                   referrerpolicy="origin"
+                   class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                    Buka di LPSE
+                </a>
+                {% elif t.lpse_detail_url %}
+                <a href="{% url 'open_lpse_detail' t.kode_tender %}"
+                   target="_blank"
+                   rel="noopener"
+                   referrerpolicy="origin"
+                   class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                    Buka di LPSE
+                </a>
+                {% else %}
+                <span class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-400">
+                    Detail LPSE belum tersedia
+                </span>
+                {% endif %}
+                <button type="button"
+                        class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
+                        hx-get="/tender/{{ t.id }}/"
+                        hx-target="#modal-content"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">
+                    Detail
+                </button>
+            </div>
         </div>
     </article>
     {% empty %}
@@ -150,3 +182,47 @@
     </div>
     {% endfor %}
 </div>
+
+{% if page_obj %}
+<div class="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-sm text-slate-500">
+        Total <span class="font-semibold text-slate-800">{{ total_count }}</span> tender
+    </p>
+
+    <div class="flex flex-wrap items-center gap-2">
+        {% if page_obj.has_previous %}
+        <button type="button"
+                class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200"
+                hx-get="{{ tender_list_url|default:'/tenders/' }}?{{ pagination_query }}&page={{ page_obj.previous_page_number }}"
+                hx-target="{{ tender_list_target|default:'#tender-list' }}"
+                hx-swap="innerHTML"
+                hx-indicator="#tender-loading">
+            Previous
+        </button>
+        {% else %}
+        <span class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400">
+            Previous
+        </span>
+        {% endif %}
+
+        <span class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-100 px-4 text-sm font-semibold text-slate-700">
+            Halaman {{ page_obj.number }} dari {{ paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <button type="button"
+                class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200"
+                hx-get="{{ tender_list_url|default:'/tenders/' }}?{{ pagination_query }}&page={{ page_obj.next_page_number }}"
+                hx-target="{{ tender_list_target|default:'#tender-list' }}"
+                hx-swap="innerHTML"
+                hx-indicator="#tender-loading">
+            Next
+        </button>
+        {% else %}
+        <span class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400">
+            Next
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
