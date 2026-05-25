@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import re
 import time
@@ -240,6 +241,12 @@ def clean_lpse_mapping_name(value, slug):
     return name or slug
 
 
+def mask_proxy_url(proxy_url):
+    if not proxy_url:
+        return ""
+    return re.sub(r"://([^:@/]+):([^@/]+)@", r"://***:***@", proxy_url)
+
+
 def fetch_detail_html(session, detail_url):
     last_error = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -412,10 +419,24 @@ class Command(BaseCommand):
         parser.add_argument("--enrich-detail", action="store_true", help="Fetch each tender detail page after list scrape")
         parser.add_argument("--detail-only", action="store_true", help="Enrich existing Tender rows without scraping DataTables")
         parser.add_argument("--limit-details", type=int, help="Limit detail enrichment count")
+        parser.add_argument("--use-proxy", action="store_true", help="Use SPSE_PROXY_URL or first SPSE_PROXY_URLS proxy for requests")
+        parser.add_argument("--rotate-proxy", action="store_true", help="Rotate SPSE_PROXY_URLS proxy per slug and on retryable failures")
+        parser.add_argument("--test-proxy", action="store_true", help="Call https://ipv4.webshare.io/ with configured proxy and exit")
 
     def handle(self, *args, **options):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
+        self.use_proxy = options.get("use_proxy") or options.get("rotate_proxy") or options.get("test_proxy")
+        self.rotate_proxy = options.get("rotate_proxy")
+        self.proxy_urls = self.load_proxy_urls() if self.use_proxy else []
+        self.proxy_index = -1
+
+        if self.use_proxy:
+            self.apply_next_proxy(reason="initial")
+
+        if options.get("test_proxy"):
+            self.test_proxy()
+            return
 
         slug_mapping = self.load_slug_mapping()
         self.validate_options(options)
@@ -474,6 +495,8 @@ class Command(BaseCommand):
         failed_slugs = []
 
         for slug in slugs:
+            if self.rotate_proxy:
+                self.apply_next_proxy(reason=f"slug={slug}")
             lpse_name = slug_mapping.get(slug, slug)
             created, updated, skipped, failed = self.scrape_slug(
                 slug,
@@ -502,6 +525,58 @@ class Command(BaseCommand):
         )
         if failed_slugs:
             self.stderr.write(self.style.WARNING(f"FAILED_SLUGS {', '.join(failed_slugs)}"))
+
+    def load_proxy_urls(self):
+        proxy_urls = []
+        env_urls = os.getenv("SPSE_PROXY_URLS", "")
+        if env_urls:
+            proxy_urls.extend(url.strip() for url in env_urls.split(",") if url.strip())
+
+        single_url = os.getenv("SPSE_PROXY_URL", "").strip()
+        if single_url:
+            proxy_urls.append(single_url)
+
+        unique_urls = []
+        for proxy_url in proxy_urls:
+            if proxy_url not in unique_urls:
+                unique_urls.append(proxy_url)
+
+        if not unique_urls:
+            raise CommandError("Proxy requested but SPSE_PROXY_URL or SPSE_PROXY_URLS is not set.")
+
+        return unique_urls
+
+    def apply_proxy(self, proxy_url):
+        self.session.proxies = {
+            "http": proxy_url,
+            "https": proxy_url,
+        }
+        self.stdout.write(f"USING PROXY {mask_proxy_url(proxy_url)}")
+
+    def apply_next_proxy(self, reason="rotate"):
+        if not self.proxy_urls:
+            return None
+        self.proxy_index = (self.proxy_index + 1) % len(self.proxy_urls)
+        proxy_url = self.proxy_urls[self.proxy_index]
+        self.stdout.write(f"PROXY ROTATE reason={reason}")
+        self.apply_proxy(proxy_url)
+        return proxy_url
+
+    def rotate_proxy_after_failure(self, reason):
+        if not self.rotate_proxy or len(self.proxy_urls) <= 1:
+            return False
+        self.apply_next_proxy(reason=reason)
+        return True
+
+    def test_proxy(self):
+        self.stdout.write("TEST PROXY https://ipv4.webshare.io/")
+        try:
+            response = self.session.get("https://ipv4.webshare.io/", timeout=REQUEST_TIMEOUT_SECONDS)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            proxy_url = self.session.proxies.get("https") or self.session.proxies.get("http") or ""
+            raise CommandError(f"Proxy test failed using {mask_proxy_url(proxy_url)}: {exc}") from exc
+        self.stdout.write(response.text.strip())
 
     def validate_options(self, options):
         if options.get("kode_tender"):
@@ -814,6 +889,15 @@ class Command(BaseCommand):
                 return response
             except requests.HTTPError as exc:
                 last_error = exc
+                status_code = exc.response.status_code if exc.response is not None else None
+                if status_code in (403, 429) and self.rotate_proxy_after_failure(f"http_{status_code}"):
+                    continue
+                if attempt < MAX_RETRIES:
+                    time.sleep(attempt)
+            except (requests.Timeout, requests.ConnectionError) as exc:
+                last_error = exc
+                if self.rotate_proxy_after_failure(exc.__class__.__name__):
+                    continue
                 if attempt < MAX_RETRIES:
                     time.sleep(attempt)
             except requests.RequestException as exc:
