@@ -253,7 +253,19 @@ Get-Content .\slug-undone.md |
 Untuk export seluruh data tender:
 
 ```bash
-python manage.py dumpdata tenders.Tender --indent 2 > spse_tenders.json
+python manage.py dumpdata tenders.Tender --indent 2 --output spse_tenders.json
+```
+
+Di Windows, gunakan Python UTF-8 mode agar karakter seperti zero-width space tidak membuat `dumpdata` gagal:
+
+```powershell
+python -X utf8 manage.py dumpdata tenders.Tender --indent 2 --output spse_tenders.json
+```
+
+Gunakan `--output`, bukan redirect `>`, terutama di Windows PowerShell. Redirect PowerShell bisa membuat file UTF-16 sehingga `loaddata` di Linux gagal dengan error seperti:
+
+```text
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0
 ```
 
 Catatan: `dumpdata` membawa primary key dari database lokal. Ini praktis untuk backup atau import awal, tetapi kurang ideal untuk sync rutin ke VPS yang sudah punya data produksi.
@@ -299,10 +311,16 @@ Setelah pull perubahan model, jalankan migrasi:
 python manage.py migrate
 ```
 
+Ini penting karena beberapa field SPSE bisa panjang. Contohnya `satuankerja` dapat berisi banyak satker sekaligus, sehingga kolom database harus sudah dimigrasikan menjadi `TextField`. Jika belum migrasi, `loaddata` di PostgreSQL bisa gagal dengan:
+
+```text
+value too long for type character varying(255)
+```
+
 Backup data VPS sebelum import:
 
 ```bash
-python manage.py dumpdata tenders.Tender --indent 2 > backup_tenders_before_import.json
+python manage.py dumpdata tenders.Tender --indent 2 --output backup_tenders_before_import.json
 ```
 
 Extract file:
@@ -312,6 +330,28 @@ tar -xzf spse_tenders.tar.gz
 ```
 
 Import:
+
+```bash
+python manage.py loaddata spse_tenders.json
+```
+
+Jika muncul error UTF-8 seperti `byte 0xff in position 0`, berarti file JSON kemungkinan UTF-16. Konversi di VPS:
+
+```bash
+python - <<'PY'
+from pathlib import Path
+path = Path("spse_tenders.json")
+raw = path.read_bytes()
+if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+    text = raw.decode("utf-16")
+    path.write_text(text, encoding="utf-8")
+    print("Converted spse_tenders.json from UTF-16 to UTF-8")
+else:
+    print("spse_tenders.json is not UTF-16 BOM; no conversion needed")
+PY
+```
+
+Lalu ulangi:
 
 ```bash
 python manage.py loaddata spse_tenders.json

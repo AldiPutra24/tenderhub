@@ -14,7 +14,7 @@ class Tender(models.Model):
     # === INSTANSI ===
     instansi = models.CharField(max_length=255, blank=True, null=True, default="")
     klpd_instansi = models.CharField(max_length=255, blank=True, null=True, default="")
-    satuankerja = models.CharField(max_length=255, blank=True, null=True, default="")
+    satuankerja = models.TextField(blank=True, null=True, default="")
 
     # === STATUS ===
     tahapan = models.CharField(max_length=255, blank=True, null=True, default="")
