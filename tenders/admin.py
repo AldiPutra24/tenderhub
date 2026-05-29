@@ -12,6 +12,7 @@ class TenderAdmin(admin.ModelAdmin):
         "lpse_kd",
         "lpse_name",
         "status",
+        "tender_ulang",
         "tanggal_pembuatan",
         "tahapan",
         "jenis_pengadaan",
@@ -25,6 +26,7 @@ class TenderAdmin(admin.ModelAdmin):
 
     list_filter = (
         "status",
+        "tender_ulang",
         "jenis_pengadaan",
         "klpd_instansi",
         "tanggal_pembuatan",
@@ -57,6 +59,8 @@ class TenderAdmin(admin.ModelAdmin):
                 "lpse_name",
                 "tahapan",
                 "status",
+                "tender_ulang",
+                "alasan_ulang",
                 "tanggal_pembuatan",
             )
         }),

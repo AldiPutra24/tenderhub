@@ -19,6 +19,8 @@ class Tender(models.Model):
     # === STATUS ===
     tahapan = models.CharField(max_length=255, blank=True, null=True, default="")
     status = models.CharField(max_length=50, blank=True, null=True, default="")
+    tender_ulang = models.BooleanField(default=False)
+    alasan_ulang = models.TextField(blank=True, null=True, default="")
 
     # === KEUANGAN ===
     sumber_dana = models.CharField(max_length=255, blank=True, null=True, default="")

@@ -1,4 +1,5 @@
 from django import template
+import re
 
 
 register = template.Library()
@@ -47,3 +48,17 @@ def percent_id(value):
         return f"{float(value):.1f}%"
     except (TypeError, ValueError):
         return "-"
+
+
+@register.filter
+def sumber_dana_tahun(sumber_dana, tahun_anggaran):
+    if not sumber_dana:
+        return "-"
+
+    value = str(sumber_dana).strip()
+    tahun = str(tahun_anggaran or "").strip()
+    if not tahun:
+        return value
+    if re.search(rf"\b{re.escape(tahun)}\b", value):
+        return value
+    return f"{value} {tahun}"

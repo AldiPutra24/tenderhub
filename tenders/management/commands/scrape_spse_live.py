@@ -25,6 +25,7 @@ REQUEST_TIMEOUT_SECONDS = 60
 MAX_RETRIES = 3
 TOKEN_RE = re.compile(r"authenticityToken\s*=\s*['\"]([^'\"]+)['\"]")
 EXCLUDED_SLUGS = {"latihan", "dpd"}
+STATUS_CHOICES = {"OPEN", "ONGOING", "FINISH", "FAILED"}
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
@@ -63,6 +64,34 @@ def clean_html(value):
 
 def clean_html_text(value):
     return clean_html(value)
+
+
+def clean_package_name(value):
+    return clean_html(value).lstrip(" ,").strip()
+
+
+def is_tender_ulang(value):
+    return "tender ulang" in str(value or "").lower()
+
+
+def normalize_detail_label(value):
+    return re.sub(r"\s+", " ", clean_html_text(value).lower()).strip()
+
+
+def is_alasan_ulang_label(value):
+    label = normalize_detail_label(value)
+    compact_label = label.replace(" ", "")
+    return label in {"alasan di ulang", "alasan ulang"} or compact_label == "alasandiulang"
+
+
+def append_year_to_sumber_dana(sumber_dana, tahun_anggaran):
+    sumber_dana = clean_html_text(sumber_dana)
+    tahun_anggaran = clean_html_text(tahun_anggaran)
+    if not sumber_dana or not tahun_anggaran:
+        return sumber_dana
+    if re.search(rf"\b{re.escape(tahun_anggaran)}\b", sumber_dana):
+        return sumber_dana
+    return f"{sumber_dana} {tahun_anggaran}".strip()
 
 
 def parse_jenis_pengadaan_tahun(value):
@@ -302,6 +331,9 @@ def parse_detail_html(html, base_url):
         elif label == "Tahap Tender Saat Ini":
             parsed["tahapan"] = value_text
             parsed["status"] = normalize_status_from_tahapan(value_text)
+        elif is_alasan_ulang_label(label):
+            parsed["tender_ulang"] = True
+            parsed["alasan_ulang"] = value_text
         elif label == "K/L/PD/Instansi Lainnya":
             parsed["klpd_instansi"] = value_text
             parsed["instansi"] = value_text
@@ -356,6 +388,8 @@ def apply_detail_to_tender(tender, parsed):
     set_if_exists(defaults, "tanggal_pembuatan", parsed.get("tanggal_pembuatan"))
     set_if_exists(defaults, "tahapan", parsed.get("tahapan"))
     set_if_exists(defaults, "status", parsed.get("status"))
+    set_if_exists(defaults, "tender_ulang", parsed.get("tender_ulang"))
+    set_if_exists(defaults, "alasan_ulang", parsed.get("alasan_ulang"))
     set_if_exists(defaults, "klpd_instansi", parsed.get("klpd_instansi"))
     set_if_exists(defaults, "instansi", parsed.get("instansi"))
     set_if_exists(defaults, "satuankerja", parsed.get("satuankerja"))
@@ -369,7 +403,7 @@ def apply_detail_to_tender(tender, parsed):
     set_if_exists(defaults, "peserta_count", parsed.get("peserta_count"))
     set_if_exists(defaults, "kode_rup", parsed.get("kode_rup"))
     set_if_exists(defaults, "nama_paket_rup", parsed.get("nama_paket_rup"))
-    set_if_exists(defaults, "sumber_dana", parsed.get("sumber_dana"))
+    set_if_exists(defaults, "sumber_dana", append_year_to_sumber_dana(parsed.get("sumber_dana"), parsed.get("tahun_anggaran")))
     set_if_exists(defaults, "uraian_pekerjaan", parsed.get("uraian_pekerjaan"))
     set_if_exists(defaults, "uraian_pekerjaan_nama_file", parsed.get("uraian_pekerjaan_nama_file"))
 
@@ -412,6 +446,21 @@ class Command(BaseCommand):
         parser.add_argument("--enrich-detail", action="store_true", help="Fetch each tender detail page after list scrape")
         parser.add_argument("--detail-only", action="store_true", help="Enrich existing Tender rows without scraping DataTables")
         parser.add_argument("--limit-details", type=int, help="Limit detail enrichment count")
+        parser.add_argument(
+            "--missing-detail-only",
+            action="store_true",
+            help="Only enrich tenders with missing detail fields such as tanggal_pembuatan, lokasi, sumber_dana, satuankerja, nilai_pagu, or peserta_count",
+        )
+        parser.add_argument(
+            "--list-status",
+            action="append",
+            help="Filter list scraping by normalized status. Can be repeated or comma-separated: OPEN,ONGOING,FINISH,FAILED",
+        )
+        parser.add_argument(
+            "--detail-status",
+            action="append",
+            help="Filter detail enrichment by status. Can be repeated or comma-separated: OPEN,ONGOING,FINISH,FAILED",
+        )
 
     def handle(self, *args, **options):
         self.session = requests.Session()
@@ -424,6 +473,9 @@ class Command(BaseCommand):
         length = options["length"]
         sleep_min = options["sleep_min"]
         sleep_max = options["sleep_max"]
+        missing_detail_only = options.get("missing_detail_only")
+        list_statuses = self.parse_status_filter(options.get("list_status"), "--list-status")
+        detail_statuses = self.parse_status_filter(options.get("detail_status"), "--detail-status")
 
         if length <= 0:
             raise CommandError("--length must be greater than 0")
@@ -440,6 +492,8 @@ class Command(BaseCommand):
                 options.get("slug"),
                 sleep_min,
                 sleep_max,
+                detail_statuses,
+                missing_detail_only,
             )
             self.stdout.write(
                 self.style.SUCCESS(
@@ -450,16 +504,30 @@ class Command(BaseCommand):
             return
 
         if options.get("detail_only"):
-            created, updated, skipped, failed = self.enrich_existing_details(
-                options["slug"],
-                tahun,
-                options.get("limit_details"),
-                sleep_min,
-                sleep_max,
-            )
+            if options.get("all_slugs"):
+                created, updated, skipped, failed, slugs_processed = self.enrich_all_existing_details(
+                    self.resolve_slugs(options, slug_mapping),
+                    tahun,
+                    options.get("limit_details"),
+                    sleep_min,
+                    sleep_max,
+                    detail_statuses,
+                    missing_detail_only,
+                )
+            else:
+                created, updated, skipped, failed = self.enrich_existing_details(
+                    options["slug"],
+                    tahun,
+                    options.get("limit_details"),
+                    sleep_min,
+                    sleep_max,
+                    detail_statuses,
+                    missing_detail_only,
+                )
+                slugs_processed = 1
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"TOTAL slugs_processed=1 created={created} updated={updated} "
+                    f"TOTAL slugs_processed={slugs_processed} created={created} updated={updated} "
                     f"skipped={skipped} failed={failed}"
                 )
             )
@@ -485,6 +553,9 @@ class Command(BaseCommand):
                 sleep_max,
                 options.get("enrich_detail"),
                 options.get("limit_details"),
+                detail_statuses,
+                list_statuses,
+                missing_detail_only,
             )
             total_created += created
             total_updated += updated
@@ -512,16 +583,42 @@ class Command(BaseCommand):
             return
 
         if options.get("detail_only"):
-            if options.get("all_slugs"):
-                raise CommandError("--detail-only currently requires --slug, not --all-slugs")
-            if not options.get("slug") or not options.get("tahun"):
-                raise CommandError("--detail-only requires --slug and --tahun")
+            if bool(options.get("slug")) == bool(options.get("all_slugs")):
+                raise CommandError("--detail-only requires exactly one of --slug or --all-slugs")
+            if not options.get("tahun"):
+                raise CommandError("--detail-only requires --tahun")
             return
 
         if bool(options.get("slug")) == bool(options.get("all_slugs")):
             raise CommandError("Use exactly one of --slug or --all-slugs")
         if not options.get("tahun"):
             raise CommandError("--tahun is required for list scraping")
+
+    def parse_status_filter(self, raw_values, option_name):
+        if not raw_values:
+            return set()
+
+        statuses = set()
+        for raw_value in raw_values:
+            for value in str(raw_value).split(","):
+                status = value.strip().upper()
+                if status:
+                    statuses.add(status)
+
+        invalid_statuses = sorted(statuses - STATUS_CHOICES)
+        if invalid_statuses:
+            raise CommandError(
+                f"{option_name} only accepts OPEN, ONGOING, FINISH, FAILED. "
+                f"Invalid: {', '.join(invalid_statuses)}"
+            )
+        if statuses and not model_has_field(Tender, "status"):
+            raise CommandError(f"{option_name} requires Tender.status field")
+        return statuses
+
+    def status_matches(self, status, status_filter):
+        if not status_filter:
+            return True
+        return clean_html_text(status).upper() in status_filter
 
     def resolve_slugs(self, options, slug_mapping):
         if options.get("slug"):
@@ -573,7 +670,21 @@ class Command(BaseCommand):
 
         return {}
 
-    def scrape_slug(self, slug, lpse_name, tahun, max_pages, length, sleep_min, sleep_max, enrich_detail=False, limit_details=None):
+    def scrape_slug(
+        self,
+        slug,
+        lpse_name,
+        tahun,
+        max_pages,
+        length,
+        sleep_min,
+        sleep_max,
+        enrich_detail=False,
+        limit_details=None,
+        detail_statuses=None,
+        list_statuses=None,
+        missing_detail_only=False,
+    ):
         self.stdout.write(f"START slug={slug} tahun={tahun}")
         list_url = self.build_list_url(slug, tahun)
         try:
@@ -626,6 +737,12 @@ class Command(BaseCommand):
             page_failed = 0
 
             for row in rows:
+                row_status = normalize_status_from_tahapan(row[3] if isinstance(row, list) and len(row) > 3 else "")
+                if not self.status_matches(row_status, list_statuses):
+                    skipped += 1
+                    page_skipped += 1
+                    continue
+
                 try:
                     result = self.upsert_row(row, slug, lpse_name)
                 except DatabaseError as exc:
@@ -650,9 +767,18 @@ class Command(BaseCommand):
                     page_skipped += 1
 
                 if enrich_detail and result in {"created", "updated"}:
+                    if not self.status_matches(row_status, detail_statuses):
+                        continue
                     if limit_details is None or detail_count < limit_details:
                         kode_tender = clean_html(row[0])
-                        detail_result = self.enrich_tender_by_kode(kode_tender, slug, sleep_min, sleep_max)
+                        detail_result = self.enrich_tender_by_kode(
+                            kode_tender,
+                            slug,
+                            sleep_min,
+                            sleep_max,
+                            detail_statuses,
+                            missing_detail_only,
+                        )
                         detail_count += 1
                         if detail_result == "failed":
                             failed += 1
@@ -729,25 +855,47 @@ class Command(BaseCommand):
         response = self.request_with_retry("POST", dt_url, headers=headers, data=data)
         return response.json()
 
-    def enrich_single_kode(self, kode_tender, slug, sleep_min, sleep_max):
-        result = self.enrich_tender_by_kode(kode_tender, slug, sleep_min, sleep_max)
+    def enrich_single_kode(self, kode_tender, slug, sleep_min, sleep_max, detail_statuses=None, missing_detail_only=False):
+        result = self.enrich_tender_by_kode(kode_tender, slug, sleep_min, sleep_max, detail_statuses, missing_detail_only)
         if result == "updated":
             return 0, 1, 0, 0
         if result == "skipped":
             return 0, 0, 1, 0
         return 0, 0, 0, 1
 
-    def enrich_tender_by_kode(self, kode_tender, slug, sleep_min, sleep_max):
+    def enrich_tender_by_kode(self, kode_tender, slug, sleep_min, sleep_max, detail_statuses=None, missing_detail_only=False):
         tender = Tender.objects.filter(kode_tender=str(kode_tender)).first()
         if not tender:
             self.stderr.write(self.style.WARNING(f"Tender kode_tender={kode_tender} not found"))
             return "failed"
+        if detail_statuses and not self.status_matches(getattr(tender, "status", ""), detail_statuses):
+            self.stdout.write(
+                f"Detail skipped kode_tender={kode_tender}: status={getattr(tender, 'status', '')} "
+                f"not in {','.join(sorted(detail_statuses))}"
+            )
+            return "skipped"
+        if missing_detail_only and not self.tender_has_missing_detail(tender):
+            self.stdout.write(f"Detail skipped kode_tender={kode_tender}: detail fields already present")
+            return "skipped"
         return self.enrich_tender_detail(tender, slug, sleep_min, sleep_max)
 
-    def enrich_existing_details(self, slug, tahun, limit_details, sleep_min, sleep_max):
+    def enrich_existing_details(
+        self,
+        slug,
+        tahun,
+        limit_details,
+        sleep_min,
+        sleep_max,
+        detail_statuses=None,
+        missing_detail_only=False,
+    ):
         queryset = Tender.objects.all()
         if model_has_field(Tender, "tahun_anggaran"):
             queryset = queryset.filter(tahun_anggaran=str(tahun))
+        if detail_statuses:
+            queryset = queryset.filter(status__in=sorted(detail_statuses))
+        if missing_detail_only:
+            queryset = queryset.filter(self.build_missing_detail_filter())
 
         slug_filter = Q(detail_url__icontains=f"/{slug}/") | Q(lpse_detail_url__icontains=f"/{slug}/")
         if model_has_field(Tender, "lpse_slug"):
@@ -769,6 +917,70 @@ class Command(BaseCommand):
             else:
                 failed += 1
         return 0, updated, skipped, failed
+
+    def build_missing_detail_filter(self):
+        missing_filter = Q(pk__isnull=True)
+        text_fields = ["lokasi_pekerjaan", "sumber_dana", "satuankerja"]
+        null_fields = ["tanggal_pembuatan", "nilai_pagu", "peserta_count"]
+
+        for field_name in text_fields:
+            if model_has_field(Tender, field_name):
+                missing_filter |= Q(**{f"{field_name}__isnull": True}) | Q(**{field_name: ""})
+
+        for field_name in null_fields:
+            if model_has_field(Tender, field_name):
+                missing_filter |= Q(**{f"{field_name}__isnull": True})
+
+        return missing_filter
+
+    def tender_has_missing_detail(self, tender):
+        for field_name in ("lokasi_pekerjaan", "sumber_dana", "satuankerja"):
+            if model_has_field(Tender, field_name) and not getattr(tender, field_name, None):
+                return True
+
+        for field_name in ("tanggal_pembuatan", "nilai_pagu", "peserta_count"):
+            if model_has_field(Tender, field_name) and getattr(tender, field_name, None) is None:
+                return True
+
+        return False
+
+    def enrich_all_existing_details(
+        self,
+        slugs,
+        tahun,
+        limit_details,
+        sleep_min,
+        sleep_max,
+        detail_statuses=None,
+        missing_detail_only=False,
+    ):
+        total_created = 0
+        total_updated = 0
+        total_skipped = 0
+        total_failed = 0
+
+        for slug in slugs:
+            self.stdout.write(f"DETAIL START slug={slug} tahun={tahun}")
+            created, updated, skipped, failed = self.enrich_existing_details(
+                slug,
+                tahun,
+                limit_details,
+                sleep_min,
+                sleep_max,
+                detail_statuses,
+                missing_detail_only,
+            )
+            total_created += created
+            total_updated += updated
+            total_skipped += skipped
+            total_failed += failed
+            self.stdout.write(
+                f"DETAIL DONE slug={slug} created={created} updated={updated} "
+                f"skipped={skipped} failed={failed}"
+            )
+            time.sleep(random.uniform(sleep_min, sleep_max))
+
+        return total_created, total_updated, total_skipped, total_failed, len(slugs)
 
     def enrich_tender_detail(self, tender, slug, sleep_min, sleep_max):
         detail_url = tender.detail_url or tender.lpse_detail_url
@@ -827,7 +1039,8 @@ class Command(BaseCommand):
         if not kode_tender:
             return "skipped"
 
-        nama_paket = clean_html(row[1])
+        tender_ulang = is_tender_ulang(row[1])
+        nama_paket = clean_package_name(row[1])
         klpd_instansi = clean_html(row[2])
         tahapan = clean_html(row[3])
         nilai_hps = parse_money(row[4])
@@ -844,6 +1057,12 @@ class Command(BaseCommand):
         self.set_if_exists(defaults, "klpd_instansi", klpd_instansi)
         self.set_if_exists(defaults, "tahapan", tahapan)
         self.set_if_exists(defaults, "status", normalize_status(tahapan))
+        self.set_if_exists(defaults, "tender_ulang", tender_ulang)
+        self.set_if_exists(
+            defaults,
+            "alasan_ulang",
+            "Terdeteksi badge Tender Ulang pada daftar tender SPSE" if tender_ulang else "",
+        )
         self.set_if_exists(defaults, "nilai_hps", nilai_hps)
         self.set_if_exists(defaults, "jenis_pengadaan", jenis_pengadaan)
         self.set_if_exists(defaults, "metode_pengadaan", metode_pengadaan)
@@ -859,6 +1078,7 @@ class Command(BaseCommand):
             "source": "spse_inaproc_datatables",
             "slug": slug,
             "detail_url": detail_url,
+            "tender_ulang": tender_ulang,
             "spse_list_unknown": {
                 "row_9": row[9] if len(row) > 9 else None,
                 "row_11": row[11] if len(row) > 11 else None,

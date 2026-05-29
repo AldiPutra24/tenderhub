@@ -17,6 +17,9 @@
             {% else %}
             <span class="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ t.status|default:"UNKNOWN" }}</span>
             {% endif %}
+            {% if t.tender_ulang %}
+            <span class="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">Tender Ulang</span>
+            {% endif %}
         </div>
 
         <h2 class="text-xl font-semibold leading-7 tracking-tight text-slate-950">
@@ -117,13 +120,27 @@
     </section>
 
     <section class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
+            <p class="text-xs font-medium text-slate-500">Tahap Tender Saat Ini</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.tahapan|default:"-" }}</p>
+        </div>
+        {% if t.tender_ulang or t.alasan_ulang %}
+        <div class="rounded-2xl border border-orange-200 bg-orange-50 p-4 sm:col-span-2">
+            <p class="text-xs font-medium text-orange-700">Alasan Ulang</p>
+            <p class="mt-1 text-sm font-semibold text-orange-950">{{ t.alasan_ulang|default:"Tender ini ditandai sebagai Tender Ulang oleh SPSE." }}</p>
+        </div>
+        {% endif %}
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <p class="text-xs font-medium text-slate-500">Lokasi</p>
             <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.lokasi_pekerjaan|default:"-" }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <p class="text-xs font-medium text-slate-500">Nilai HPS</p>
-            <p class="mt-1 text-sm font-semibold text-slate-950">Rp {{ t.nilai_hps|default:"-" }}</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.nilai_hps|rupiah }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Nilai Pagu Paket</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.nilai_pagu|rupiah }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <p class="text-xs font-medium text-slate-500">Tanggal Pembuatan</p>
@@ -138,12 +155,16 @@
             <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.klpd_instansi|default:t.instansi|default:"-" }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <p class="text-xs font-medium text-slate-500">Satuan Kerja</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.satuankerja|default:"-" }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <p class="text-xs font-medium text-slate-500">LPSE</p>
             <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.lpse_name|default:"-" }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <p class="text-xs font-medium text-slate-500">Sumber Dana</p>
-            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.sumber_dana|default:"-" }}</p>
+            <p class="mt-1 text-sm font-semibold text-slate-950">{{ t.sumber_dana|sumber_dana_tahun:t.tahun_anggaran }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
             <p class="text-xs font-medium text-slate-500">Jenis & Metode Pengadaan</p>
