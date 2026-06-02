@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Tender, TenderBookmark
+from .models import LPSEWatchlist, Tender, TenderBookmark
 
 @admin.register(Tender)
 class TenderAdmin(admin.ModelAdmin):
@@ -112,3 +112,10 @@ class TenderAdmin(admin.ModelAdmin):
     uraian_file_link.short_description = "Uraian Singkat Pekerjaan"
 
 admin.site.register(TenderBookmark)
+
+
+@admin.register(LPSEWatchlist)
+class LPSEWatchlistAdmin(admin.ModelAdmin):
+    list_display = ("user", "lpse_name", "lpse_slug", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "user__email", "lpse_name", "lpse_slug")

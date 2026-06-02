@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Daftar LPSE - GPFE PROC HUB{% endblock %}
+{% block title %}Semua LPSE Data - GPFE PROC HUB{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
             <p class="text-sm font-medium text-slate-500">Direktori LPSE</p>
-            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Daftar LPSE</h1>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Semua LPSE Data</h1>
             <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                 Ringkasan paket, nilai, status, dan aktivitas tender per LPSE.
             </p>
@@ -17,6 +17,16 @@
             <p class="mt-1 text-xl font-semibold text-slate-950">{{ total_count }}</p>
         </div>
     </div>
+
+    {% if messages %}
+    <div class="space-y-2">
+        {% for message in messages %}
+        <div class="rounded-2xl border px-4 py-3 text-sm font-semibold {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <form id="lpse-filter-form" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-[1fr_220px_140px]">
         <input type="hidden" name="page" value="1">

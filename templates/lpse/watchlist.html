@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Watchlist LPSE - GPFE PROC HUB{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-sm font-medium text-slate-500">Direktori LPSE</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Watchlist LPSE</h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Pantau hingga {{ watchlist_limit }} LPSE prioritas untuk pipeline tender vendor.
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p class="text-xs font-medium text-slate-500">Watchlist aktif</p>
+                <p class="mt-1 text-xl font-semibold text-slate-950">{{ watchlist_count }}/{{ watchlist_limit }}</p>
+            </div>
+            <a href="{% url 'lpse_list' %}" class="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                Semua LPSE Data
+            </a>
+        </div>
+    </div>
+
+    <div id="watchlist-lpse-list">
+        {% include "lpse/watchlist_partial.html" %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Tender Explorer - GPFE PROC HUB{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <section class="rounded-lg border border-subtle bg-surface p-5 shadow-card">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <p class="text-sm font-black uppercase text-primary">Tender Explorer</p>
+                <h1 class="mt-1 text-2xl font-black tracking-tight text-primary-ink sm:text-3xl">
+                    Pusat Pencarian Tender
+                </h1>
+                <p class="mt-2 max-w-3xl text-sm font-semibold leading-6 text-secondary">
+                    Cari peluang tender, filter berdasarkan status dan jenis pengadaan, urutkan nilai HPS, tanggal, atau AI Match.
+                </p>
+            </div>
+            <div class="rounded-lg border border-subtle bg-surface-muted px-3 py-2 text-sm font-bold text-secondary">
+                Total {{ total_count }} tender
+            </div>
+        </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <aside class="lg:sticky lg:top-24 lg:self-start">
+            <form id="tender-filter-form" class="rounded-lg border border-subtle bg-surface p-4 shadow-card">
+                <input type="hidden" name="page" value="1">
+                <div class="mb-5">
+                    <h2 class="text-sm font-black text-primary-ink">Filter Tender</h2>
+                    <p class="mt-1 text-sm font-semibold text-muted">HTMX search aktif tanpa reload halaman penuh.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="tender-search" class="mb-1.5 block text-sm font-bold text-secondary">Search</label>
+                        <input id="tender-search"
+                               type="text"
+                               name="q"
+                               value="{{ selected_filters.q }}"
+                               placeholder="Nama paket, kode, instansi..."
+                               class="field-control"
+                               hx-get="{% url 'tender_list' %}"
+                               hx-target="#tender-list"
+                               hx-include="#tender-filter-form"
+                               hx-trigger="keyup changed delay:500ms"
+                               hx-indicator="#tender-loading">
+                    </div>
+
+                    <div>
+                        <label for="status-filter" class="mb-1.5 block text-sm font-bold text-secondary">Status</label>
+                        <select id="status-filter" name="status" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            <option value="">Semua Status</option>
+                            <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
+                            <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
+                            <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
+                            <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="jenis-pengadaan-filter" class="mb-1.5 block text-sm font-bold text-secondary">Jenis Pengadaan</label>
+                        <select id="jenis-pengadaan-filter" name="jenis_pengadaan" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            <option value="">Semua Jenis</option>
+                            {% for option in filter_options.jenis_pengadaan %}
+                            <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="klpd-filter" class="mb-1.5 block text-sm font-bold text-secondary">Instansi</label>
+                        <select id="klpd-filter" name="klpd_instansi" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            <option value="">Semua Instansi</option>
+                            {% for option in filter_options.klpd_instansi %}
+                            <option value="{{ option }}" {% if selected_filters.klpd_instansi == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="sort-filter" class="mb-1.5 block text-sm font-bold text-secondary">Sort</label>
+                        <select id="sort-filter" name="sort" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            {% for value, label in filter_options.sort.items %}
+                            <option value="{{ value }}" {% if selected_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="per-page-filter" class="mb-1.5 block text-sm font-bold text-secondary">Pagination</label>
+                        <select id="per-page-filter" name="per_page" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            {% for option in allowed_per_page %}
+                            <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </aside>
+
+        <div class="min-w-0">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-black text-primary-ink">Hasil Tender</h2>
+                    <p class="text-sm font-semibold text-muted">Bookmark, AI Match, dan modal detail tetap berjalan.</p>
+                </div>
+                <div id="tender-loading" class="htmx-indicator hidden items-center gap-2 rounded-lg border border-subtle bg-surface px-3 py-1.5 text-xs font-bold text-muted shadow-card sm:flex">
+                    <span class="h-2 w-2 animate-pulse rounded-full bg-primary"></span>
+                    Memuat...
+                </div>
+            </div>
+            <div id="tender-list">
+                {% include "dashboard/tender_list.html" %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

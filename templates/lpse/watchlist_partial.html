@@ -1,0 +1,78 @@
+{% load tender_format %}
+
+{% if messages %}
+<div class="mb-4 space-y-2">
+    {% for message in messages %}
+    <div class="rounded-2xl border px-4 py-3 text-sm font-semibold {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% elif message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700{% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if watchlist_entries %}
+<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for lpse in watchlist_entries %}
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <a href="{% url 'lpse_detail' lpse.slug %}" class="line-clamp-2 text-base font-semibold leading-6 text-slate-950 hover:text-slate-700">
+                    {{ lpse.lpse_name }}
+                </a>
+                <p class="mt-2 text-xs font-medium text-slate-500">Slug LPSE</p>
+                <span class="mt-1 inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                    {{ lpse.real_slug|default:lpse.slug }}
+                </span>
+            </div>
+            <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Watchlisted</span>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-2xl bg-slate-50 p-3">
+                <p class="text-xs font-medium text-slate-500">Total Tender</p>
+                <p class="mt-1 text-sm font-semibold text-slate-950">{{ lpse.total_paket }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-3">
+                <p class="text-xs font-medium text-slate-500">Total HPS</p>
+                <p class="mt-1 truncate text-sm font-semibold text-slate-950">{{ lpse.total_hps|rupiah }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-3">
+                <p class="text-xs font-medium text-slate-500">OPEN</p>
+                <p class="mt-1 text-sm font-semibold text-emerald-700">{{ lpse.paket_open }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-3">
+                <p class="text-xs font-medium text-slate-500">ONGOING</p>
+                <p class="mt-1 text-sm font-semibold text-blue-700">{{ lpse.paket_ongoing }}</p>
+            </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <a href="{% url 'lpse_detail' lpse.slug %}" class="text-sm font-semibold text-slate-600 hover:text-slate-950">
+                Lihat detail
+            </a>
+            <form method="post"
+                  action="{% url 'lpse_watchlist_remove' lpse.slug %}"
+                  hx-post="{% url 'lpse_watchlist_remove' lpse.slug %}"
+                  hx-target="#watchlist-lpse-list"
+                  hx-swap="innerHTML">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                    Remove dari Watchlist
+                </button>
+            </form>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+    <h2 class="text-base font-semibold text-slate-950">Belum ada LPSE dalam watchlist.</h2>
+    <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+        Tambahkan LPSE dari halaman Semua LPSE Data.
+    </p>
+    <a href="{% url 'lpse_list' %}" class="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+        Buka Semua LPSE Data
+    </a>
+</div>
+{% endif %}

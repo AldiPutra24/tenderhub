@@ -153,7 +153,7 @@
                 {% elif t.match_data.missing %}
                     {{ t.match_data.missing.0 }}
                 {% else %}
-                    Lengkapi profil vendor untuk rekomendasi lebih akurat.
+                    Lengkapi profil vendor untuk AI Match yang lebih akurat.
                 {% endif %}
             </p>
         </div>
@@ -176,7 +176,7 @@
                 {% endif %}
                 <button type="button"
                         class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
-                        hx-get="/tender/{{ t.id }}/"
+                        hx-get="{% url 'tender_detail' t.id %}"
                         hx-target="#modal-content"
                         hx-swap="innerHTML"
                         hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">

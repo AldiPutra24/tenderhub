@@ -1,14 +1,17 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.db.models import F, Q
+from django.db import IntegrityError
+from django.db.models import Case, CharField, Count, F, Q, Sum, Value, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.http import urlencode
+from django.views.decorators.http import require_POST
 
-from .models import Tender, TenderBookmark
+from .models import LPSEWatchlist, Tender, TenderBookmark
 from .services import lpse_analytics
 from .services.matching import calculate_tender_match
 
@@ -39,6 +42,7 @@ LPSE_TENDER_SORT_OPTIONS = {
 
 ALLOWED_PER_PAGE = [15, 25, 50, 100]
 DEFAULT_PER_PAGE = 25
+LPSE_WATCHLIST_LIMIT = 5
 
 
 LOGIN_REQUIRED_MATCH = {
@@ -246,30 +250,91 @@ def get_paginated_tenders(request, base_queryset=None, sort_options=None, tender
     }
 
 
-def dashboard(request):
-    tender_context = get_paginated_tenders(request)
-    tenders = tender_context["tenders"]
-    match_scores = [
-        tender.match_data.get("score")
-        for tender in tenders
-        if tender.match_data.get("score") is not None
+def get_lpse_label_expression():
+    return Case(
+        When(lpse_name__gt="", then=F("lpse_name")),
+        When(lpse_slug__gt="", then=F("lpse_slug")),
+        default=Value("LPSE Tidak Diketahui"),
+        output_field=CharField(),
+    )
+
+
+def build_dashboard_overview(request):
+    base_queryset = Tender.objects.all()
+    total_tender = base_queryset.count()
+    total_hps = base_queryset.aggregate(total=Sum("nilai_hps"))["total"] or 0
+    tender_aktif = base_queryset.filter(status__in=["OPEN", "ONGOING"]).count()
+    total_lpse = (
+        base_queryset.annotate(lpse_label=get_lpse_label_expression())
+        .values("lpse_label")
+        .distinct()
+        .count()
+    )
+
+    top_10_lpse = list(
+        base_queryset.annotate(lpse_label=get_lpse_label_expression())
+        .values("lpse_label")
+        .annotate(package_count=Count("id"), total_hps=Sum("nilai_hps"))
+        .order_by("-package_count", "lpse_label")[:10]
+    )
+    max_lpse_count = max((item["package_count"] for item in top_10_lpse), default=0)
+    for index, item in enumerate(top_10_lpse, start=1):
+        item["rank"] = index
+        item["progress"] = round((item["package_count"] / max_lpse_count) * 100) if max_lpse_count else 0
+
+    latest_tenders = list(
+        base_queryset.order_by(F("tanggal_pembuatan").desc(nulls_last=True), "-id")[:15]
+    )
+    attach_match_data(request, latest_tenders)
+
+    procurement_definitions = [
+        ("Pekerjaan Konstruksi", Q(jenis_pengadaan__icontains="Konstruksi")),
+        ("Barang", Q(jenis_pengadaan__icontains="Barang")),
+        ("Jasa Konsultansi", Q(jenis_pengadaan__icontains="Konsultansi")),
+        ("Jasa Lainnya", Q(jenis_pengadaan__icontains="Jasa Lainnya")),
     ]
+    procurement_type_stats = []
+    for label, query in procurement_definitions:
+        count = base_queryset.filter(query).count()
+        procurement_type_stats.append({
+            "label": label,
+            "count": count,
+            "percentage": round((count / total_tender) * 100, 1) if total_tender else 0,
+        })
 
-    saved_ids = []
-    if request.user.is_authenticated:
-        saved_ids = list(TenderBookmark.objects.filter(
-            user=request.user
-        ).values_list("tender_id", flat=True))
+    top_lpse = top_10_lpse[0] if top_10_lpse else None
+    top_procurement = max(procurement_type_stats, key=lambda item: item["count"], default=None)
+    highest_hps_lpse = max(top_10_lpse, key=lambda item: item["total_hps"] or 0, default=None)
+    latest_tender = latest_tenders[0] if latest_tenders else None
 
+    return {
+        "dashboard_stats": {
+            "total_tender": total_tender,
+            "total_hps": total_hps,
+            "total_lpse": total_lpse,
+            "tender_aktif": tender_aktif,
+        },
+        "top_10_lpse": top_10_lpse,
+        "latest_tenders": latest_tenders,
+        "procurement_type_stats": procurement_type_stats,
+        "quick_insights": {
+            "top_lpse": top_lpse,
+            "top_procurement": top_procurement,
+            "highest_hps_lpse": highest_hps_lpse,
+            "latest_tender": latest_tender,
+        },
+    }
+
+
+def dashboard(request):
     context = {
-        "tenders": tenders,
-        "saved_ids": saved_ids,
-        "filter_options": get_filter_options(),
-        "selected_filters": tender_context["selected_filters"],
-        "best_match_score": max(match_scores) if match_scores else None,
-        **{key: value for key, value in tender_context.items() if key not in {"tenders", "selected_filters"}},
+        **build_dashboard_overview(request),
     }
     return render(request, "dashboard/index.html", context)
+
+
+def settings_redirect(request):
+    return redirect("vendor_profile")
 
 
 def tender_list(request):
@@ -279,16 +344,23 @@ def tender_list(request):
     saved_ids = []
     if request.user.is_authenticated:
         saved_ids = list(TenderBookmark.objects.filter(
-            user=request.user
+            user=request.user,
+            tender__in=tenders,
         ).values_list("tender_id", flat=True))
 
     context = {
         "tenders": tenders,
         "saved_ids": saved_ids,
+        "filter_options": get_filter_options(),
         "selected_filters": tender_context["selected_filters"],
         **{key: value for key, value in tender_context.items() if key not in {"tenders", "selected_filters"}},
     }
-    return render(request, "dashboard/tender_list.html", context)
+
+    if request.headers.get("HX-Request"):
+        return render(request, "dashboard/tender_list.html", context)
+
+    context["tender_list_url"] = reverse("tender_list")
+    return render(request, "dashboard/tender_explorer.html", context)
 
 
 def tender_detail(request, pk):
@@ -297,12 +369,44 @@ def tender_detail(request, pk):
     return render(request, "dashboard/tender_detail.html", {"t": tender})
 
 
-def lpse_list_view(request):
+def get_per_page_from_params(params):
+    try:
+        per_page = int(params.get("per_page", DEFAULT_PER_PAGE))
+    except (TypeError, ValueError):
+        return DEFAULT_PER_PAGE
+    return per_page if per_page in ALLOWED_PER_PAGE else DEFAULT_PER_PAGE
+
+
+def get_page_number_from_params(params):
+    try:
+        page = int(params.get("page", 1))
+    except (TypeError, ValueError):
+        return 1
+    return max(page, 1)
+
+
+def get_lpse_request_params(request):
+    return request.POST if request.method == "POST" else request.GET
+
+
+def get_watchlisted_slugs(user):
+    if not user.is_authenticated:
+        return set()
+
+    return set(
+        LPSEWatchlist.objects.filter(user=user)
+        .values_list("lpse_slug", flat=True)
+    )
+
+
+def build_lpse_list_context(request, params=None):
+    params = params or get_lpse_request_params(request)
     entries = build_lpse_entries()
-    query = request.GET.get("q", "").strip().casefold()
-    sort = request.GET.get("sort") or "total_desc"
-    per_page = get_per_page(request)
-    page = get_page_number(request)
+    query_value = params.get("q", "")
+    query = query_value.strip().casefold()
+    sort = params.get("sort") or "total_desc"
+    per_page = get_per_page_from_params(params)
+    page = get_page_number_from_params(params)
 
     if query:
         entries = [
@@ -322,29 +426,146 @@ def lpse_list_view(request):
 
     paginator = Paginator(entries, per_page)
     page_obj = paginator.get_page(page)
-    params = request.GET.copy()
-    params.pop("page", None)
-    params["per_page"] = str(per_page)
+    pagination_params = {
+        key: params.get(key)
+        for key in ("q", "sort")
+        if params.get(key)
+    }
+    pagination_params["per_page"] = str(per_page)
 
-    context = {
+    watchlisted_slugs = get_watchlisted_slugs(request.user)
+    for entry in page_obj.object_list:
+        entry["is_watchlisted"] = entry["slug"] in watchlisted_slugs
+
+    return {
         "lpse_entries": page_obj.object_list,
         "page_obj": page_obj,
         "paginator": paginator,
         "per_page": per_page,
         "allowed_per_page": ALLOWED_PER_PAGE,
-        "pagination_query": params.urlencode(),
+        "pagination_query": urlencode(pagination_params),
         "total_count": paginator.count,
-        "selected": {"q": request.GET.get("q", ""), "sort": sort},
+        "selected": {"q": query_value, "sort": sort},
         "sort_options": {
             "total_desc": "Total Paket terbanyak",
             "hps_desc": "Total HPS tertinggi",
             "open_desc": "Paket OPEN terbanyak",
             "name_asc": "Nama LPSE A-Z",
         },
+        "watchlisted_slugs": watchlisted_slugs,
+        "watchlist_count": len(watchlisted_slugs),
+        "watchlist_limit": LPSE_WATCHLIST_LIMIT,
+        "watchlist_limit_reached": len(watchlisted_slugs) >= LPSE_WATCHLIST_LIMIT,
     }
 
+
+def lpse_list_view(request):
+    context = build_lpse_list_context(request)
     template = "lpse/list_partial.html" if request.headers.get("HX-Request") else "lpse/list.html"
     return render(request, template, context)
+
+
+def get_lpse_entry_or_404(slug):
+    for entry in build_lpse_entries():
+        if entry["slug"] == slug:
+            return entry
+
+    raise Http404("LPSE tidak ditemukan")
+
+
+def build_lpse_watchlist_context(request):
+    watchlists = list(
+        LPSEWatchlist.objects.filter(user=request.user)
+        .only("lpse_slug", "lpse_name", "created_at")
+        .order_by("-created_at")
+    )
+    entries_by_slug = {entry["slug"]: entry for entry in build_lpse_entries()}
+    watchlist_entries = []
+
+    for watchlist in watchlists:
+        entry = entries_by_slug.get(watchlist.lpse_slug)
+        if entry:
+            item = entry.copy()
+        else:
+            item = {
+                "slug": watchlist.lpse_slug,
+                "real_slug": watchlist.lpse_slug,
+                "lpse_name": watchlist.lpse_name,
+                "total_paket": 0,
+                "total_hps": 0,
+                "total_pagu": 0,
+                "paket_open": 0,
+                "paket_ongoing": 0,
+                "paket_finish": 0,
+                "paket_failed": 0,
+                "latest_tender_date": None,
+            }
+        item["created_at"] = watchlist.created_at
+        watchlist_entries.append(item)
+
+    return {
+        "watchlist_entries": watchlist_entries,
+        "watchlist_count": len(watchlist_entries),
+        "watchlist_limit": LPSE_WATCHLIST_LIMIT,
+    }
+
+
+@login_required
+def lpse_watchlist_view(request):
+    return render(request, "lpse/watchlist.html", build_lpse_watchlist_context(request))
+
+
+def render_lpse_watchlist_mutation_response(request):
+    current_url = request.headers.get("HX-Current-URL", "")
+    if request.headers.get("HX-Request"):
+        if "/lpse/watchlist" in current_url:
+            return render(request, "lpse/watchlist_partial.html", build_lpse_watchlist_context(request))
+        return render(request, "lpse/list_partial.html", build_lpse_list_context(request, request.POST))
+
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("lpse_list")
+    return redirect(next_url)
+
+
+@login_required
+@require_POST
+def add_lpse_watchlist(request, slug):
+    entry = get_lpse_entry_or_404(slug)
+
+    if LPSEWatchlist.objects.filter(user=request.user, lpse_slug=entry["slug"]).exists():
+        messages.info(request, f"{entry['lpse_name']} sudah ada di watchlist.")
+        return render_lpse_watchlist_mutation_response(request)
+
+    if LPSEWatchlist.objects.filter(user=request.user).count() >= LPSE_WATCHLIST_LIMIT:
+        messages.error(request, "Maksimal 5 LPSE dalam watchlist untuk saat ini.")
+        return render_lpse_watchlist_mutation_response(request)
+
+    try:
+        LPSEWatchlist.objects.create(
+            user=request.user,
+            lpse_slug=entry["slug"],
+            lpse_name=entry["lpse_name"],
+        )
+        messages.success(request, f"{entry['lpse_name']} ditambahkan ke watchlist.")
+    except IntegrityError:
+        messages.info(request, f"{entry['lpse_name']} sudah ada di watchlist.")
+
+    return render_lpse_watchlist_mutation_response(request)
+
+
+@login_required
+@require_POST
+def remove_lpse_watchlist(request, slug):
+    deleted_count, _ = LPSEWatchlist.objects.filter(
+        user=request.user,
+        lpse_slug=slug,
+    ).delete()
+
+    if deleted_count:
+        messages.success(request, "LPSE dihapus dari watchlist.")
+    else:
+        messages.info(request, "LPSE tidak ditemukan dalam watchlist Anda.")
+
+    return render_lpse_watchlist_mutation_response(request)
 
 
 def build_lpse_entries():
@@ -518,8 +739,8 @@ def toggle_bookmark(request, pk):
     if not created:
         bookmark.delete()
 
-        # Kalau dari halaman saved -> hapus card.
-        if request.headers.get("HX-Current-URL", "").endswith("/dashboard/saved/"):
+        current_url = request.headers.get("HX-Current-URL", "")
+        if current_url.endswith("/dashboard/saved/") or current_url.endswith("/tenders/bookmarks/"):
             return HttpResponse("")
 
         saved = False
@@ -548,3 +769,7 @@ def saved_tenders(request):
         "tenders": tenders,
         "saved_ids": saved_ids,
     })
+
+
+def saved_tenders_legacy(request):
+    return redirect("saved_tenders")

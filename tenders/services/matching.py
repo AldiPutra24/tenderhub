@@ -8,7 +8,7 @@ PROFILE_INCOMPLETE_MATCH = {
     "label": "Lengkapi Profil",
     "reasons": [],
     "missing": [
-        "Lengkapi profil vendor untuk rekomendasi lebih akurat.",
+        "Lengkapi profil vendor untuk AI Match yang lebih akurat.",
     ],
     "requires_profile": True,
 }

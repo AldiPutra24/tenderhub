@@ -41,6 +41,28 @@ def rupiah(value):
 
 
 @register.filter
+def rupiah_compact(value):
+    if value in (None, ""):
+        return "Rp 0"
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return "Rp 0"
+
+    units = [
+        (1_000_000_000_000, "T"),
+        (1_000_000_000, "M"),
+        (1_000_000, "Jt"),
+    ]
+    for divisor, suffix in units:
+        if abs(amount) >= divisor:
+            number = amount / divisor
+            formatted = f"{number:.1f}".rstrip("0").rstrip(".").replace(".", ",")
+            return f"Rp {formatted} {suffix}"
+    return "Rp " + f"{int(amount):,}".replace(",", ".")
+
+
+@register.filter
 def percent_id(value):
     if value in (None, ""):
         return "-"

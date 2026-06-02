@@ -17,6 +17,20 @@
                     },
                     boxShadow: {
                         soft: "0 18px 45px -24px rgba(15, 23, 42, 0.35)",
+                        card: "0 12px 30px rgba(16, 32, 51, 0.08)",
+                    },
+                    colors: {
+                        brand: {
+                            navy: "#01106F",
+                            blue: "#2563eb",
+                            cyan: "#06b6d4",
+                            green: "#10b981",
+                            amber: "#f59e0b",
+                            red: "#C80000",
+                            purple: "#45006B",
+                            ink: "#102033",
+                            bg: "#f7fbff",
+                        },
                     },
                 },
             },
@@ -28,12 +42,58 @@
 
     <style>
         [x-cloak] { display: none !important; }
+        :root {
+            --primary: #01106F;
+            --primary-hover: #45006B;
+            --primary-soft: #eef4ff;
+            --accent: #C80000;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #C80000;
+            --surface: #ffffff;
+            --surface-muted: #f7fbff;
+            --border-subtle: #dbe4f0;
+            --text-primary: #102033;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+        }
+        .primary { background: var(--primary); color: #fff; }
+        .primary-hover:hover { background: var(--primary-hover); color: #fff; }
+        .primary-soft { background: var(--primary-soft); color: var(--primary); }
+        .success { background: rgba(16, 185, 129, 0.1); color: #047857; border-color: rgba(16, 185, 129, 0.24); }
+        .warning { background: rgba(245, 158, 11, 0.12); color: #b45309; border-color: rgba(245, 158, 11, 0.28); }
+        .danger { background: rgba(200, 0, 0, 0.08); color: var(--danger); border-color: rgba(200, 0, 0, 0.2); }
+        .surface { background: var(--surface); }
+        .surface-muted { background: var(--surface-muted); }
+        .border-subtle { border-color: var(--border-subtle); }
+        .text-primary { color: var(--primary); }
+        .text-primary-ink { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .text-muted { color: var(--text-muted); }
+        .bg-surface { background: var(--surface); }
+        .bg-surface-muted { background: var(--surface-muted); }
+        .field-control {
+            width: 100%;
+            height: 2.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-subtle);
+            background: #fff;
+            padding: 0 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: box-shadow .15s ease, border-color .15s ease;
+        }
+        .field-control:focus {
+            border-color: rgba(1, 16, 111, 0.36);
+            box-shadow: 0 0 0 4px rgba(1, 16, 111, 0.08);
+        }
     </style>
 </head>
 
-<body class="h-full bg-slate-50 text-slate-900 antialiased">
+<body class="h-full bg-brand-bg text-brand-ink antialiased">
 {% block body %}
-<div x-data="{ sidebarOpen: false, modalOpen: false }"
+<div x-data="{ sidebarOpen: false, modalOpen: false, tenderMenuOpen: {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' or request.resolver_match.url_name == 'saved_tenders' or request.resolver_match.url_name == 'saved_tenders_legacy' %}true{% else %}false{% endif %}, lpseMenuOpen: {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' or request.resolver_match.url_name == 'lpse_watchlist' %}true{% else %}false{% endif %} }"
      @open-modal.window="modalOpen = true"
      @keydown.escape.window="modalOpen = false"
      class="min-h-screen">
@@ -44,49 +104,118 @@
          @click="sidebarOpen = false"
          class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden"></div>
 
-    <aside class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white/95 shadow-soft backdrop-blur transition-transform duration-300 lg:translate-x-0"
+    <aside class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-subtle bg-white/95 shadow-soft backdrop-blur transition-transform duration-300 lg:translate-x-0"
            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-        <div class="flex h-16 items-center gap-3 border-b border-slate-100 px-5">
-            <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white shadow-sm">
+        <div class="flex h-16 items-center gap-3 border-b border-subtle px-5">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg primary text-sm font-black shadow-sm">
                 GP
             </div>
             <div>
-                <p class="text-sm font-semibold tracking-tight text-slate-950">GPFE PROC HUB</p>
-                <p class="text-xs text-slate-500">AI Procurement Intelligence Platform</p>
+                <p class="text-sm font-black tracking-tight text-primary-ink">GPFE PROC HUB</p>
+                <p class="text-xs font-semibold text-muted">Procurement Intelligence Platform</p>
             </div>
         </div>
 
         <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-5">
             <a href="/dashboard/"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
+               class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition {% if request.resolver_match.url_name == 'dashboard' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12.75h6.5v7.5h-6.5v-7.5ZM13.75 3.75h6.5v16.5h-6.5V3.75ZM3.75 3.75h6.5v5.5h-6.5v-5.5Z"/>
                 </svg>
                 Dashboard
             </a>
 
-            <a href="/dashboard/saved/"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'saved_tenders' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
-                <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 4.75A2.25 2.25 0 0 1 9 2.5h6a2.25 2.25 0 0 1 2.25 2.25v16.1l-5.25-3.25-5.25 3.25V4.75Z"/>
-                </svg>
-                Tender Tersimpan
-            </a>
+            <div class="space-y-1">
+                <button type="button"
+                        @click="tenderMenuOpen = !tenderMenuOpen"
+                        class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' or request.resolver_match.url_name == 'saved_tenders' or request.resolver_match.url_name == 'saved_tenders_legacy' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}"
+                        :aria-expanded="tenderMenuOpen.toString()">
+                    <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.75h14M5 12h14M5 17.25h9"/>
+                    </svg>
+                    <span class="flex-1">Daftar Tender</span>
+                    <svg class="h-4 w-4 flex-none transition-transform duration-200"
+                         :class="tenderMenuOpen ? 'rotate-180' : ''"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
 
-            <a href="{% url 'lpse_list' %}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
-                <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17"/>
-                </svg>
-                Daftar LPSE
-            </a>
+                <div x-show="tenderMenuOpen"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="ml-6 space-y-1 border-l border-subtle pl-3">
+                    <a href="{% url 'tender_list' %}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                        <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' %}primary{% else %}bg-slate-300{% endif %}"></span>
+                        Tender Explorer
+                    </a>
+                    <a href="{% url 'saved_tenders' %}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'saved_tenders' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                        <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'saved_tenders' %}primary{% else %}bg-slate-300{% endif %}"></span>
+                        Bookmarks
+                    </a>
+                </div>
+            </div>
 
-            <a href="{% url 'vendor_profile' %}"
-               class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition {% if request.resolver_match.url_name == 'vendor_profile' %}bg-slate-950 text-white shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-950{% endif %}">
+            <div class="space-y-1">
+                <button type="button"
+                        @click="lpseMenuOpen = !lpseMenuOpen"
+                        class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' or request.resolver_match.url_name == 'lpse_watchlist' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}"
+                        :aria-expanded="lpseMenuOpen.toString()">
+                    <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17"/>
+                    </svg>
+                    <span class="flex-1">Daftar LPSE</span>
+                    <svg class="h-4 w-4 flex-none transition-transform duration-200"
+                         :class="lpseMenuOpen ? 'rotate-180' : ''"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="1.8"
+                         aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
+
+                <div x-show="lpseMenuOpen"
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="ml-6 space-y-1 border-l border-subtle pl-3">
+                    <a href="{% url 'lpse_list' %}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                        <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}primary{% else %}bg-slate-300{% endif %}"></span>
+                        Semua LPSE Data
+                    </a>
+                    <a href="{% url 'lpse_watchlist' %}"
+                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_watchlist' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                        <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'lpse_watchlist' %}primary{% else %}bg-slate-300{% endif %}"></span>
+                        Watchlist LPSE
+                    </a>
+                </div>
+            </div>
+
+            <a href="{% url 'settings' %}"
+               class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition {% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'vendor_profile' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75h4.5l.55 2.2a7.4 7.4 0 0 1 1.55.9l2.16-.67 2.25 3.9-1.62 1.57c.04.26.06.53.06.8s-.02.54-.06.8l1.62 1.57-2.25 3.9-2.16-.67a7.4 7.4 0 0 1-1.55.9l-.55 2.2h-4.5l-.55-2.2a7.4 7.4 0 0 1-1.55-.9l-2.16.67-2.25-3.9 1.62-1.57a5.4 5.4 0 0 1-.06-.8c0-.27.02-.54.06-.8L3.26 10.08l2.25-3.9 2.16.67a7.4 7.4 0 0 1 1.55-.9l.53-2.2Z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14.75a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z"/>
                 </svg>
-                Profil Vendor
+                Settings
             </a>
         </nav>
 
@@ -121,15 +250,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/>
                     </svg>
                 </button>
-
-                <div class="relative hidden flex-1 sm:block">
-                    <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"/>
-                    </svg>
-                    <input type="search"
-                           placeholder="Cari tender, instansi, lokasi..."
-                           class="h-10 w-full max-w-xl rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-200/70">
-                </div>
 
                 <div class="ml-auto flex items-center gap-2">
                     <button type="button"

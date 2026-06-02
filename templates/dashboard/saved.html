@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}GPFE PROC HUB{% endblock %}
+{% block title %}Bookmarks - GPFE PROC HUB{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <p class="text-sm font-medium text-slate-500">Saved workspace</p>
-            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Tender Tersimpan</h1>
+            <p class="text-sm font-medium text-slate-500">Daftar Tender</p>
+            <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Bookmarks</h1>
             <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                 Kumpulan tender prioritas Anda untuk dipantau dan dianalisis lebih lanjut.
             </p>
@@ -29,10 +29,10 @@
         </div>
         <h2 class="mt-4 text-base font-semibold text-slate-950">Belum ada tender tersimpan</h2>
         <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-            Simpan tender dari dashboard agar mudah dipantau kembali saat menyusun prioritas penawaran.
+            Belum ada tender yang disimpan. Simpan tender dari halaman Tender Explorer.
         </p>
-        <a href="/dashboard/" class="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
-            Lihat Dashboard
+        <a href="{% url 'tender_list' %}" class="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+            Buka Tender Explorer
         </a>
     </div>
     {% endif %}
