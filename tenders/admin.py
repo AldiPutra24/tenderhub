@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import LPSEWatchlist, Tender, TenderBookmark
+from .models import LPSEWatchlist, Tender, TenderBookmark, TenderNotification
 
 @admin.register(Tender)
 class TenderAdmin(admin.ModelAdmin):
@@ -119,3 +119,11 @@ class LPSEWatchlistAdmin(admin.ModelAdmin):
     list_display = ("user", "lpse_name", "lpse_slug", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "user__email", "lpse_name", "lpse_slug")
+
+
+@admin.register(TenderNotification)
+class TenderNotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "tender", "notification_type", "is_read", "created_at", "read_at")
+    list_filter = ("notification_type", "is_read", "created_at", "read_at")
+    search_fields = ("user__username", "user__email", "title", "tender__kode_tender", "tender__nama_paket")
+    list_select_related = ("user", "tender")

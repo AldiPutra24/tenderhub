@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from .models import LPSEWatchlist, Tender, TenderBookmark
 from .services import lpse_analytics
 from .services.matching import calculate_tender_match
+from .services.notifications import get_notifications, get_unread_count, mark_all_read, mark_notification_read
 
 
 PROCUREMENT_TYPE_OPTIONS = [
@@ -335,6 +336,39 @@ def dashboard(request):
 
 def settings_redirect(request):
     return redirect("vendor_profile")
+
+
+def render_notification_widget(request):
+    return render(request, "partials/notification_bell.html", {
+        "tender_notifications": get_notifications(request.user),
+        "tender_notifications_count": get_unread_count(request.user, generate=False),
+    })
+
+
+@login_required
+@require_POST
+def mark_tender_notification_read(request, notification_id):
+    mark_notification_read(notification_id, request.user)
+    if request.headers.get("HX-Request"):
+        return render_notification_widget(request)
+    return redirect(request.META.get("HTTP_REFERER") or "dashboard")
+
+
+@login_required
+@require_POST
+def mark_all_tender_notifications_read(request):
+    mark_all_read(request.user)
+    if request.headers.get("HX-Request"):
+        return render_notification_widget(request)
+    return redirect(request.META.get("HTTP_REFERER") or "dashboard")
+
+
+@login_required
+def open_tender_notification(request, notification_id):
+    notification = mark_notification_read(notification_id, request.user)
+    if not notification:
+        raise Http404("Notifikasi tidak ditemukan")
+    return redirect(f"{reverse('tender_list')}?{urlencode({'tender': notification.tender.kode_tender})}")
 
 
 def tender_list(request):

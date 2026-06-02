@@ -94,3 +94,38 @@ class LPSEWatchlist(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.lpse_name}"
+
+
+class TenderNotification(models.Model):
+    WATCHLIST_LPSE = "watchlist_lpse"
+    AI_MATCH_HIGH = "ai_match_high"
+    NOTIFICATION_TYPE_CHOICES = [
+        (WATCHLIST_LPSE, "Watchlist LPSE"),
+        (AI_MATCH_HIGH, "AI Match Tinggi"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tender_notifications")
+    tender = models.ForeignKey(Tender, on_delete=models.CASCADE, related_name="notifications")
+    notification_type = models.CharField(max_length=32, choices=NOTIFICATION_TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "tender", "notification_type"],
+                name="unique_user_tender_notification_type",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["user", "is_read", "-created_at"],
+                name="tenders_ten_user_id_d785ce_idx",
+            ),
+        ]
+        ordering = ["is_read", "-created_at"]
+
+    def __str__(self):
+        return f"{self.user} - {self.title}"
