@@ -1,5 +1,6 @@
+from django.contrib import messages
+from django.contrib.auth import SESSION_KEY
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
 from django.contrib.auth.models import User
 from .forms import VendorRegisterForm, VendorProfileForm
 from .models import VendorProfile
@@ -17,7 +18,8 @@ def register_view(request):
                 username=email,
                 email=email,
                 password=password,
-                first_name=form.cleaned_data["full_name"]
+                first_name=form.cleaned_data["full_name"],
+                is_active=False,
             )
 
             VendorProfile.objects.create(
@@ -33,13 +35,22 @@ def register_view(request):
                 country=form.cleaned_data.get("country"),
             )
 
-            login(request, user)
-            return redirect("dashboard")
+            messages.success(
+                request,
+                "Pendaftaran berhasil. Akun kakak sedang menunggu approval admin.",
+            )
+            return redirect("login")
 
     else:
         form = VendorRegisterForm()
 
     return render(request, "users/register.html", {"form": form})
+
+
+def inactive_view(request):
+    return render(request, "users/inactive.html", {
+        "has_auth_session": bool(request.session.get(SESSION_KEY)),
+    })
 
 
 @login_required

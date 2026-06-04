@@ -1,6 +1,86 @@
 from django import forms
+from django.conf import settings
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.core.cache import cache
+import logging
 from .models import VendorProfile
+
+
+logger = logging.getLogger(__name__)
+
+
+class ApprovedAuthenticationForm(AuthenticationForm):
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": "Login gagal. Periksa kembali email/username dan password.",
+        "inactive": "Login gagal. Akun anda belum aktif atau masih menunggu approval admin.",
+        "locked": "Terlalu banyak percobaan login gagal. Silakan coba lagi beberapa menit.",
+    }
+
+    def clean(self):
+        username = self.cleaned_data.get("username")
+        cache_key = self.get_cache_key(username)
+
+        if cache.get(f"{cache_key}:locked"):
+            logger.warning("Login blocked by throttle for username=%s ip=%s", username, self.get_client_ip())
+            raise forms.ValidationError(
+                self.error_messages["locked"],
+                code="locked",
+            )
+
+        if username and User.objects.filter(username=username, is_active=False).exists():
+            self.record_failed_attempt(username, reason="inactive")
+            raise forms.ValidationError(
+                self.error_messages["inactive"],
+                code="inactive",
+            )
+
+        try:
+            cleaned_data = super().clean()
+        except forms.ValidationError:
+            self.record_failed_attempt(username, reason="invalid")
+            raise forms.ValidationError(
+                self.error_messages["invalid_login"],
+                code="invalid_login",
+            )
+
+        self.reset_failed_attempts(username)
+        return cleaned_data
+
+    def get_client_ip(self):
+        if not self.request:
+            return "unknown"
+
+        forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if forwarded_for:
+            return forwarded_for.split(",", 1)[0].strip()
+        return self.request.META.get("REMOTE_ADDR", "unknown")
+
+    def get_cache_key(self, username):
+        normalized_username = (username or "").strip().casefold() or "anonymous"
+        return f"login-fail:{self.get_client_ip()}:{normalized_username}"
+
+    def record_failed_attempt(self, username, reason):
+        cache_key = self.get_cache_key(username)
+        attempts = cache.get(cache_key, 0) + 1
+        cache.set(cache_key, attempts, settings.LOGIN_LOCKOUT_SECONDS)
+        logger.warning(
+            "Login failed reason=%s username=%s ip=%s attempts=%s",
+            reason,
+            username,
+            self.get_client_ip(),
+            attempts,
+        )
+
+        if attempts >= settings.LOGIN_FAILURE_LIMIT:
+            cache.set(f"{cache_key}:locked", True, settings.LOGIN_LOCKOUT_SECONDS)
+            logger.warning("Login locked username=%s ip=%s", username, self.get_client_ip())
+
+    def reset_failed_attempts(self, username):
+        cache_key = self.get_cache_key(username)
+        cache.delete(cache_key)
+        cache.delete(f"{cache_key}:locked")
 
 
 class VendorRegisterForm(forms.Form):

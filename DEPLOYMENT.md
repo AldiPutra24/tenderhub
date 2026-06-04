@@ -1,6 +1,10 @@
 # GPFE PROC HUB Deployment
 
-This project is configured for Render Web Service hosting with a Neon PostgreSQL production database.
+Panduan ini menggunakan server production generic dengan PostgreSQL `DATABASE_URL`.
+Domain production utama:
+
+- `inaprochub.gpfe.id`
+- `www.inaprochub.gpfe.id` jika subdomain `www` diarahkan ke aplikasi
 
 ## Local Development
 
@@ -10,14 +14,34 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Local development falls back to SQLite when `DATABASE_URL` is not set.
+Local development memakai SQLite saat `DATABASE_URL` tidak diset.
 
-## Render Build and Start Commands
+## Production Environment
+
+Set environment variable berikut di server production:
+
+```env
+SECRET_KEY=
+ENVIRONMENT=production
+DEBUG=False
+ALLOWED_HOSTS=inaprochub.gpfe.id,www.inaprochub.gpfe.id
+CSRF_TRUSTED_ORIGINS=https://inaprochub.gpfe.id,https://www.inaprochub.gpfe.id
+DATABASE_URL=
+ENABLE_SECURE_SSL=True
+SECURE_SSL_REDIRECT=True
+ADMIN_URL_PATH=admin
+```
+
+`SECRET_KEY` wajib diisi dari environment. Jangan simpan secret, password, token, cookie, atau connection string di repository.
+
+## Build and Start
 
 Build command:
 
 ```bash
-pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+pip install -r requirements.txt
+python manage.py collectstatic --noinput
+python manage.py migrate
 ```
 
 Start command:
@@ -28,35 +52,38 @@ gunicorn core.wsgi:application
 
 ## Deployment Checklist
 
-1. Push the `tenderapp` project to GitHub.
-2. Create a Neon PostgreSQL database.
-3. Copy the Neon `DATABASE_URL`.
-4. Create a Render Web Service from the GitHub repository.
-5. Add Render environment variables:
-   - `SECRET_KEY`: a strong Django secret key.
-   - `DEBUG`: `False`.
-   - `ALLOWED_HOSTS`: your Render hostname, for example `gpfe-proc-hub.onrender.com`.
-   - `DATABASE_URL`: the Neon connection string.
-   - `CSRF_TRUSTED_ORIGINS`: your Render origin, for example `https://gpfe-proc-hub.onrender.com`.
-6. Deploy the Render service.
-7. Create a superuser:
+1. Deploy folder `tenderapp` ke server production.
+2. Siapkan PostgreSQL dan isi `DATABASE_URL`.
+3. Isi environment variable production di atas.
+4. Jalankan `python manage.py migrate`.
+5. Jalankan `python manage.py collectstatic --noinput`.
+6. Buat superuser:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-8. Import tender data:
+7. Import tender data jika diperlukan:
 
 ```bash
 python manage.py import_tenders path/to/tender-data.xlsx
 ```
 
+8. Approve user vendor dari Django Admin dengan mengubah `is_active=True`.
+
+## Security Checks
+
+- Pastikan `DEBUG=False` di production.
+- Pastikan `ALLOWED_HOSTS` hanya berisi domain production.
+- Pastikan `CSRF_TRUSTED_ORIGINS` memakai origin HTTPS production.
+- Pastikan HTTPS aktif sebelum mengaktifkan HSTS preload.
+- Pastikan static files dilayani dari hasil `collectstatic`, bukan dari folder project mentah.
+- Pastikan `.env`, `db.sqlite3`, backup database, log, credential, dan file export sensitif tidak berada di static/media publik.
+
 ## Common Deployment Checks
 
-- `DisallowedHost`: confirm `ALLOWED_HOSTS` contains the Render hostname without `https://`.
-- Static files not loading: confirm `collectstatic` ran and `WhiteNoiseMiddleware` is enabled after `SecurityMiddleware`.
-- CSRF errors: confirm `CSRF_TRUSTED_ORIGINS` contains the full Render origin with `https://`.
-- Database errors: confirm Neon `DATABASE_URL` is set and migrations ran successfully.
-- Missing tables: run `python manage.py migrate` in the Render shell.
-- `collectstatic` failures: check static file references and make sure dependencies installed from `requirements.txt`.
-- Production safety: keep `DEBUG=False` on Render.
+- `DisallowedHost`: cek `ALLOWED_HOSTS` tanpa `https://`.
+- CSRF errors: cek `CSRF_TRUSTED_ORIGINS` memakai origin lengkap dengan `https://`.
+- Static files tidak muncul: cek `collectstatic` dan `WhiteNoiseMiddleware`.
+- Database errors: cek `DATABASE_URL` dan migration.
+- Missing tables: jalankan `python manage.py migrate`.

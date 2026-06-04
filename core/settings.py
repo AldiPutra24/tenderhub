@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+from django.core.management.utils import get_random_secret_key
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,36 +27,82 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    'SECRET_KEY',
-    'django-insecure-ltcq@jnwut%xppx1*8rdcv@x4zjea#)n%ksw@g(h=9so7#nqe=',
+def env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in ("1", "true", "yes", "on")
+
+
+def env_list(name, default=None):
+    value = os.getenv(name)
+    if not value:
+        return list(default or [])
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development').strip().lower()
+IS_PRODUCTION = ENVIRONMENT == 'production'
+
+# SECURITY WARNING: don't run with debug turned on in production.
+DEBUG = env_bool('DEBUG', default=not IS_PRODUCTION)
+
+# SECRET_KEY must come from the environment in production.
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if not IS_PRODUCTION:
+        SECRET_KEY = get_random_secret_key()
+    else:
+        raise ImproperlyConfigured('SECRET_KEY environment variable is required when ENVIRONMENT=production.')
+
+PRODUCTION_HOSTS = ['inaprochub.gpfe.id', 'www.inaprochub.gpfe.id']
+PRODUCTION_CSRF_ORIGINS = [
+    'https://inaprochub.gpfe.id',
+    'https://www.inaprochub.gpfe.id',
+]
+
+ALLOWED_HOSTS = env_list(
+    'ALLOWED_HOSTS',
+    default=PRODUCTION_HOSTS if IS_PRODUCTION else ['localhost', '127.0.0.1', '[::1]', 'testserver'],
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() not in ('false', '0', 'no')
+CSRF_TRUSTED_ORIGINS = env_list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=PRODUCTION_CSRF_ORIGINS if IS_PRODUCTION else [],
+)
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv('ALLOWED_HOSTS', '').split(',')
-    if host.strip()
-]
-
-RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
-    if origin.strip()
-]
-if RENDER_EXTERNAL_HOSTNAME:
-    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+ENABLE_SECURE_SSL = env_bool('ENABLE_SECURE_SSL', default=IS_PRODUCTION)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', default=ENABLE_SECURE_SSL)
+SESSION_COOKIE_SECURE = env_bool('SESSION_COOKIE_SECURE', default=ENABLE_SECURE_SSL)
+CSRF_COOKIE_SECURE = env_bool('CSRF_COOKIE_SECURE', default=ENABLE_SECURE_SSL)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'same-origin'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000' if ENABLE_SECURE_SSL else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=ENABLE_SECURE_SSL)
+SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', default=ENABLE_SECURE_SSL)
+
+CONTENT_SECURITY_POLICY = os.getenv(
+    'CONTENT_SECURITY_POLICY',
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+    "img-src 'self' data: https:; "
+    "font-src 'self' data: https://fonts.gstatic.com; "
+    "connect-src 'self' https://script.google.com https://script.googleusercontent.com; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'",
+)
+
+LOGIN_FAILURE_LIMIT = int(os.getenv('LOGIN_FAILURE_LIMIT', '5'))
+LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '900'))
+ADMIN_URL_PATH = os.getenv('ADMIN_URL_PATH', 'admin').strip('/') or 'admin'
 
 
 # Application definition
@@ -76,11 +124,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'users.middleware.ApprovedUserRequiredMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -161,7 +211,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -173,3 +223,30 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+        "users.forms": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "users.middleware": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

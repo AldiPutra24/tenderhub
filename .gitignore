@@ -8,5 +8,10 @@ __pycache__/
 venv/
 media/
 staticfiles/
+*.log
+*.sqlite3
+*.bak
+*.backup
+*.tar.gz
 ~$*.xlsx
 *.tmp

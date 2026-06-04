@@ -8,7 +8,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import slugify
 from django.urls import reverse
-from django.utils.http import urlencode
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
 from .models import LPSEWatchlist, Tender, TenderBookmark
@@ -338,6 +338,16 @@ def settings_redirect(request):
     return redirect("vendor_profile")
 
 
+def get_safe_redirect_url(request, candidate, fallback):
+    if candidate and url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return fallback
+
+
 def render_notification_widget(request):
     return render(request, "partials/notification_bell.html", {
         "tender_notifications": get_notifications(request.user),
@@ -351,7 +361,7 @@ def mark_tender_notification_read(request, notification_id):
     mark_notification_read(notification_id, request.user)
     if request.headers.get("HX-Request"):
         return render_notification_widget(request)
-    return redirect(request.META.get("HTTP_REFERER") or "dashboard")
+    return redirect(get_safe_redirect_url(request, request.META.get("HTTP_REFERER"), reverse("dashboard")))
 
 
 @login_required
@@ -360,10 +370,11 @@ def mark_all_tender_notifications_read(request):
     mark_all_read(request.user)
     if request.headers.get("HX-Request"):
         return render_notification_widget(request)
-    return redirect(request.META.get("HTTP_REFERER") or "dashboard")
+    return redirect(get_safe_redirect_url(request, request.META.get("HTTP_REFERER"), reverse("dashboard")))
 
 
 @login_required
+@require_POST
 def open_tender_notification(request, notification_id):
     notification = mark_notification_read(notification_id, request.user)
     if not notification:
@@ -556,7 +567,11 @@ def render_lpse_watchlist_mutation_response(request):
             return render(request, "lpse/watchlist_partial.html", build_lpse_watchlist_context(request))
         return render(request, "lpse/list_partial.html", build_lpse_list_context(request, request.POST))
 
-    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("lpse_list")
+    next_url = get_safe_redirect_url(
+        request,
+        request.POST.get("next") or request.META.get("HTTP_REFERER"),
+        reverse("lpse_list"),
+    )
     return redirect(next_url)
 
 
@@ -762,6 +777,7 @@ def get_spse_slug(tender, detail_url=""):
 
 
 @login_required
+@require_POST
 def toggle_bookmark(request, pk):
     tender = get_object_or_404(Tender, id=pk)
 

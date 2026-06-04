@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <form method="post" x-data="{ locationType: '{{ form.location_type.value|default:'indonesia' }}' }" class="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <form method="post" data-location-form class="grid gap-6 lg:grid-cols-[260px_1fr]">
         {% csrf_token %}
 
         <aside class="lg:sticky lg:top-24 lg:self-start">
@@ -137,23 +137,23 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <label for="id_location_type" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Lokasi</label>
-                            <select id="id_location_type" name="location_type" x-model="locationType" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                            <select id="id_location_type" name="location_type" data-location-select class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
                                 <option value="indonesia" {% if form.location_type.value == "indonesia" or not form.location_type.value %}selected{% endif %}>Indonesia</option>
                                 <option value="international" {% if form.location_type.value == "international" %}selected{% endif %}>Internasional</option>
                             </select>
                             {% if form.location_type.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.location_type.errors|striptags }}</p>{% endif %}
                         </div>
-                        <div x-show="locationType === 'indonesia'" x-transition>
+                        <div data-location-section="indonesia" {% if form.location_type.value == "international" %}hidden{% endif %}>
                             <label for="id_province" class="mb-1.5 block text-sm font-medium text-slate-700">Provinsi</label>
                             <input id="id_province" name="province" type="text" value="{{ form.province.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
                             {% if form.province.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.province.errors|striptags }}</p>{% endif %}
                         </div>
-                        <div x-show="locationType === 'indonesia'" x-transition>
+                        <div data-location-section="indonesia" {% if form.location_type.value == "international" %}hidden{% endif %}>
                             <label for="id_city_or_regency" class="mb-1.5 block text-sm font-medium text-slate-700">Kota/Kabupaten</label>
                             <input id="id_city_or_regency" name="city_or_regency" type="text" value="{{ form.city_or_regency.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
                             {% if form.city_or_regency.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.city_or_regency.errors|striptags }}</p>{% endif %}
                         </div>
-                        <div class="sm:col-span-2" x-show="locationType === 'international'" x-transition>
+                        <div class="sm:col-span-2" data-location-section="international" {% if form.location_type.value != "international" %}hidden{% endif %}>
                             <label for="id_country" class="mb-1.5 block text-sm font-medium text-slate-700">Negara</label>
                             <input id="id_country" name="country" type="text" value="{{ form.country.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
                             {% if form.country.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.country.errors|striptags }}</p>{% endif %}
