@@ -30,6 +30,7 @@ DATABASE_URL=
 ENABLE_SECURE_SSL=True
 SECURE_SSL_REDIRECT=True
 ADMIN_URL_PATH=admin
+LOGIN_LOCKOUT_SECONDS=60
 ```
 
 `SECRET_KEY` wajib diisi dari environment. Jangan simpan secret, password, token, cookie, atau connection string di repository.

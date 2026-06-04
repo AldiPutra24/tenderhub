@@ -101,7 +101,7 @@ CONTENT_SECURITY_POLICY = os.getenv(
 )
 
 LOGIN_FAILURE_LIMIT = int(os.getenv('LOGIN_FAILURE_LIMIT', '5'))
-LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '900'))
+LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '60'))
 ADMIN_URL_PATH = os.getenv('ADMIN_URL_PATH', 'admin').strip('/') or 'admin'
 
 

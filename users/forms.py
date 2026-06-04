@@ -3,7 +3,9 @@ from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.utils import timezone
 import logging
+import math
 from .models import VendorProfile
 
 
@@ -15,22 +17,26 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         **AuthenticationForm.error_messages,
         "invalid_login": "Login gagal. Periksa kembali email/username dan password.",
         "inactive": "Login gagal. Akun anda belum aktif atau masih menunggu approval admin.",
-        "locked": "Terlalu banyak percobaan login gagal. Silakan coba lagi beberapa menit.",
+        "locked": "Terlalu banyak percobaan login gagal.",
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lockout_remaining_seconds = 0
 
     def clean(self):
         username = self.cleaned_data.get("username")
         cache_key = self.get_cache_key(username)
+        lockout_remaining = self.get_lockout_remaining_seconds(cache_key)
 
-        if cache.get(f"{cache_key}:locked"):
+        if lockout_remaining > 0:
+            self.lockout_remaining_seconds = lockout_remaining
             logger.warning("Login blocked by throttle for username=%s ip=%s", username, self.get_client_ip())
-            raise forms.ValidationError(
-                self.error_messages["locked"],
-                code="locked",
-            )
+            raise self.get_locked_error()
 
         if username and User.objects.filter(username=username, is_active=False).exists():
-            self.record_failed_attempt(username, reason="inactive")
+            if self.record_failed_attempt(username, reason="inactive"):
+                raise self.get_locked_error()
             raise forms.ValidationError(
                 self.error_messages["inactive"],
                 code="inactive",
@@ -39,7 +45,8 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         try:
             cleaned_data = super().clean()
         except forms.ValidationError:
-            self.record_failed_attempt(username, reason="invalid")
+            if self.record_failed_attempt(username, reason="invalid"):
+                raise self.get_locked_error()
             raise forms.ValidationError(
                 self.error_messages["invalid_login"],
                 code="invalid_login",
@@ -61,10 +68,54 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         normalized_username = (username or "").strip().casefold() or "anonymous"
         return f"login-fail:{self.get_client_ip()}:{normalized_username}"
 
+    def get_now_timestamp(self):
+        return timezone.now().timestamp()
+
+    def get_throttle_state(self, cache_key):
+        state = cache.get(cache_key) or {}
+        if not isinstance(state, dict):
+            return {"failed_attempts": int(state or 0), "locked_until": None}
+        return {
+            "failed_attempts": int(state.get("failed_attempts") or 0),
+            "locked_until": state.get("locked_until"),
+        }
+
+    def get_lockout_remaining_seconds(self, cache_key):
+        state = self.get_throttle_state(cache_key)
+        locked_until = state.get("locked_until")
+        if not locked_until:
+            return 0
+
+        remaining = int(math.ceil(float(locked_until) - self.get_now_timestamp()))
+        if remaining <= 0:
+            cache.delete(cache_key)
+            return 0
+        return remaining
+
+    def get_locked_error(self):
+        return forms.ValidationError(
+            self.error_messages["locked"],
+            code="locked",
+        )
+
     def record_failed_attempt(self, username, reason):
         cache_key = self.get_cache_key(username)
-        attempts = cache.get(cache_key, 0) + 1
-        cache.set(cache_key, attempts, settings.LOGIN_LOCKOUT_SECONDS)
+        state = self.get_throttle_state(cache_key)
+        attempts = state["failed_attempts"] + 1
+        locked_until = None
+
+        if attempts >= settings.LOGIN_FAILURE_LIMIT:
+            locked_until = self.get_now_timestamp() + settings.LOGIN_LOCKOUT_SECONDS
+            self.lockout_remaining_seconds = settings.LOGIN_LOCKOUT_SECONDS
+
+        cache.set(
+            cache_key,
+            {
+                "failed_attempts": attempts,
+                "locked_until": locked_until,
+            },
+            settings.LOGIN_LOCKOUT_SECONDS,
+        )
         logger.warning(
             "Login failed reason=%s username=%s ip=%s attempts=%s",
             reason,
@@ -73,14 +124,14 @@ class ApprovedAuthenticationForm(AuthenticationForm):
             attempts,
         )
 
-        if attempts >= settings.LOGIN_FAILURE_LIMIT:
-            cache.set(f"{cache_key}:locked", True, settings.LOGIN_LOCKOUT_SECONDS)
+        if locked_until:
             logger.warning("Login locked username=%s ip=%s", username, self.get_client_ip())
+            return True
+        return False
 
     def reset_failed_attempts(self, username):
         cache_key = self.get_cache_key(username)
         cache.delete(cache_key)
-        cache.delete(f"{cache_key}:locked")
 
 
 class VendorRegisterForm(forms.Form):

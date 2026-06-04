@@ -76,7 +76,18 @@
                         </div>
                         {% endif %}
 
-                        {% if form.non_field_errors %}
+                        {% if form.lockout_remaining_seconds %}
+                        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                             data-lockout-alert
+                             data-lockout-seconds="{{ form.lockout_remaining_seconds }}">
+                            <p class="font-semibold">⚠️ Terlalu banyak percobaan login gagal.</p>
+                            <p class="mt-1">Silakan coba lagi dalam:</p>
+                            <p class="mt-2 text-lg font-bold tabular-nums" data-lockout-countdown>01:00</p>
+                            <p class="mt-2 hidden font-semibold text-emerald-700" data-lockout-finished>
+                                Lockout selesai. Silakan coba login kembali.
+                            </p>
+                        </div>
+                        {% elif form.non_field_errors %}
                         <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                             {{ form.non_field_errors|striptags }}
                         </div>
@@ -113,6 +124,8 @@
                         </div>
 
                         <button type="submit"
+                                data-login-submit
+                                {% if form.lockout_remaining_seconds %}disabled{% endif %}
                                 class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
                             Login
                         </button>
@@ -129,4 +142,44 @@
         </section>
     </div>
 </main>
+<script>
+    (function () {
+        var alertBox = document.querySelector("[data-lockout-alert]");
+        if (!alertBox) return;
+
+        var countdown = alertBox.querySelector("[data-lockout-countdown]");
+        var finished = alertBox.querySelector("[data-lockout-finished]");
+        var submitButton = document.querySelector("[data-login-submit]");
+        var remaining = parseInt(alertBox.getAttribute("data-lockout-seconds") || "0", 10);
+
+        function formatTime(totalSeconds) {
+            var safeSeconds = Math.max(0, totalSeconds);
+            var minutes = Math.floor(safeSeconds / 60);
+            var seconds = safeSeconds % 60;
+            return String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
+        }
+
+        function tick() {
+            if (countdown) countdown.textContent = formatTime(remaining);
+
+            if (remaining <= 0) {
+                if (finished) finished.classList.remove("hidden");
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.classList.remove("cursor-not-allowed", "opacity-60");
+                }
+                return;
+            }
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add("cursor-not-allowed", "opacity-60");
+            }
+            remaining -= 1;
+            window.setTimeout(tick, 1000);
+        }
+
+        tick();
+    })();
+</script>
 {% endblock %}
