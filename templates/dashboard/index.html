@@ -163,8 +163,7 @@
                                     class="line-clamp-2 text-left font-semibold text-slate-950 hover:text-slate-700"
                                     hx-get="{% url 'tender_detail' tender.id %}"
                                     hx-target="#modal-content"
-                                    hx-swap="innerHTML"
-                                    hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">
+                                    hx-swap="innerHTML">
                                 {{ tender.nama_paket|default:"-" }}
                             </button>
                             <p class="mt-1 text-xs text-slate-500">{{ tender.kode_tender }}</p>

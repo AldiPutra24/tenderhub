@@ -178,8 +178,7 @@
                         class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
                         hx-get="{% url 'tender_detail' t.id %}"
                         hx-target="#modal-content"
-                        hx-swap="innerHTML"
-                        hx-on::after-request="window.dispatchEvent(new CustomEvent('open-modal'))">
+                        hx-swap="innerHTML">
                     Detail
                 </button>
             </div>

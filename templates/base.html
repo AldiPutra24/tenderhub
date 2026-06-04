@@ -513,7 +513,12 @@
                 syncLocationFields(event.target.closest("[data-location-form]") || document);
             });
 
-            document.addEventListener("htmx:afterSwap", function () {
+            document.addEventListener("htmx:afterSwap", function (event) {
+                var target = event.detail && event.detail.target;
+                if (target && target.id === "modal-content") {
+                    openModal();
+                }
+
                 document.querySelectorAll("[data-location-form]").forEach(syncLocationFields);
                 document.querySelectorAll('[data-notification][data-open="true"]').forEach(function (root) {
                     setHidden(root.querySelector("[data-notification-menu]"), false);
