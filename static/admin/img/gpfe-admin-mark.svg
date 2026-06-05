@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">GPFE PROC HUB</title>
+  <rect width="64" height="64" rx="14" fill="#10b981"/>
+  <path d="M17 20h30v7H24v10h18v7H24v8h-7V20Z" fill="#fff"/>
+  <path d="M35 30h12v7H35z" fill="#d1fae5"/>
+</svg>
