@@ -41,8 +41,8 @@ Build command:
 
 ```bash
 pip install -r requirements.txt
-python manage.py collectstatic --noinput
 python manage.py migrate
+python manage.py collectstatic --noinput --clear
 ```
 
 Start command:
@@ -57,20 +57,27 @@ gunicorn core.wsgi:application
 2. Siapkan PostgreSQL dan isi `DATABASE_URL`.
 3. Isi environment variable production di atas.
 4. Jalankan `python manage.py migrate`.
-5. Jalankan `python manage.py collectstatic --noinput`.
-6. Buat superuser:
+5. Jalankan `python manage.py collectstatic --noinput --clear`.
+6. Restart service Gunicorn agar manifest static terbaru dimuat:
+
+```bash
+sudo systemctl restart gunicorn
+```
+
+Sesuaikan `gunicorn` dengan nama service aplikasi di VPS.
+7. Buat superuser:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-7. Import tender data jika diperlukan:
+8. Import tender data jika diperlukan:
 
 ```bash
 python manage.py import_tenders path/to/tender-data.xlsx
 ```
 
-8. Approve user vendor dari Django Admin dengan mengubah `is_active=True`.
+9. Approve user vendor dari Django Admin dengan mengubah `is_active=True`.
 
 ## Security Checks
 
@@ -88,3 +95,31 @@ python manage.py import_tenders path/to/tender-data.xlsx
 - Static files tidak muncul: cek `collectstatic` dan `WhiteNoiseMiddleware`.
 - Database errors: cek `DATABASE_URL` dan migration.
 - Missing tables: jalankan `python manage.py migrate`.
+
+## Admin Error 500 Setelah Deploy
+
+Jika `/admin/login/` mengembalikan HTTP 500 setelah perubahan template atau
+stylesheet admin, rebuild static manifest dan restart proses aplikasi:
+
+```bash
+cd /path/to/tenderapp
+source venv/bin/activate
+python manage.py check
+python manage.py migrate
+python manage.py collectstatic --noinput --clear
+sudo systemctl restart gunicorn
+```
+
+Pastikan asset berikut menghasilkan HTTP 200:
+
+```bash
+curl -I https://inaprochub.gpfe.id/static/admin/css/gpfe_admin.css
+curl -I https://inaprochub.gpfe.id/static/admin/img/gpfe-admin-mark.svg
+curl -I https://inaprochub.gpfe.id/admin/login/
+```
+
+Jika masih 500, baca traceback aplikasi:
+
+```bash
+sudo journalctl -u gunicorn -n 100 --no-pager
+```
