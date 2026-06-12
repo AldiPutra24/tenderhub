@@ -15,6 +15,7 @@ from .models import LPSEWatchlist, Tender, TenderBookmark
 from .services import lpse_analytics
 from .services.matching import calculate_tender_match
 from .services.notifications import get_notifications, get_unread_count, mark_all_read, mark_notification_read
+from .year_utils import extract_budget_years
 
 
 PROCUREMENT_TYPE_OPTIONS = [
@@ -111,8 +112,25 @@ def get_filter_options():
     return {
         "jenis_pengadaan": PROCUREMENT_TYPE_OPTIONS,
         "klpd_instansi": sorted(value for value in klpd_values if value)[:150],
+        "tahun": get_year_options(),
         "sort": SORT_OPTIONS,
     }
+
+
+def get_year_options(queryset=None):
+    queryset = queryset if queryset is not None else Tender.objects.all()
+    values = (
+        queryset.exclude(tahun_anggaran__isnull=True)
+        .exclude(tahun_anggaran="")
+        .values_list("tahun_anggaran", flat=True)
+        .distinct()
+    )
+    years = {
+        year
+        for value in values
+        for year in extract_budget_years(value)
+    }
+    return sorted(years, reverse=True)
 
 
 def get_lpse_tender_filter_options(queryset):
@@ -121,14 +139,9 @@ def get_lpse_tender_filter_options(queryset):
         .values_list("jenis_pengadaan", flat=True)
         .distinct()
     )
-    tahun_values = (
-        queryset.exclude(tahun_anggaran="")
-        .values_list("tahun_anggaran", flat=True)
-        .distinct()
-    )
     return {
         "jenis_pengadaan": sorted(value for value in jenis_values if value),
-        "tahun_anggaran": sorted((value for value in tahun_values if value), reverse=True),
+        "tahun": get_year_options(queryset),
         "sort": LPSE_TENDER_SORT_OPTIONS,
     }
 
@@ -144,7 +157,10 @@ def get_selected_filters(request, sort_options=None):
         "status": request.GET.get("status", "").strip(),
         "jenis_pengadaan": request.GET.get("jenis_pengadaan", "").strip(),
         "klpd_instansi": request.GET.get("klpd_instansi", "").strip(),
-        "tahun_anggaran": request.GET.get("tahun_anggaran", "").strip(),
+        "tahun": request.GET.get(
+            "tahun",
+            request.GET.get("tahun_anggaran", ""),
+        ).strip(),
         "sort": sort,
     }
 
@@ -196,8 +212,8 @@ def get_filtered_queryset(request, base_queryset=None, sort_options=None):
             | (Q(klpd_instansi="") & Q(instansi=selected["klpd_instansi"]))
         )
 
-    if selected["tahun_anggaran"]:
-        tenders = tenders.filter(tahun_anggaran=selected["tahun_anggaran"])
+    if selected["tahun"]:
+        tenders = tenders.filter(tahun_anggaran__contains=selected["tahun"])
 
     return tenders, selected
 
@@ -262,6 +278,14 @@ def get_lpse_label_expression():
 
 def build_dashboard_overview(request):
     base_queryset = Tender.objects.all()
+    selected_tahun = request.GET.get(
+        "tahun",
+        request.GET.get("tahun_anggaran", ""),
+    ).strip()
+    tahun_options = get_year_options(base_queryset)
+    if selected_tahun:
+        base_queryset = base_queryset.filter(tahun_anggaran__contains=selected_tahun)
+
     total_tender = base_queryset.count()
     total_hps = base_queryset.aggregate(total=Sum("nilai_hps"))["total"] or 0
     tender_aktif = base_queryset.filter(status__in=["OPEN", "ONGOING"]).count()
@@ -324,6 +348,8 @@ def build_dashboard_overview(request):
             "highest_hps_lpse": highest_hps_lpse,
             "latest_tender": latest_tender,
         },
+        "tahun_options": tahun_options,
+        "selected_tahun": selected_tahun,
     }
 
 
@@ -699,7 +725,7 @@ def lpse_detail_view(request, slug):
     sample = queryset.first()
     real_slug = lpse_analytics.infer_slug_from_tender(sample) or slug
     lpse_name = sample.lpse_name or real_slug or slug
-    summary = lpse_analytics.calculate_lpse_summary(queryset)
+    filter_options = get_lpse_tender_filter_options(queryset)
     tender_list_url = reverse("lpse_detail", kwargs={"slug": slug})
     tender_context = get_paginated_tenders(
         request,
@@ -708,6 +734,10 @@ def lpse_detail_view(request, slug):
         tender_list_url=tender_list_url,
         tender_list_target="#lpse-tender-list",
     )
+    analytics_queryset = queryset
+    selected_tahun = tender_context["selected_filters"]["tahun"]
+    if selected_tahun:
+        analytics_queryset = analytics_queryset.filter(tahun_anggaran__contains=selected_tahun)
 
     saved_ids = []
     if request.user.is_authenticated:
@@ -721,13 +751,13 @@ def lpse_detail_view(request, slug):
         "lpse_name": lpse_name,
         "old_url": "",
         "lpse_url": f"https://spse.inaproc.id/{real_slug}/lelang" if real_slug else "",
-        "summary": summary,
-        "top_procurement_types": lpse_analytics.get_top_procurement_types(queryset),
-        "top_instansi": lpse_analytics.get_top_instansi(queryset),
-        "top_active_tenders": lpse_analytics.get_top_active_tenders(queryset),
-        "latest_tenders": lpse_analytics.get_latest_tenders(queryset),
-        "quality": lpse_analytics.get_data_quality_metrics(queryset),
-        "filter_options": get_lpse_tender_filter_options(queryset),
+        "summary": lpse_analytics.calculate_lpse_summary(analytics_queryset),
+        "top_procurement_types": lpse_analytics.get_top_procurement_types(analytics_queryset),
+        "top_instansi": lpse_analytics.get_top_instansi(analytics_queryset),
+        "top_active_tenders": lpse_analytics.get_top_active_tenders(analytics_queryset),
+        "latest_tenders": lpse_analytics.get_latest_tenders(analytics_queryset),
+        "quality": lpse_analytics.get_data_quality_metrics(analytics_queryset),
+        "filter_options": filter_options,
         "saved_ids": saved_ids,
         "selected_filters": tender_context["selected_filters"],
         **{key: value for key, value in tender_context.items() if key not in {"selected_filters", "saved_ids"}},

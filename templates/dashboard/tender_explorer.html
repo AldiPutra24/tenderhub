@@ -78,6 +78,16 @@
                     </div>
 
                     <div>
+                        <label for="tahun-filter" class="mb-1.5 block text-sm font-bold text-secondary">Tahun</label>
+                        <select id="tahun-filter" name="tahun" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            <option value="">Semua Tahun</option>
+                            {% for option in filter_options.tahun %}
+                            <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
                         <label for="sort-filter" class="mb-1.5 block text-sm font-bold text-secondary">Sort</label>
                         <select id="sort-filter" name="sort" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
                             {% for value, label in filter_options.sort.items %}

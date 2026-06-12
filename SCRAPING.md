@@ -85,9 +85,14 @@ python manage.py scrape_spse_live --all-slugs --tahun 2026 --detail-only
 Command ini akan:
 
 - mencari tender existing berdasarkan `lpse_slug`, `detail_url`, atau `lpse_detail_url`
+- mencocokkan `--tahun` terhadap seluruh tahun pada tender multi-tahun, bukan hanya satu tahun terakhir
 - membuka halaman detail SPSE
 - memperbarui field detail seperti `tanggal_pembuatan`, `sumber_dana`, `lokasi_pekerjaan`, `satuankerja`, `nilai_pagu`, `nilai_hps`, `peserta_count`, dan `tahapan`
 - mengambil alasan tender ulang dari label detail `Alasan di ulang` jika tersedia
+
+Tender multi-tahun disimpan dalam format seperti `2026, 2027, 2028`. Untuk
+data lama yang sebelumnya hanya tersimpan sebagai tahun terakhir, command
+detail akan mencoba recovery satu kali jika field detail tender masih kosong.
 
 Untuk satu LPSE:
 
@@ -189,6 +194,10 @@ ONGOING
 FINISH
 FAILED
 ```
+
+Tahapan SPSE yang mengandung kata `batal` atau `gagal`, termasuk
+`Seleksi Batal`, `Tender Batal`, `Seleksi Gagal`, dan `Tender Gagal`,
+dinormalisasi menjadi status `FAILED`.
 
 ## Pengaturan Sleep
 

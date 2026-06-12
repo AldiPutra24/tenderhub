@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.utils.dateparse import parse_date as django_parse_date
 
 from tenders.models import Tender
+from tenders.year_utils import extract_budget_years, normalize_budget_years
 
 
 BASE_URL = "https://spse.inaproc.id"
@@ -86,12 +87,18 @@ def is_alasan_ulang_label(value):
 
 def append_year_to_sumber_dana(sumber_dana, tahun_anggaran):
     sumber_dana = clean_html_text(sumber_dana)
-    tahun_anggaran = clean_html_text(tahun_anggaran)
-    if not sumber_dana or not tahun_anggaran:
+    years = extract_budget_years(tahun_anggaran)
+    if not sumber_dana or not years:
         return sumber_dana
-    if re.search(rf"\b{re.escape(tahun_anggaran)}\b", sumber_dana):
+
+    missing_years = [
+        year
+        for year in years
+        if not re.search(rf"\b{re.escape(year)}\b", sumber_dana)
+    ]
+    if not missing_years:
         return sumber_dana
-    return f"{sumber_dana} {tahun_anggaran}".strip()
+    return f"{sumber_dana} {', '.join(missing_years)}".strip()
 
 
 def parse_jenis_pengadaan_tahun(value):
@@ -99,8 +106,7 @@ def parse_jenis_pengadaan_tahun(value):
     if not text:
         return "", ""
 
-    years = re.findall(r"\b(20\d{2}|19\d{2})\b", text)
-    tahun_anggaran = years[-1] if years else ""
+    tahun_anggaran = normalize_budget_years(text)
     jenis_pengadaan = re.sub(r"\s*-\s*TA\s*[\d,\s]+", "", text, flags=re.IGNORECASE).strip()
     return jenis_pengadaan, tahun_anggaran
 
@@ -175,8 +181,8 @@ def parse_peserta_count(value):
 
 
 def normalize_status(tahapan):
-    text = tahapan.lower()
-    if "tender batal" in text:
+    text = clean_html_text(tahapan).lower()
+    if "batal" in text or "gagal" in text:
         return "FAILED"
     if "tender sudah selesai" in text:
         return "FINISH"
@@ -247,8 +253,8 @@ def absolute_url(base_url, href):
 
 
 def parse_year(value):
-    match = re.search(r"\b(\d{4})\b", clean_html_text(value))
-    return match.group(1) if match else clean_html_text(value)
+    normalized = normalize_budget_years(value)
+    return normalized or clean_html_text(value)
 
 
 def merge_json_value(existing, key, value):
@@ -890,17 +896,33 @@ class Command(BaseCommand):
         missing_detail_only=False,
     ):
         queryset = Tender.objects.all()
-        if model_has_field(Tender, "tahun_anggaran"):
-            queryset = queryset.filter(tahun_anggaran=str(tahun))
         if detail_statuses:
             queryset = queryset.filter(status__in=sorted(detail_statuses))
-        if missing_detail_only:
-            queryset = queryset.filter(self.build_missing_detail_filter())
 
         slug_filter = Q(detail_url__icontains=f"/{slug}/") | Q(lpse_detail_url__icontains=f"/{slug}/")
         if model_has_field(Tender, "lpse_slug"):
             slug_filter |= Q(lpse_slug=slug)
         queryset = queryset.filter(slug_filter).order_by("id")
+
+        if model_has_field(Tender, "tahun_anggaran"):
+            requested_year = str(tahun)
+            year_filter = Q(tahun_anggaran__contains=requested_year)
+            legacy_filter = (
+                Q(tahun_anggaran__gt=requested_year)
+                & self.build_missing_detail_filter()
+            )
+            legacy_count = queryset.filter(legacy_filter).exclude(year_filter).count()
+            if legacy_count:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"DETAIL legacy multi-year recovery slug={slug} "
+                        f"tahun={tahun} candidates={legacy_count}"
+                    )
+                )
+            queryset = queryset.filter(year_filter | legacy_filter)
+
+        if missing_detail_only:
+            queryset = queryset.filter(self.build_missing_detail_filter())
 
         if limit_details:
             queryset = queryset[:limit_details]

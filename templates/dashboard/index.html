@@ -17,10 +17,29 @@
                         Ringkasan kondisi pasar pengadaan pemerintah, aktivitas LPSE, dan peluang tender terbaru untuk prioritas vendor.
                     </p>
                 </div>
-                <a href="{% url 'tender_list' %}"
-                   class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
-                    Lihat Semua Tender
-                </a>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <form method="get" class="flex items-end gap-2">
+                        <div>
+                            <label for="dashboard-tahun" class="mb-1.5 block text-xs font-semibold text-slate-500">Tahun</label>
+                            <select id="dashboard-tahun"
+                                    name="tahun"
+                                    class="h-10 min-w-32 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
+                                <option value="">Semua Tahun</option>
+                                {% for option in tahun_options %}
+                                <option value="{{ option }}" {% if selected_tahun == option %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit"
+                                class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                            Terapkan
+                        </button>
+                    </form>
+                    <a href="{% url 'tender_list' %}{% if selected_tahun %}?tahun={{ selected_tahun|urlencode }}{% endif %}"
+                       class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+                        Lihat Semua Tender
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -138,9 +157,9 @@
                 <h2 class="text-base font-semibold text-slate-950">Tender Terbaru</h2>
                 <p class="mt-1 text-sm text-slate-500">15 tender terbaru berdasarkan tanggal pembuatan.</p>
             </div>
-            <a href="{% url 'tender_list' %}" class="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
-                Lihat Semua Tender
-            </a>
+                <a href="{% url 'tender_list' %}{% if selected_tahun %}?tahun={{ selected_tahun|urlencode }}{% endif %}" class="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                    Lihat Semua Tender
+                </a>
         </div>
 
         <div class="overflow-x-auto">

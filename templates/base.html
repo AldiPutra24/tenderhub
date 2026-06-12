@@ -509,6 +509,19 @@
             });
 
             document.addEventListener("change", function (event) {
+                var pageFilter = event.target.closest("[data-page-filter-submit]");
+                if (pageFilter) {
+                    var filterForm = pageFilter.closest("form");
+                    if (filterForm) {
+                        if (typeof filterForm.requestSubmit === "function") {
+                            filterForm.requestSubmit();
+                        } else {
+                            filterForm.submit();
+                        }
+                    }
+                    return;
+                }
+
                 if (!event.target.matches("[data-location-select]")) return;
                 syncLocationFields(event.target.closest("[data-location-form]") || document);
             });
