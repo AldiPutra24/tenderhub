@@ -8,6 +8,8 @@ from tenders.models import Tender
 
 
 SPSE_DETAIL_RE = re.compile(r"spse\.inaproc\.id/([^/]+)/lelang/")
+ACTIVE_STATUSES = ["OPEN", "ONGOING", "BERLANGSUNG"]
+FINISHED_STATUSES = ["FINISH", "SELESAI"]
 
 
 def model_has_field(model, field_name):
@@ -67,10 +69,10 @@ def calculate_lpse_summary(queryset):
         "total_paket": Count("id"),
         "total_hps": Sum("nilai_hps"),
         "total_pagu": Sum("nilai_pagu"),
-        "hps_finished": Sum("nilai_hps", filter=Q(status="FINISH")),
+        "hps_finished": Sum("nilai_hps", filter=Q(status__in=FINISHED_STATUSES)),
         "paket_open": Count("id", filter=Q(status="OPEN")),
-        "paket_ongoing": Count("id", filter=Q(status="ONGOING")),
-        "paket_finish": Count("id", filter=Q(status="FINISH")),
+        "paket_ongoing": Count("id", filter=Q(status__in=["ONGOING", "BERLANGSUNG"])),
+        "paket_finish": Count("id", filter=Q(status__in=FINISHED_STATUSES)),
         "paket_failed": Count("id", filter=Q(status="FAILED")),
         "avg_hps": Avg("nilai_hps"),
         "avg_peserta": Avg("peserta_count"),
@@ -118,7 +120,7 @@ def get_top_instansi(queryset):
 
 def get_top_active_tenders(queryset):
     return list(
-        queryset.filter(status__in=["OPEN", "ONGOING"])
+        queryset.filter(status__in=ACTIVE_STATUSES)
         .order_by("-nilai_hps", "-id")[:5]
     )
 

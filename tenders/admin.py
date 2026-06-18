@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import LPSEWatchlist, Tender, TenderBookmark, TenderNotification
+from .models import InaprocInstansi, LPSEWatchlist, Tender, TenderBookmark, TenderNotification
 
 
 @admin.register(Tender)
@@ -191,3 +191,13 @@ class TenderNotificationAdmin(admin.ModelAdmin):
     list_per_page = 50
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+
+@admin.register(InaprocInstansi)
+class InaprocInstansiAdmin(admin.ModelAdmin):
+    list_display = ("jenis_klpd", "kode", "nama", "is_active", "updated_at")
+    list_filter = ("jenis_klpd", "is_active")
+    search_fields = ("kode", "nama")
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("jenis_klpd", "nama")
+    list_per_page = 100

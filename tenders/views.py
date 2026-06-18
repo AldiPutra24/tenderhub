@@ -24,6 +24,8 @@ PROCUREMENT_TYPE_OPTIONS = [
     "Jasa Konsultansi",
     "Jasa Lainnya",
 ]
+ACTIVE_STATUSES = ["OPEN", "ONGOING", "BERLANGSUNG"]
+FINISHED_STATUSES = ["FINISH", "SELESAI"]
 
 SORT_OPTIONS = {
     "created_desc": "Terbaru",
@@ -288,7 +290,7 @@ def build_dashboard_overview(request):
 
     total_tender = base_queryset.count()
     total_hps = base_queryset.aggregate(total=Sum("nilai_hps"))["total"] or 0
-    tender_aktif = base_queryset.filter(status__in=["OPEN", "ONGOING"]).count()
+    tender_aktif = base_queryset.filter(status__in=ACTIVE_STATUSES).count()
     total_lpse = (
         base_queryset.annotate(lpse_label=get_lpse_label_expression())
         .values("lpse_label")
@@ -693,9 +695,9 @@ def build_lpse_entries():
         status = tender.get("status")
         if status == "OPEN":
             group["paket_open"] += 1
-        elif status == "ONGOING":
+        elif status in ("ONGOING", "BERLANGSUNG"):
             group["paket_ongoing"] += 1
-        elif status == "FINISH":
+        elif status in ("FINISH", "SELESAI"):
             group["paket_finish"] += 1
         elif status == "FAILED":
             group["paket_failed"] += 1

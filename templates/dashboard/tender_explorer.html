@@ -52,7 +52,9 @@
                             <option value="">Semua Status</option>
                             <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
                             <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
+                            <option value="BERLANGSUNG" {% if selected_filters.status == "BERLANGSUNG" %}selected{% endif %}>BERLANGSUNG</option>
                             <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
+                            <option value="SELESAI" {% if selected_filters.status == "SELESAI" %}selected{% endif %}>SELESAI</option>
                             <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
                         </select>
                     </div>

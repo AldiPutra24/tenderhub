@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 class Tender(models.Model):
     # === IDENTITAS ===
     kode_tender = models.CharField(max_length=50, unique=True)
+    kode_paket = models.CharField(max_length=50, unique=True, blank=True, null=True)
     kode_rup = models.CharField(max_length=100, blank=True, null=True, default="")
 
     # === NAMA ===
@@ -13,32 +14,43 @@ class Tender(models.Model):
 
     # === INSTANSI ===
     instansi = models.CharField(max_length=255, blank=True, null=True, default="")
+    nama_instansi = models.CharField(max_length=255, blank=True, null=True)
     klpd_instansi = models.CharField(max_length=255, blank=True, null=True, default="")
     satuankerja = models.TextField(blank=True, null=True, default="")
+    nama_satuan_kerja = models.TextField(blank=True, null=True)
 
     # === STATUS ===
     tahapan = models.CharField(max_length=255, blank=True, null=True, default="")
     status = models.CharField(max_length=50, blank=True, null=True, default="")
+    status_paket = models.CharField(max_length=50, blank=True, null=True)
     tender_ulang = models.BooleanField(default=False)
     alasan_ulang = models.TextField(blank=True, null=True, default="")
 
     # === KEUANGAN ===
     sumber_dana = models.CharField(max_length=255, blank=True, null=True, default="")
+    sumber_transaksi = models.CharField(max_length=100, blank=True, null=True)
     tahun_anggaran = models.CharField(max_length=50, blank=True, null=True, default="")
 
     nilai_hps = models.BigIntegerField(blank=True, null=True)
     nilai_pagu = models.BigIntegerField(blank=True, null=True)
+    total_nilai = models.BigIntegerField(blank=True, null=True)
+    nilai_pdn = models.BigIntegerField(blank=True, null=True)
 
     # === LOKASI ===
     lokasi_pekerjaan = models.TextField(blank=True, null=True)
 
     # === JENIS ===
+    kategori = models.CharField(max_length=255, blank=True, null=True)
     jenis_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
     metode_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
+    metode_tender = models.CharField(max_length=255, blank=True, null=True)
+    metode_evaluasi = models.CharField(max_length=255, blank=True, null=True)
+    cara_pembayaran = models.CharField(max_length=255, blank=True, null=True)
     jenis_kontrak = models.CharField(max_length=255, blank=True, null=True, default="")
 
     # === KOMPETISI ===
     peserta_count = models.IntegerField(blank=True, null=True)
+    nama_penyedia = models.CharField(max_length=255, blank=True, null=True)
 
     # === DOKUMEN ===
     uraian_pekerjaan = models.URLField(max_length=1000, blank=True, null=True, default="")
@@ -53,6 +65,9 @@ class Tender(models.Model):
 
     # === META ===
     tanggal_pembuatan = models.DateField(blank=True, null=True)
+    tanggal_tender = models.DateField(blank=True, null=True)
+    data_source = models.CharField(max_length=100, blank=True, null=True)
+    raw_data = models.JSONField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -60,6 +75,31 @@ class Tender(models.Model):
     def __str__(self):
         nama = self.nama_paket or "-"
         return f"{self.kode_tender} - {nama}"
+
+
+class InaprocInstansi(models.Model):
+    kode = models.CharField(max_length=50)
+    nama = models.CharField(max_length=255)
+    jenis_klpd = models.CharField(max_length=10)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["jenis_klpd", "kode"],
+                name="unique_inaproc_instansi_jenis_kode",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["jenis_klpd", "is_active"], name="tenders_ina_jenis_k_0f3e0b_idx"),
+            models.Index(fields=["kode"], name="tenders_ina_kode_5a2d9f_idx"),
+        ]
+        ordering = ["jenis_klpd", "nama"]
+
+    def __str__(self):
+        return f"{self.jenis_klpd}:{self.kode} - {self.nama}"
 
 
 class TenderBookmark(models.Model):

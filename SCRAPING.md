@@ -1,13 +1,128 @@
-# SPSE Scraping Workflow
+# INAPROC Realisasi CSV & SPSE Legacy Workflow
 
-Dokumen ini menjelaskan workflow scraping SPSE INAPROC untuk GPFE PROC HUB.
+Dokumen ini menjelaskan workflow data tender GPFE PROC HUB. Source utama saat ini
+adalah INAPROC Realisasi CSV API. Scraper SPSE tetap tersedia sebagai fallback
+legacy jika detail LPSE lama masih dibutuhkan.
+
+## Source Utama: INAPROC Realisasi CSV
+
+Import paket berlangsung tahun berjalan:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --status BERLANGSUNG
+```
+
+Import paket selesai:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --status SELESAI
+```
+
+Import semua status valid:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --all-status
+```
+
+Catatan: halaman tabel bisa dibuka hanya dengan tahun, tetapi export CSV INAPROC
+wajib memakai `jenisKlpd` dan `instansi`. Jalankan discovery dulu untuk melihat
+kode instansi:
+
+```bash
+python manage.py discover_inaproc_instansi
+```
+
+Contoh import satu instansi:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --jenis-klpd 1 --instansi K3 --status BERLANGSUNG
+```
+
+Kode `jenisKlpd`:
+
+- `1`: Kementerian
+- `2`: Lembaga
+- `3`: Provinsi
+- `4`: Kabupaten
+- `5`: Kota
+
+Import semua instansi aktif hasil discovery:
+
+```bash
+python manage.py import_realisasi_all --tahun 2026
+```
+
+Testing terbatas:
+
+```bash
+python manage.py import_realisasi_all --tahun 2026 --limit-instansi 3 --limit-row 10
+```
+
+Testing tanpa menulis database:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --limit 25 --dry-run
+```
+
+Jika endpoint mengembalikan 403, aktifkan debug HTTP aman:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --limit 5 --debug-http
+```
+
+Jika requests tetap terkena 403 karena Cloudflare/session browser, fallback Playwright
+tersedia secara opsional:
+
+```bash
+python manage.py import_realisasi --tahun 2026 --status BERLANGSUNG --limit 5 --browser-fallback
+```
+
+Fallback ini tidak menjadi default. Jika Playwright belum tersedia di environment,
+install dulu:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+```
+
+Filter yang tersedia:
+
+```bash
+python manage.py import_realisasi \
+  --tahun 2026 \
+  --status BERLANGSUNG \
+  --instansi "Kementerian Pekerjaan Umum" \
+  --jenis-klpd "Kementerian" \
+  --search-paket "jalan" \
+  --search-penyedia "nama vendor"
+```
+
+Detail enrichment untuk data yang masih belum memiliki `nilai_hps`,
+`nilai_pagu`, `lokasi_pekerjaan`, atau `detail_url`:
+
+```bash
+python manage.py enrich_realisasi_detail --tahun 2026 --limit 100
+```
+
+Satu kode paket/tender:
+
+```bash
+python manage.py enrich_realisasi_detail --kode 10123076000
+```
+
+Scheduler yang disarankan:
+
+- `import_realisasi --status BERLANGSUNG` setiap 30 menit
+- `import_realisasi --status SELESAI` satu kali per hari
+- `enrich_realisasi_detail` setelah import utama selesai
 
 ## Prinsip Utama
 
+- Gunakan endpoint CSV langsung INAPROC Realisasi untuk sync utama.
 - Scraping SPSE dijalankan dari mesin lokal atau IP yang bisa membuka `https://spse.inaproc.id`.
 - VPS dipakai untuk menjalankan aplikasi, dashboard, dan import data.
 - Jangan hapus data tender di VPS sebelum import ulang.
-- Untuk sync berulang, gunakan pola upsert berdasarkan `kode_tender`, bukan replace database.
+- Untuk sync berulang, gunakan pola upsert berdasarkan `kode_paket` dengan fallback `kode_tender`, bukan replace database.
 - LKPP ISB API sync tetap bisa dijalankan langsung di VPS karena endpoint-nya resmi dan lebih stabil.
 
 ## Kenapa Scrape Dari Lokal
