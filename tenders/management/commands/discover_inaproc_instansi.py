@@ -1,5 +1,9 @@
+import json
+from pathlib import Path
+
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 
 from tenders.models import InaprocInstansi
 from tenders.services.inaproc_realisasi_client import (
@@ -16,6 +20,8 @@ class Command(BaseCommand):
         parser.add_argument("--tahun", type=int, default=2026, help="Tahun anggaran for dashboard options")
         parser.add_argument("--jenis-klpd", help="One jenisKlpd code: 1, 2, 3, 4, or 5")
         parser.add_argument("--debug-http", action="store_true", help="Print safe HTTP debug information")
+        parser.add_argument("--browser-fallback", action="store_true", help="Use Playwright if requests receives 403")
+        parser.add_argument("--export-json", help="Write discovered instansi rows to JSON file")
 
     def handle(self, *args, **options):
         tahun = options["tahun"]
@@ -33,12 +39,17 @@ class Command(BaseCommand):
         total_updated = 0
         total_deactivated = 0
         total_error = 0
+        export_rows = []
 
         for jenis_klpd in jenis_values:
             label = JENIS_KLPD_LABELS.get(jenis_klpd, jenis_klpd)
             self.stdout.write(f"DISCOVER jenisKlpd={jenis_klpd} {label}")
             try:
-                rows = client.fetch_instansi_options(tahun=tahun, jenis_klpd=jenis_klpd)
+                rows = client.fetch_instansi_options(
+                    tahun=tahun,
+                    jenis_klpd=jenis_klpd,
+                    browser_fallback=options["browser_fallback"],
+                )
                 created, updated, deactivated = self.upsert_rows(jenis_klpd, rows)
             except Exception as exc:
                 total_error += 1
@@ -48,10 +59,14 @@ class Command(BaseCommand):
             total_created += created
             total_updated += updated
             total_deactivated += deactivated
+            export_rows.extend(rows)
             self.stdout.write(
                 f"DONE jenisKlpd={jenis_klpd} row_count={len(rows)} "
                 f"created={created} updated={updated} deactivated={deactivated}"
             )
+
+        if options.get("export_json"):
+            self.write_export_json(options["export_json"], tahun, export_rows)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -87,6 +102,17 @@ class Command(BaseCommand):
             ).exclude(kode__in=seen_codes).update(is_active=False)
 
         return created, updated, deactivated
+
+    def write_export_json(self, file_path, tahun, rows):
+        path = Path(file_path)
+        payload = {
+            "tahun": tahun,
+            "generated_at": timezone.now().isoformat(),
+            "source": "discover_inaproc_instansi",
+            "instansi": rows,
+        }
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.stdout.write(f"EXPORT JSON {path} rows={len(rows)}")
 
     def write_http_debug(self, event):
         self.stdout.write(

@@ -32,6 +32,28 @@ kode instansi:
 python manage.py discover_inaproc_instansi
 ```
 
+Jika VPS kena 403 Cloudflare, discovery bisa dicoba lewat browser headless:
+
+```bash
+python manage.py discover_inaproc_instansi --browser-fallback
+```
+
+Playwright tidak wajib untuk jalur normal. Jika fallback browser dibutuhkan,
+install dependency berikut di environment yang menjalankan command:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+python -m playwright install-deps chromium
+```
+
+Fallback paling aman adalah discovery di lokal lalu import JSON di VPS:
+
+```bash
+python manage.py discover_inaproc_instansi --export-json inaproc_instansi_2026.json
+python manage.py import_inaproc_instansi_json inaproc_instansi_2026.json
+```
+
 Contoh import satu instansi:
 
 ```bash
@@ -56,6 +78,13 @@ Testing terbatas:
 
 ```bash
 python manage.py import_realisasi_all --tahun 2026 --limit-instansi 3 --limit-row 10
+```
+
+Jika VPS diblokir saat export CSV, download CSV di lokal, upload ke VPS, lalu
+import file manual:
+
+```bash
+python manage.py import_realisasi_file path/to/file.csv --tahun 2026 --jenis-klpd 1 --instansi K3 --status BERLANGSUNG
 ```
 
 Testing tanpa menulis database:

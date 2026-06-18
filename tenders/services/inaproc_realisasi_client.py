@@ -4,6 +4,7 @@ import json
 import re
 from datetime import date, datetime
 from types import SimpleNamespace
+from urllib.parse import urlencode
 
 import requests
 from django.utils.dateparse import parse_date as django_parse_date
@@ -81,6 +82,14 @@ class InaprocRequestError(Exception):
 
 class InaprocForbiddenError(InaprocRequestError):
     pass
+
+
+PLAYWRIGHT_INSTALL_MESSAGE = (
+    "Requests tetap 403 dan Playwright belum terpasang. Install dengan:\n"
+    "pip install playwright\n"
+    "python -m playwright install chromium\n"
+    "python -m playwright install-deps chromium"
+)
 
 
 def clean_text(value):
@@ -292,33 +301,34 @@ class InaprocRealisasiClient:
         sumber="Tender",
         status=None,
         limit=20,
+        browser_fallback=False,
     ):
         self.referer_tahun = tahun
-        params = {
-            "tahun": int(tahun),
-            "sumber": clean_text(sumber),
-            "limit": int(limit),
-        }
-        for value in self._list_value(jenis_klpd):
-            params.setdefault("jenis_klpd", [])
-            params["jenis_klpd"].append(value)
-        if clean_text(instansi):
-            params["instansi"] = clean_text(instansi)
-        if status:
-            params["status_paket"] = normalize_status(status)
-
-        self.warmup_realisasi_page(tahun=tahun)
-        response = self.session.get(
-            self._url(REALISASI_DATA_PATH),
-            headers=self._dashboard_json_headers(),
-            params=params,
-            timeout=self.timeout,
+        params = self.build_realisasi_data_params(
+            tahun=tahun,
+            jenis_klpd=jenis_klpd,
+            instansi=instansi,
+            sumber=sumber,
+            status=status,
+            limit=limit,
         )
-        self._debug_response("GET", response.url, response)
-        self._raise_for_status(response, "realisasi data")
-        return response.json()
+        try:
+            self.warmup_realisasi_page(tahun=tahun)
+            response = self.session.get(
+                self._url(REALISASI_DATA_PATH),
+                headers=self._dashboard_json_headers(),
+                params=params,
+                timeout=self.timeout,
+            )
+            self._debug_response("GET", getattr(response, "url", self._url(REALISASI_DATA_PATH)), response)
+            self._raise_for_status(response, "realisasi data")
+            return response.json()
+        except InaprocForbiddenError:
+            if not browser_fallback:
+                raise
+            return self._fetch_realisasi_data_with_browser(params)
 
-    def fetch_instansi_options(self, tahun, jenis_klpd):
+    def fetch_instansi_options(self, tahun, jenis_klpd, browser_fallback=False):
         jenis_klpd = clean_text(jenis_klpd)
         if jenis_klpd not in VALID_JENIS_KLPD:
             raise ValueError(f"jenis_klpd must be one of: {', '.join(VALID_JENIS_KLPD)}")
@@ -327,6 +337,7 @@ class InaprocRealisasiClient:
             jenis_klpd=[jenis_klpd],
             sumber="Tender",
             limit=20,
+            browser_fallback=browser_fallback,
         )
         options = payload.get("instansiOptions") or []
         return [
@@ -433,10 +444,7 @@ class InaprocRealisasiClient:
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as exc:
-            raise InaprocForbiddenError(
-                "Requests tetap 403 dan Playwright belum terpasang. "
-                "Install dengan `pip install playwright` lalu `python -m playwright install chromium`.",
-            ) from exc
+            raise InaprocForbiddenError(PLAYWRIGHT_INSTALL_MESSAGE) from exc
 
         page_url = self.realisasi_page_url()
         with sync_playwright() as playwright:
@@ -532,6 +540,73 @@ class InaprocRealisasiClient:
             self._raise_for_status(response, result.get("stage") or "browser fallback")
         return result.get("body", "")
 
+    def _fetch_realisasi_data_with_browser(self, params):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as exc:
+            raise InaprocForbiddenError(PLAYWRIGHT_INSTALL_MESSAGE) from exc
+
+        page_url = self.realisasi_page_url()
+        data_url = f"{self._url(REALISASI_DATA_PATH)}?{urlencode(params, doseq=True)}"
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(headless=True)
+            context = browser.new_context(
+                locale="id-ID",
+                user_agent=USER_AGENT,
+                extra_http_headers={
+                    "accept-language": ACCEPT_LANGUAGE,
+                    "sec-ch-ua": SEC_CH_UA,
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": '"Windows"',
+                },
+            )
+            page = context.new_page()
+            page.goto(page_url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
+            self._debug_event("GET", page_url, 200, "browser/page", "")
+            result = page.evaluate(
+                """
+                async ({ dataUrl }) => {
+                    const response = await fetch(dataUrl, {
+                        method: "GET",
+                        credentials: "include",
+                        headers: {
+                            "accept": "application/json,*/*",
+                            "content-type": "application/json",
+                            "sec-fetch-site": "same-origin",
+                            "sec-fetch-mode": "cors",
+                            "sec-fetch-dest": "empty"
+                        }
+                    });
+                    const text = await response.text();
+                    return {
+                        ok: response.ok,
+                        status: response.status,
+                        contentType: response.headers.get("content-type") || "",
+                        body: text
+                    };
+                }
+                """,
+                {"dataUrl": data_url},
+            )
+            browser.close()
+
+        self._debug_event(
+            "GET",
+            data_url,
+            result.get("status"),
+            result.get("contentType", ""),
+            result.get("body", ""),
+            error=not result.get("ok"),
+        )
+        if not result.get("ok"):
+            response = SimpleNamespace(
+                status_code=result.get("status"),
+                headers={"content-type": result.get("contentType", "")},
+                text=result.get("body", ""),
+            )
+            self._raise_for_status(response, "realisasi data browser fallback")
+        return json.loads(result.get("body") or "{}")
+
     def _map_row(self, row, mapping):
         mapped = {}
         for csv_key, field_name in mapping.items():
@@ -610,6 +685,29 @@ class InaprocRealisasiClient:
             }
         )
         return headers
+
+    def build_realisasi_data_params(
+        self,
+        tahun,
+        jenis_klpd=None,
+        instansi="",
+        sumber="Tender",
+        status=None,
+        limit=20,
+    ):
+        params = {
+            "tahun": int(tahun),
+            "sumber": clean_text(sumber),
+            "limit": int(limit),
+        }
+        for value in self._list_value(jenis_klpd):
+            params.setdefault("jenis_klpd", [])
+            params["jenis_klpd"].append(value)
+        if clean_text(instansi):
+            params["instansi"] = clean_text(instansi)
+        if status:
+            params["status_paket"] = normalize_status(status)
+        return params
 
     def _list_value(self, value):
         if value in (None, ""):
