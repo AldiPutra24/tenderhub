@@ -115,6 +115,13 @@ python manage.py migrate
 python manage.py import_spse_tenders_file spse_tenders.json
 ```
 
+Untuk file besar, command import menampilkan progress dan memakai batch write.
+Jika ingin progress lebih sering:
+
+```bash
+python manage.py import_spse_tenders_file spse_tenders.json --progress-every 500 --batch-size 1000
+```
+
 Untuk testing import tanpa menulis database:
 
 ```bash
