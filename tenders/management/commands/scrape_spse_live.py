@@ -268,6 +268,26 @@ def merge_json_value(existing, key, value):
     return merged
 
 
+def resolve_spse_source(existing):
+    if existing and getattr(existing, "data_source", None) == Tender.SOURCE_REALISASI:
+        return Tender.SOURCE_MIXED
+    if existing and getattr(existing, "data_source", None) == Tender.SOURCE_MIXED:
+        return Tender.SOURCE_MIXED
+    return Tender.SOURCE_SPSE
+
+
+def find_spse_tender(kode_tender, slug=""):
+    queryset = Tender.objects.filter(kode_tender=str(kode_tender))
+    if slug and model_has_field(Tender, "lpse_slug"):
+        exact = queryset.filter(lpse_slug=slug).first()
+        if exact:
+            return exact
+        blank_slug = queryset.filter(Q(lpse_slug="") | Q(lpse_slug__isnull=True)).first()
+        if blank_slug:
+            return blank_slug
+    return queryset.first()
+
+
 def clean_lpse_mapping_name(value, slug):
     name = clean_html_text(value) or slug
     if ">" in name:
@@ -349,6 +369,10 @@ def parse_detail_html(html, base_url):
             parsed["jenis_pengadaan"] = value_text
         elif label == "Metode Pengadaan":
             parsed["metode_pengadaan"] = value_text
+        elif label == "Metode Kualifikasi":
+            parsed["metode_kualifikasi"] = value_text
+        elif label == "Metode Pemilihan":
+            parsed["metode_pemilihan"] = value_text
         elif label == "Tahun Anggaran":
             parsed["tahun_anggaran"] = parse_year(value_text)
         elif label == "Jenis Kontrak":
@@ -362,6 +386,7 @@ def parse_detail_html(html, base_url):
             parsed["lokasi_pekerjaan"] = "; ".join(locations) if locations else value_text
         elif label == "Syarat Kualifikasi":
             parsed["syarat_kualifikasi"] = value_text
+            parsed["dokumen"] = value_text
         elif label == "Peserta Tender":
             parsed["peserta_count"] = parse_peserta_count(value_text)
 
@@ -401,6 +426,8 @@ def apply_detail_to_tender(tender, parsed):
     set_if_exists(defaults, "satuankerja", parsed.get("satuankerja"))
     set_if_exists(defaults, "jenis_pengadaan", parsed.get("jenis_pengadaan"))
     set_if_exists(defaults, "metode_pengadaan", parsed.get("metode_pengadaan"))
+    set_if_exists(defaults, "metode_kualifikasi", parsed.get("metode_kualifikasi"))
+    set_if_exists(defaults, "metode_pemilihan", parsed.get("metode_pemilihan"))
     set_if_exists(defaults, "tahun_anggaran", parsed.get("tahun_anggaran"))
     set_if_exists(defaults, "nilai_pagu", parsed.get("nilai_pagu"))
     set_if_exists(defaults, "nilai_hps", parsed.get("nilai_hps"))
@@ -412,6 +439,8 @@ def apply_detail_to_tender(tender, parsed):
     set_if_exists(defaults, "sumber_dana", append_year_to_sumber_dana(parsed.get("sumber_dana"), parsed.get("tahun_anggaran")))
     set_if_exists(defaults, "uraian_pekerjaan", parsed.get("uraian_pekerjaan"))
     set_if_exists(defaults, "uraian_pekerjaan_nama_file", parsed.get("uraian_pekerjaan_nama_file"))
+    set_if_exists(defaults, "dokumen", parsed.get("dokumen"))
+    set_if_exists(defaults, "data_source", resolve_spse_source(tender))
 
     if not tender.detail_url:
         set_if_exists(defaults, "detail_url", parsed.get("detail_url"))
@@ -870,7 +899,7 @@ class Command(BaseCommand):
         return 0, 0, 0, 1
 
     def enrich_tender_by_kode(self, kode_tender, slug, sleep_min, sleep_max, detail_statuses=None, missing_detail_only=False):
-        tender = Tender.objects.filter(kode_tender=str(kode_tender)).first()
+        tender = find_spse_tender(kode_tender, slug)
         if not tender:
             self.stderr.write(self.style.WARNING(f"Tender kode_tender={kode_tender} not found"))
             return "failed"
@@ -1079,12 +1108,13 @@ class Command(BaseCommand):
         self.set_if_exists(defaults, "klpd_instansi", klpd_instansi)
         self.set_if_exists(defaults, "tahapan", tahapan)
         self.set_if_exists(defaults, "status", normalize_status(tahapan))
-        self.set_if_exists(defaults, "tender_ulang", tender_ulang)
-        self.set_if_exists(
-            defaults,
-            "alasan_ulang",
-            "Terdeteksi badge Tender Ulang pada daftar tender SPSE" if tender_ulang else "",
-        )
+        if tender_ulang:
+            self.set_if_exists(defaults, "tender_ulang", True)
+            self.set_if_exists(
+                defaults,
+                "alasan_ulang",
+                "Terdeteksi badge Tender Ulang pada daftar tender SPSE",
+            )
         self.set_if_exists(defaults, "nilai_hps", nilai_hps)
         self.set_if_exists(defaults, "jenis_pengadaan", jenis_pengadaan)
         self.set_if_exists(defaults, "metode_pengadaan", metode_pengadaan)
@@ -1111,7 +1141,8 @@ class Command(BaseCommand):
             },
             "row": row,
         }
-        tender = Tender.objects.filter(kode_tender=kode_tender).first()
+        tender = find_spse_tender(kode_tender, slug)
+        self.set_if_exists(defaults, "data_source", resolve_spse_source(tender))
         if model_has_field(Tender, "raw_data"):
             existing_raw = getattr(tender, "raw_data", None) if tender else None
             self.set_if_exists(defaults, "raw_data", merge_json_value(existing_raw, "spse_list", raw_data))
@@ -1119,11 +1150,21 @@ class Command(BaseCommand):
             existing_detail = getattr(tender, "detail_json", None) if tender else None
             self.set_if_exists(defaults, "detail_json", merge_json_value(existing_detail, "spse_list", raw_data))
 
-        if tender and tender.detail_url:
-            obj, created = Tender.objects.update_or_create(kode_tender=kode_tender, defaults=defaults)
-        else:
+        if not tender or not tender.detail_url:
             self.set_if_exists(defaults, "detail_url", detail_url)
-            obj, created = Tender.objects.update_or_create(kode_tender=kode_tender, defaults=defaults)
+
+        if tender:
+            obj, created = Tender.objects.update_or_create(pk=tender.pk, defaults=defaults)
+        elif slug and model_has_field(Tender, "lpse_slug"):
+            obj, created = Tender.objects.update_or_create(
+                kode_tender=kode_tender,
+                lpse_slug=slug,
+                defaults=defaults,
+            )
+        else:
+            defaults["kode_tender"] = kode_tender
+            obj = Tender.objects.create(**defaults)
+            created = True
 
         return "created" if created else "updated"
 

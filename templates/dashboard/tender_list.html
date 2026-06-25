@@ -162,7 +162,7 @@
             <p class="truncate text-xs text-slate-500">{{ t.metode_pengadaan|default:"Metode belum tersedia" }}</p>
             <div class="flex shrink-0 items-center gap-2">
                 {% if t.detail_url or t.lpse_detail_url or t.lpse_slug %}
-                <a href="{% url 'open_lpse_detail' t.kode_tender %}"
+                <a href="{% url 'open_lpse_detail_by_id' t.id %}"
                    target="_blank"
                    rel="noopener"
                    referrerpolicy="origin"

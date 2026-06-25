@@ -56,8 +56,18 @@ def build_watchlist_filter(watchlists):
 
 def get_recent_tenders(days=7):
     cutoff_date = timezone.localdate() - timedelta(days=days)
+    spse_signal = (
+        Q(lpse_slug__gt="")
+        | Q(lpse_detail_url__contains="spse.inaproc.id")
+        | Q(detail_url__contains="spse.inaproc.id")
+    )
     return (
-        Tender.objects.filter(tanggal_pembuatan__isnull=False, tanggal_pembuatan__gte=cutoff_date)
+        Tender.objects.filter(
+            Q(data_source__in=[Tender.SOURCE_SPSE, Tender.SOURCE_MIXED]) | spse_signal,
+            tanggal_pembuatan__isnull=False,
+            tanggal_pembuatan__gte=cutoff_date,
+            status__in=["OPEN", "ONGOING"],
+        )
         .only(
             "id",
             "kode_tender",

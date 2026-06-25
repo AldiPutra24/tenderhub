@@ -3,8 +3,19 @@ from django.contrib.auth.models import User
 
 
 class Tender(models.Model):
+    SOURCE_SPSE = "SPSE"
+    SOURCE_REALISASI = "REALISASI"
+    SOURCE_LKPP_API = "LKPP_API"
+    SOURCE_MIXED = "MIXED"
+    DATA_SOURCE_CHOICES = [
+        (SOURCE_SPSE, "SPSE"),
+        (SOURCE_REALISASI, "INAPROC Realisasi"),
+        (SOURCE_LKPP_API, "LKPP API"),
+        (SOURCE_MIXED, "Mixed"),
+    ]
+
     # === IDENTITAS ===
-    kode_tender = models.CharField(max_length=50, unique=True)
+    kode_tender = models.CharField(max_length=50, db_index=True)
     kode_paket = models.CharField(max_length=50, unique=True, blank=True, null=True)
     kode_rup = models.CharField(max_length=100, blank=True, null=True, default="")
 
@@ -27,12 +38,13 @@ class Tender(models.Model):
     alasan_ulang = models.TextField(blank=True, null=True, default="")
 
     # === KEUANGAN ===
-    sumber_dana = models.CharField(max_length=255, blank=True, null=True, default="")
+    sumber_dana = models.TextField(blank=True, null=True, default="")
     sumber_transaksi = models.CharField(max_length=100, blank=True, null=True)
     tahun_anggaran = models.CharField(max_length=50, blank=True, null=True, default="")
 
     nilai_hps = models.BigIntegerField(blank=True, null=True)
     nilai_pagu = models.BigIntegerField(blank=True, null=True)
+    nilai_kontrak = models.BigIntegerField(blank=True, null=True)
     total_nilai = models.BigIntegerField(blank=True, null=True)
     nilai_pdn = models.BigIntegerField(blank=True, null=True)
 
@@ -43,6 +55,8 @@ class Tender(models.Model):
     kategori = models.CharField(max_length=255, blank=True, null=True)
     jenis_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
     metode_pengadaan = models.CharField(max_length=255, blank=True, null=True, default="")
+    metode_kualifikasi = models.CharField(max_length=255, blank=True, null=True, default="")
+    metode_pemilihan = models.CharField(max_length=255, blank=True, null=True, default="")
     metode_tender = models.CharField(max_length=255, blank=True, null=True)
     metode_evaluasi = models.CharField(max_length=255, blank=True, null=True)
     cara_pembayaran = models.CharField(max_length=255, blank=True, null=True)
@@ -55,6 +69,7 @@ class Tender(models.Model):
     # === DOKUMEN ===
     uraian_pekerjaan = models.URLField(max_length=1000, blank=True, null=True, default="")
     uraian_pekerjaan_nama_file = models.TextField(blank=True, null=True)
+    dokumen = models.TextField(blank=True, null=True, default="")
     detail_url = models.URLField(max_length=1000, blank=True, null=True, default="")
 
     # === LPSE ===
@@ -66,7 +81,13 @@ class Tender(models.Model):
     # === META ===
     tanggal_pembuatan = models.DateField(blank=True, null=True)
     tanggal_tender = models.DateField(blank=True, null=True)
-    data_source = models.CharField(max_length=100, blank=True, null=True)
+    data_source = models.CharField(
+        max_length=20,
+        choices=DATA_SOURCE_CHOICES,
+        default=SOURCE_SPSE,
+        blank=True,
+        null=True,
+    )
     raw_data = models.JSONField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -75,6 +96,18 @@ class Tender(models.Model):
     def __str__(self):
         nama = self.nama_paket or "-"
         return f"{self.kode_tender} - {nama}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["kode_tender", "lpse_slug"],
+                name="unique_tender_kode_lpse_slug",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["data_source", "status"], name="tenders_src_status_idx"),
+            models.Index(fields=["lpse_slug", "status"], name="tenders_lpse_status_idx"),
+        ]
 
 
 class InaprocInstansi(models.Model):

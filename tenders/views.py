@@ -24,8 +24,17 @@ PROCUREMENT_TYPE_OPTIONS = [
     "Jasa Konsultansi",
     "Jasa Lainnya",
 ]
-ACTIVE_STATUSES = ["OPEN", "ONGOING", "BERLANGSUNG"]
-FINISHED_STATUSES = ["FINISH", "SELESAI"]
+SPSE_SOURCE_VALUES = [Tender.SOURCE_SPSE, Tender.SOURCE_MIXED]
+ACTIVE_STATUSES = ["OPEN", "ONGOING"]
+FINISHED_STATUSES = ["FINISH"]
+SOURCE_FILTER_OPTIONS = {
+    "operational": "SPSE + Mixed",
+    "all": "Semua",
+    Tender.SOURCE_SPSE: "SPSE",
+    Tender.SOURCE_REALISASI: "Realisasi",
+    Tender.SOURCE_MIXED: "Mixed",
+    Tender.SOURCE_LKPP_API: "LKPP API",
+}
 
 SORT_OPTIONS = {
     "created_desc": "Terbaru",
@@ -34,6 +43,8 @@ SORT_OPTIONS = {
     "match_asc": "AI Match Terendah",
     "hps_desc": "Nilai HPS Tertinggi",
     "hps_asc": "Nilai HPS Terendah",
+    "participants_desc": "Peserta Terbanyak",
+    "participants_asc": "Peserta Tersedikit",
 }
 
 LPSE_TENDER_SORT_OPTIONS = {
@@ -43,6 +54,33 @@ LPSE_TENDER_SORT_OPTIONS = {
     "match_desc": "AI Match tertinggi",
     "name_asc": "Nama Paket A-Z",
 }
+
+
+def get_spse_operational_filter():
+    spse_signal = (
+        Q(lpse_slug__gt="")
+        | Q(lpse_detail_url__contains="spse.inaproc.id")
+        | Q(detail_url__contains="spse.inaproc.id")
+    )
+    return Q(data_source__in=SPSE_SOURCE_VALUES) | spse_signal
+
+
+def get_operational_queryset():
+    return Tender.objects.filter(get_spse_operational_filter())
+
+
+def apply_source_filter(queryset, source):
+    if source == "all":
+        return Tender.objects.all()
+    if source == Tender.SOURCE_SPSE:
+        return queryset.filter(data_source=Tender.SOURCE_SPSE)
+    if source == Tender.SOURCE_REALISASI:
+        return Tender.objects.filter(data_source=Tender.SOURCE_REALISASI)
+    if source == Tender.SOURCE_MIXED:
+        return queryset.filter(data_source=Tender.SOURCE_MIXED)
+    if source == Tender.SOURCE_LKPP_API:
+        return Tender.objects.filter(data_source=Tender.SOURCE_LKPP_API)
+    return queryset.filter(get_spse_operational_filter())
 
 ALLOWED_PER_PAGE = [15, 25, 50, 100]
 DEFAULT_PER_PAGE = 25
@@ -99,22 +137,30 @@ def attach_match_data(request, tenders):
 
 
 def get_filter_options():
+    base_queryset = get_operational_queryset()
     klpd_values = set(
-        Tender.objects.exclude(klpd_instansi="")
+        base_queryset.exclude(klpd_instansi="")
         .values_list("klpd_instansi", flat=True)
         .distinct()
     )
     klpd_values.update(
-        Tender.objects.filter(klpd_instansi="")
+        base_queryset.filter(klpd_instansi="")
         .exclude(instansi="")
         .values_list("instansi", flat=True)
+        .distinct()
+    )
+    lpse_values = (
+        base_queryset.exclude(lpse_name="")
+        .values_list("lpse_name", flat=True)
         .distinct()
     )
 
     return {
         "jenis_pengadaan": PROCUREMENT_TYPE_OPTIONS,
         "klpd_instansi": sorted(value for value in klpd_values if value)[:150],
-        "tahun": get_year_options(),
+        "lpse": sorted(value for value in lpse_values if value)[:150],
+        "tahun": get_year_options(base_queryset),
+        "source": SOURCE_FILTER_OPTIONS,
         "sort": SORT_OPTIONS,
     }
 
@@ -159,6 +205,8 @@ def get_selected_filters(request, sort_options=None):
         "status": request.GET.get("status", "").strip(),
         "jenis_pengadaan": request.GET.get("jenis_pengadaan", "").strip(),
         "klpd_instansi": request.GET.get("klpd_instansi", "").strip(),
+        "lpse": request.GET.get("lpse", "").strip(),
+        "source": request.GET.get("source", "operational").strip() or "operational",
         "tahun": request.GET.get(
             "tahun",
             request.GET.get("tahun_anggaran", ""),
@@ -192,7 +240,9 @@ def get_pagination_query(request, per_page):
 
 def get_filtered_queryset(request, base_queryset=None, sort_options=None):
     selected = get_selected_filters(request, sort_options)
-    tenders = base_queryset if base_queryset is not None else Tender.objects.all()
+    tenders = base_queryset if base_queryset is not None else get_operational_queryset()
+    if base_queryset is None:
+        tenders = apply_source_filter(tenders, selected["source"])
 
     if selected["q"]:
         tenders = tenders.filter(
@@ -200,6 +250,8 @@ def get_filtered_queryset(request, base_queryset=None, sort_options=None):
             | Q(kode_tender__icontains=selected["q"])
             | Q(instansi__icontains=selected["q"])
             | Q(klpd_instansi__icontains=selected["q"])
+            | Q(satuankerja__icontains=selected["q"])
+            | Q(lpse_name__icontains=selected["q"])
         )
 
     if selected["status"]:
@@ -214,6 +266,9 @@ def get_filtered_queryset(request, base_queryset=None, sort_options=None):
             | (Q(klpd_instansi="") & Q(instansi=selected["klpd_instansi"]))
         )
 
+    if selected["lpse"]:
+        tenders = tenders.filter(Q(lpse_name=selected["lpse"]) | Q(lpse_slug=selected["lpse"]))
+
     if selected["tahun"]:
         tenders = tenders.filter(tahun_anggaran__contains=selected["tahun"])
 
@@ -227,6 +282,10 @@ def apply_db_sort(tenders, sort):
         return tenders.order_by(F("nilai_hps").desc(nulls_last=True), "-id")
     if sort == "hps_asc":
         return tenders.order_by(F("nilai_hps").asc(nulls_last=True), "id")
+    if sort == "participants_desc":
+        return tenders.order_by(F("peserta_count").desc(nulls_last=True), "-id")
+    if sort == "participants_asc":
+        return tenders.order_by(F("peserta_count").asc(nulls_last=True), "id")
     if sort == "name_asc":
         return tenders.order_by("nama_paket", "id")
     return tenders.order_by(F("tanggal_pembuatan").desc(nulls_last=True), "-id")
@@ -279,7 +338,7 @@ def get_lpse_label_expression():
 
 
 def build_dashboard_overview(request):
-    base_queryset = Tender.objects.all()
+    base_queryset = get_operational_queryset()
     selected_tahun = request.GET.get(
         "tahun",
         request.GET.get("tahun_anggaran", ""),
@@ -661,7 +720,7 @@ def build_lpse_entries():
     if "lpse_slug" in field_names:
         values.append("lpse_slug")
 
-    for tender in Tender.objects.values(*values):
+    for tender in get_operational_queryset().values(*values):
         slug = tender.get("lpse_slug") or infer_slug_from_urls(tender.get("detail_url"), tender.get("lpse_detail_url"))
         lpse_name = tender.get("lpse_name") or slug or "LPSE Tidak Diketahui"
         key = slug or slugify(lpse_name) or f"lpse-{tender['id']}"
@@ -695,9 +754,9 @@ def build_lpse_entries():
         status = tender.get("status")
         if status == "OPEN":
             group["paket_open"] += 1
-        elif status in ("ONGOING", "BERLANGSUNG"):
+        elif status == "ONGOING":
             group["paket_ongoing"] += 1
-        elif status in ("FINISH", "SELESAI"):
+        elif status == "FINISH":
             group["paket_finish"] += 1
         elif status == "FAILED":
             group["paket_failed"] += 1
@@ -771,7 +830,18 @@ def lpse_detail_view(request, slug):
 
 
 def open_lpse_detail(request, kode_tender):
-    tender = get_object_or_404(Tender, kode_tender=str(kode_tender))
+    tender = Tender.objects.filter(kode_tender=str(kode_tender)).order_by("-updated_at", "-id").first()
+    if not tender:
+        raise Http404("Tender tidak ditemukan")
+    return render_open_lpse_detail(request, tender)
+
+
+def open_lpse_detail_by_id(request, pk):
+    tender = get_object_or_404(Tender, id=pk)
+    return render_open_lpse_detail(request, tender)
+
+
+def render_open_lpse_detail(request, tender):
     detail_url = tender.detail_url or tender.lpse_detail_url
     slug = get_spse_slug(tender, detail_url)
 

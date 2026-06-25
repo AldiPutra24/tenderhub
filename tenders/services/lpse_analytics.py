@@ -8,8 +8,8 @@ from tenders.models import Tender
 
 
 SPSE_DETAIL_RE = re.compile(r"spse\.inaproc\.id/([^/]+)/lelang/")
-ACTIVE_STATUSES = ["OPEN", "ONGOING", "BERLANGSUNG"]
-FINISHED_STATUSES = ["FINISH", "SELESAI"]
+ACTIVE_STATUSES = ["OPEN", "ONGOING"]
+FINISHED_STATUSES = ["FINISH"]
 
 
 def model_has_field(model, field_name):
@@ -43,7 +43,14 @@ def infer_slug_from_tender(tender):
 
 def get_lpse_queryset(slug_or_name):
     slug_or_name = str(slug_or_name or "").strip()
-    queryset = Tender.objects.all()
+    spse_signal = (
+        Q(lpse_slug__gt="")
+        | Q(lpse_detail_url__contains="spse.inaproc.id")
+        | Q(detail_url__contains="spse.inaproc.id")
+    )
+    queryset = Tender.objects.filter(
+        Q(data_source__in=[Tender.SOURCE_SPSE, Tender.SOURCE_MIXED]) | spse_signal
+    )
 
     filters = Q(lpse_name__iexact=slug_or_name)
     if model_has_field(Tender, "lpse_slug"):
@@ -71,7 +78,7 @@ def calculate_lpse_summary(queryset):
         "total_pagu": Sum("nilai_pagu"),
         "hps_finished": Sum("nilai_hps", filter=Q(status__in=FINISHED_STATUSES)),
         "paket_open": Count("id", filter=Q(status="OPEN")),
-        "paket_ongoing": Count("id", filter=Q(status__in=["ONGOING", "BERLANGSUNG"])),
+        "paket_ongoing": Count("id", filter=Q(status="ONGOING")),
         "paket_finish": Count("id", filter=Q(status__in=FINISHED_STATUSES)),
         "paket_failed": Count("id", filter=Q(status="FAILED")),
         "avg_hps": Avg("nilai_hps"),

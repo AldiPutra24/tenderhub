@@ -18,6 +18,7 @@ urlpatterns = [
     path("lpse/<slug:slug>/watchlist/add/", views.add_lpse_watchlist, name="lpse_watchlist_add"),
     path("lpse/<slug:slug>/watchlist/remove/", views.remove_lpse_watchlist, name="lpse_watchlist_remove"),
     path("lpse/open/<str:kode_tender>/", views.open_lpse_detail, name="open_lpse_detail"),
+    path("lpse/open-id/<int:pk>/", views.open_lpse_detail_by_id, name="open_lpse_detail_by_id"),
     path("lpse/<slug:slug>/", views.lpse_detail_view, name="lpse_detail"),
     path("bookmark/<int:pk>/", views.toggle_bookmark, name="toggle_bookmark"),
     path("dashboard/saved/", views.saved_tenders_legacy, name="saved_tenders_legacy"),

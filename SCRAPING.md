@@ -1,10 +1,132 @@
-# INAPROC Realisasi CSV & SPSE Legacy Workflow
+# GPFE PROC HUB Data Source Workflow
 
-Dokumen ini menjelaskan workflow data tender GPFE PROC HUB. Source utama saat ini
-adalah INAPROC Realisasi CSV API. Scraper SPSE tetap tersedia sebagai fallback
-legacy jika detail LPSE lama masih dibutuhkan.
+Dokumen ini menjelaskan workflow data tender GPFE PROC HUB.
 
-## Source Utama: INAPROC Realisasi CSV
+## Prioritas Data Source
+
+Primary operational source: **SPSE via `scrape_spse_live`**
+
+Dipakai untuk:
+
+- Tender Explorer
+- Dashboard tender aktif
+- Bookmark
+- Watchlist LPSE
+- Notification tender baru
+- AI Match
+- Detail tender
+- Link `Buka di LPSE`
+
+Secondary analytics source: **INAPROC Realisasi CSV**
+
+Dipakai untuk:
+
+- Analytics realisasi
+- Penyedia pemenang
+- Competitor Insight
+- Vendor Directory
+- Nilai realisasi/kontrak
+- Data penyedia pemenang
+
+Warning:
+
+- VPS/datacenter sering terkena `403 Forbidden`, Cloudflare, atau PerimeterX
+  saat akses SPSE/INAPROC.
+- Scrape utama disarankan dari lokal atau IP yang bisa membuka
+  `https://spse.inaproc.id`.
+- VPS cukup dipakai untuk aplikasi, dashboard, migrasi, dan import file hasil
+  scrape lokal.
+- Jangan hapus data tender di VPS sebelum import ulang. Gunakan upsert.
+
+## Source Utama: SPSE `scrape_spse_live`
+
+List scrape semua slug:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --sleep-min 2 --sleep-max 5
+```
+
+List scrape satu slug:
+
+```bash
+python manage.py scrape_spse_live --slug jakarta --tahun 2026 --sleep-min 2 --sleep-max 5
+```
+
+Detail enrichment semua slug:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --detail-only --missing-detail-only --sleep-min 2 --sleep-max 5
+```
+
+Detail satu kode:
+
+```bash
+python manage.py scrape_spse_live --kode-tender 10139423000 --slug polri --enrich-detail
+```
+
+Filter status list:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --list-status OPEN,ONGOING
+```
+
+Filter detail:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --detail-only --missing-detail-only --detail-status OPEN,ONGOING
+```
+
+Status operasional SPSE:
+
+```text
+OPEN
+ONGOING
+FINISH
+FAILED
+```
+
+Tahapan yang mengandung kata `batal` atau `gagal` dinormalisasi menjadi
+`FAILED`. Tender aktif adalah `OPEN` + `ONGOING`.
+
+## Export/Import SPSE Lokal ke VPS
+
+Lokal scrape:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --sleep-min 2 --sleep-max 5
+```
+
+Lokal export:
+
+```powershell
+python -X utf8 manage.py dumpdata tenders.Tender --indent 2 --output spse_tenders.json
+```
+
+Upload ke VPS:
+
+```bash
+scp spse_tenders.json root@VPS:/var/www/tenderhub/
+```
+
+VPS:
+
+```bash
+python manage.py migrate
+python manage.py import_spse_tenders_file spse_tenders.json
+```
+
+Untuk testing import tanpa menulis database:
+
+```bash
+python manage.py import_spse_tenders_file spse_tenders.json --dry-run --limit 10
+```
+
+`loaddata` tetap bisa dipakai untuk import awal/restore ketika database cocok
+dengan fixture, tetapi untuk sync rutin gunakan `import_spse_tenders_file`
+karena command ini mengabaikan primary key lokal, upsert berdasarkan
+`kode_tender + lpse_slug`, dan tidak menghapus bookmark atau relasi user.
+
+## Source Secondary: INAPROC Realisasi CSV
 
 Import paket berlangsung tahun berjalan:
 
@@ -126,6 +248,10 @@ python manage.py import_realisasi \
   --search-penyedia "nama vendor"
 ```
 
+Detail enrichment Realisasi bersifat experimental/low priority. Gunakan hanya
+jika memang membutuhkan data tambahan Realisasi, bukan sebagai proses utama
+Tender Explorer.
+
 Detail enrichment untuk data yang masih belum memiliki `nilai_hps`,
 `nilai_pagu`, `lokasi_pekerjaan`, atau `detail_url`:
 
@@ -139,19 +265,23 @@ Satu kode paket/tender:
 python manage.py enrich_realisasi_detail --kode 10123076000
 ```
 
-Scheduler yang disarankan:
+Scheduler Realisasi yang disarankan untuk analytics:
 
 - `import_realisasi --status BERLANGSUNG` setiap 30 menit
 - `import_realisasi --status SELESAI` satu kali per hari
-- `enrich_realisasi_detail` setelah import utama selesai
+- `enrich_realisasi_detail` opsional/experimental jika data detail Realisasi
+  memang dibutuhkan
 
 ## Prinsip Utama
 
-- Gunakan endpoint CSV langsung INAPROC Realisasi untuk sync utama.
+- Gunakan SPSE `scrape_spse_live` untuk sync operasional utama.
+- Gunakan endpoint CSV INAPROC Realisasi untuk analytics dan competitor insight.
 - Scraping SPSE dijalankan dari mesin lokal atau IP yang bisa membuka `https://spse.inaproc.id`.
 - VPS dipakai untuk menjalankan aplikasi, dashboard, dan import data.
 - Jangan hapus data tender di VPS sebelum import ulang.
-- Untuk sync berulang, gunakan pola upsert berdasarkan `kode_paket` dengan fallback `kode_tender`, bukan replace database.
+- Untuk sync SPSE berulang, gunakan pola upsert berdasarkan `kode_tender + lpse_slug`
+  dengan fallback `kode_tender`, bukan replace database.
+- Untuk sync Realisasi berulang, gunakan `kode_paket` dengan fallback `kode_tender`.
 - LKPP ISB API sync tetap bisa dijalankan langsung di VPS karena endpoint-nya resmi dan lebih stabil.
 
 ## Kenapa Scrape Dari Lokal
@@ -510,7 +640,13 @@ Lalu ulangi:
 python manage.py loaddata spse_tenders.json
 ```
 
-Gunakan `loaddata` hanya jika kondisi database VPS memang cocok dengan file fixture lokal, misalnya import awal atau restore backup. Untuk import rutin, lebih aman gunakan command berbasis `update_or_create(kode_tender=...)`.
+Gunakan `loaddata` hanya jika kondisi database VPS memang cocok dengan file
+fixture lokal, misalnya import awal atau restore backup. Untuk import rutin
+SPSE, lebih aman gunakan:
+
+```bash
+python manage.py import_spse_tenders_file spse_tenders.json
+```
 
 Verifikasi:
 
@@ -525,14 +661,20 @@ Jangan hapus data VPS sebelum import ulang.
 
 Namun, `loaddata` tidak ideal untuk import rutin karena bekerja dengan primary key dari database lokal. Jika ID lokal dan ID VPS berbeda, import bisa bentrok atau overwrite record yang tidak diinginkan.
 
-Untuk import berulang, pendekatan terbaik adalah command import khusus yang melakukan:
+Untuk import SPSE berulang, pendekatan terbaik adalah command import khusus
+yang melakukan lookup berdasarkan `kode_tender + lpse_slug` jika slug tersedia,
+dengan fallback `kode_tender`:
 
 ```python
 Tender.objects.update_or_create(
     kode_tender=kode_tender,
+    lpse_slug=lpse_slug,
     defaults=payload,
 )
 ```
+
+Untuk import Realisasi berulang, gunakan `kode_paket` dengan fallback
+`kode_tender`.
 
 Dengan pendekatan ini:
 

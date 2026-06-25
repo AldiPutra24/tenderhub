@@ -3,9 +3,28 @@ from django.db import transaction
 from tenders.models import Tender
 
 
-MAIN_SOURCE = "inaproc_realisasi_csv"
-DETAIL_SOURCE = "inaproc_realisasi_detail_csv"
+MAIN_SOURCE = Tender.SOURCE_REALISASI
+DETAIL_SOURCE = Tender.SOURCE_REALISASI
 DETAIL_REQUIRED_FIELDS = ("nilai_hps", "nilai_pagu", "lokasi_pekerjaan", "detail_url")
+SPSE_PROTECTED_FIELDS = {
+    "nama_paket",
+    "instansi",
+    "klpd_instansi",
+    "satuankerja",
+    "sumber_dana",
+    "metode_pengadaan",
+    "jenis_pengadaan",
+    "tahun_anggaran",
+    "nilai_hps",
+    "nilai_pagu",
+    "tanggal_pembuatan",
+    "tanggal_tender",
+    "lokasi_pekerjaan",
+    "detail_url",
+    "lpse_detail_url",
+    "tahapan",
+    "status",
+}
 
 
 def clean_text(value):
@@ -25,6 +44,32 @@ def set_if_empty(defaults, tender, field_name, value):
         return
     if not getattr(tender, field_name, None):
         defaults[field_name] = value
+
+
+def has_spse_data(tender):
+    if not tender:
+        return False
+    if tender.data_source in {Tender.SOURCE_SPSE, Tender.SOURCE_MIXED, Tender.SOURCE_LKPP_API}:
+        return True
+    return bool(tender.lpse_slug or tender.lpse_detail_url or tender.detail_url)
+
+
+def resolve_source(existing, incoming_source):
+    if not existing:
+        return incoming_source
+    if existing.data_source == incoming_source:
+        return incoming_source
+    if existing.data_source in {Tender.SOURCE_SPSE, Tender.SOURCE_MIXED, Tender.SOURCE_LKPP_API}:
+        return Tender.SOURCE_MIXED
+    return incoming_source
+
+
+def set_realisasi_value(defaults, existing, field_name, value):
+    if value in (None, ""):
+        return
+    if has_spse_data(existing) and field_name in SPSE_PROTECTED_FIELDS and getattr(existing, field_name, None):
+        return
+    defaults[field_name] = value
 
 
 def merge_raw_data(existing, key, value):
@@ -67,24 +112,24 @@ def build_main_defaults(row, existing=None):
     set_if_value(defaults, "kode_paket", kode_paket)
     set_if_value(defaults, "kode_tender", kode_tender)
     set_if_value(defaults, "kode_rup", row.get("kode_rup"))
-    set_if_value(defaults, "nama_paket", row.get("nama_paket"))
+    set_realisasi_value(defaults, existing, "nama_paket", row.get("nama_paket"))
     set_if_value(defaults, "nama_instansi", row.get("nama_instansi"))
     set_if_value(defaults, "nama_satuan_kerja", row.get("nama_satuan_kerja"))
-    set_if_value(defaults, "instansi", row.get("nama_instansi"))
-    set_if_value(defaults, "klpd_instansi", row.get("nama_instansi"))
-    set_if_value(defaults, "satuankerja", row.get("nama_satuan_kerja"))
+    set_realisasi_value(defaults, existing, "instansi", row.get("nama_instansi"))
+    set_realisasi_value(defaults, existing, "klpd_instansi", row.get("nama_instansi"))
+    set_realisasi_value(defaults, existing, "satuankerja", row.get("nama_satuan_kerja"))
     set_if_value(defaults, "sumber_transaksi", row.get("sumber_transaksi"))
-    set_if_value(defaults, "sumber_dana", row.get("sumber_dana"))
+    set_realisasi_value(defaults, existing, "sumber_dana", row.get("sumber_dana"))
     set_if_value(defaults, "nama_penyedia", row.get("nama_penyedia"))
-    set_if_value(defaults, "metode_pengadaan", row.get("metode_pengadaan"))
-    set_if_value(defaults, "jenis_pengadaan", row.get("jenis_pengadaan"))
+    set_realisasi_value(defaults, existing, "metode_pengadaan", row.get("metode_pengadaan"))
+    set_realisasi_value(defaults, existing, "jenis_pengadaan", row.get("jenis_pengadaan"))
     set_if_value(defaults, "status_paket", status_paket)
-    set_if_value(defaults, "status", status_paket)
-    set_if_value(defaults, "tahapan", status_paket)
-    set_if_value(defaults, "tahun_anggaran", row.get("tahun_anggaran"))
+    set_realisasi_value(defaults, existing, "status", status_paket)
+    set_realisasi_value(defaults, existing, "tahapan", status_paket)
+    set_realisasi_value(defaults, existing, "tahun_anggaran", row.get("tahun_anggaran"))
     set_if_value(defaults, "total_nilai", total_nilai)
     set_if_value(defaults, "nilai_pdn", row.get("nilai_pdn"))
-    set_if_value(defaults, "data_source", MAIN_SOURCE)
+    set_if_value(defaults, "data_source", resolve_source(existing, MAIN_SOURCE))
 
     if total_nilai is not None and (existing is None or existing.nilai_hps is None):
         defaults["nilai_hps"] = total_nilai
@@ -176,7 +221,7 @@ def build_detail_defaults(tender, row):
     set_if_empty(defaults, tender, "satuankerja", row.get("satuan_kerja"))
     set_if_empty(defaults, tender, "nama_satuan_kerja", row.get("satuan_kerja"))
 
-    defaults["data_source"] = DETAIL_SOURCE
+    defaults["data_source"] = resolve_source(tender, DETAIL_SOURCE)
     defaults["raw_data"] = merge_raw_data(getattr(tender, "raw_data", None), "realisasi_detail", row)
     return defaults
 

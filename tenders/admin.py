@@ -9,16 +9,20 @@ class TenderAdmin(admin.ModelAdmin):
     list_display = (
         "kode_tender",
         "nama_paket",
+        "lpse_name",
         "instansi",
-        "jenis_pengadaan",
-        "nilai_hps_display",
         "status_badge",
+        "tahapan",
+        "nilai_hps_display",
         "tanggal_pembuatan",
+        "data_source",
     )
     list_filter = (
-        "jenis_pengadaan",
+        "data_source",
         "status",
-        "tanggal_pembuatan",
+        "lpse_name",
+        "jenis_pengadaan",
+        "tahun_anggaran",
     )
     search_fields = (
         "kode_tender",
@@ -49,6 +53,7 @@ class TenderAdmin(admin.ModelAdmin):
                     "tender_ulang",
                     "alasan_ulang",
                     "tanggal_pembuatan",
+                    "data_source",
                 )
             },
         ),
@@ -72,13 +77,16 @@ class TenderAdmin(admin.ModelAdmin):
                     "satuankerja",
                     "jenis_pengadaan",
                     "metode_pengadaan",
+                    "metode_kualifikasi",
+                    "metode_pemilihan",
+                    "metode_evaluasi",
                     "jenis_kontrak",
                     "lokasi_pekerjaan",
                     "peserta_count",
                 ),
             },
         ),
-        ("Nilai", {"fields": ("nilai_pagu", "nilai_hps")}),
+        ("Nilai", {"fields": ("nilai_pagu", "nilai_hps", "nilai_kontrak", "total_nilai", "nilai_pdn")}),
         (
             "Dokumen",
             {
@@ -87,8 +95,26 @@ class TenderAdmin(admin.ModelAdmin):
                     "uraian_pekerjaan",
                     "uraian_pekerjaan_nama_file",
                     "uraian_file_link",
+                    "dokumen",
                     "detail_url",
                     "lpse_detail_url",
+                ),
+            },
+        ),
+        (
+            "Realisasi",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "kode_paket",
+                    "nama_instansi",
+                    "nama_satuan_kerja",
+                    "status_paket",
+                    "sumber_transaksi",
+                    "nama_penyedia",
+                    "kategori",
+                    "metode_tender",
+                    "cara_pembayaran",
                 ),
             },
         ),
@@ -96,7 +122,7 @@ class TenderAdmin(admin.ModelAdmin):
             "Metadata",
             {
                 "classes": ("collapse",),
-                "fields": ("created_at", "updated_at"),
+                "fields": ("raw_data", "created_at", "updated_at"),
             },
         ),
     )

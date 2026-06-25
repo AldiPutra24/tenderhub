@@ -378,6 +378,7 @@ class Command(BaseCommand):
             self.set_if_exists(defaults, "raw_data", row)
         elif model_has_field(Tender, "detail_json"):
             self.set_if_exists(defaults, "detail_json", row)
+        self.set_if_exists(defaults, "data_source", Tender.SOURCE_LKPP_API)
 
         # TenderUmumPublik does not provide a real detail URL. Keep existing detail_url
         # and lpse_detail_url untouched; new rows use the model default blank URL.

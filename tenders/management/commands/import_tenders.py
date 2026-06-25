@@ -143,6 +143,7 @@ class Command(BaseCommand):
                     "peserta_count": clean_int(row.get("Peserta Tender Count") or row.get("Peserta Tender")),
 
                     "detail_url": clean_text(row.get("Detail URL") or row.get("List Detail URL")),
+                    "data_source": Tender.SOURCE_SPSE,
 
                     # # jika model kamu punya JSONField ini
                     # "rup_json": clean_json(row.get("Rencana Umum Pengadaan JSON")),

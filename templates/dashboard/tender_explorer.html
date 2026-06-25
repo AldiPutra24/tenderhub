@@ -52,10 +52,17 @@
                             <option value="">Semua Status</option>
                             <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
                             <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
-                            <option value="BERLANGSUNG" {% if selected_filters.status == "BERLANGSUNG" %}selected{% endif %}>BERLANGSUNG</option>
                             <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
-                            <option value="SELESAI" {% if selected_filters.status == "SELESAI" %}selected{% endif %}>SELESAI</option>
                             <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="source-filter" class="mb-1.5 block text-sm font-bold text-secondary">Source</label>
+                        <select id="source-filter" name="source" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            {% for value, label in filter_options.source.items %}
+                            <option value="{{ value }}" {% if selected_filters.source == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
@@ -75,6 +82,16 @@
                             <option value="">Semua Instansi</option>
                             {% for option in filter_options.klpd_instansi %}
                             <option value="{{ option }}" {% if selected_filters.klpd_instansi == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="lpse-filter" class="mb-1.5 block text-sm font-bold text-secondary">LPSE</label>
+                        <select id="lpse-filter" name="lpse" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                            <option value="">Semua LPSE</option>
+                            {% for option in filter_options.lpse %}
+                            <option value="{{ option }}" {% if selected_filters.lpse == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
                             {% endfor %}
                         </select>
                     </div>
