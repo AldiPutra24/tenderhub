@@ -18,6 +18,10 @@ from .forms import ResendVerificationForm, VendorRegisterForm, VendorProfileForm
 from .models import VendorProfile
 from .tokens import email_verification_token
 from django.contrib.auth.decorators import login_required
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class GPFEPasswordResetView(PasswordResetView):
@@ -70,17 +74,23 @@ def register_view(request):
                 city_or_regency=form.cleaned_data.get("city_or_regency"),
                 country=form.cleaned_data.get("country"),
                 email_verified=False,
+                email_verified_at=None,
             )
 
             email_sent = send_verification_with_rate_limit(request, user, email)
-            messages.success(
-                request,
-                "Pendaftaran berhasil. Silakan cek email kakak untuk verifikasi akun.",
-            )
-            if not email_sent:
+            if email_sent:
+                messages.success(
+                    request,
+                    "Pendaftaran berhasil. Silakan cek email kakak untuk verifikasi akun.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Pendaftaran berhasil, tetapi email verifikasi gagal dikirim.",
+                )
                 messages.warning(
                     request,
-                    "Jika email belum masuk, gunakan kirim ulang verifikasi.",
+                    "Silakan gunakan kirim ulang verifikasi dari halaman login.",
                 )
             return redirect("login")
 
@@ -162,6 +172,8 @@ def get_or_create_profile(user):
             company_name="",
             whatsapp_number="",
             business_field="",
+            email_verified=False,
+            email_verified_at=None,
         )
 
 
@@ -181,6 +193,7 @@ def send_verification_with_rate_limit(request, user, email):
     try:
         send_verification_email(request, user)
     except Exception:
+        logger.exception("Failed to send verification email for user_id=%s email=%s", user.pk, email)
         return False
     return True
 

@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from unittest.mock import patch
 
 from users.tokens import email_verification_token
 from users.models import VendorProfile
@@ -222,9 +223,27 @@ class EmailVerificationTests(TestCase):
         user = User.objects.get(username="vendor@example.com")
         self.assertFalse(user.is_active)
         self.assertFalse(user.vendor_profile.email_verified)
+        self.assertIsNone(user.vendor_profile.email_verified_at)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "Verifikasi Email GPFE PROC HUB")
         self.assertIn("/accounts/verify-email/", mail.outbox[0].body)
+
+    @patch("users.email_verification.send_mail", side_effect=Exception("SMTP down"))
+    def test_register_does_not_500_when_verification_email_fails(self, mocked_send_mail):
+        response = self.client.post(
+            reverse("register"),
+            self.get_registration_payload(email="smtp-fail@example.com"),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pendaftaran berhasil, tetapi email verifikasi gagal dikirim.")
+        user = User.objects.get(username="smtp-fail@example.com")
+        self.assertFalse(user.is_active)
+        self.assertFalse(user.vendor_profile.email_verified)
+        self.assertIsNone(user.vendor_profile.email_verified_at)
+        self.assertEqual(len(mail.outbox), 0)
+        mocked_send_mail.assert_called_once()
 
     def test_unverified_user_cannot_login(self):
         self.create_pending_user(verified=False)
