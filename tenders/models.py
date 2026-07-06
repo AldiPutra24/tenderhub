@@ -202,3 +202,29 @@ class TenderNotification(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.title}"
+
+
+class TenderNotificationEmailLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tender_notification_email_logs")
+    notification = models.ForeignKey(
+        TenderNotification,
+        on_delete=models.CASCADE,
+        related_name="email_logs",
+    )
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "notification"],
+                name="unique_user_notification_email_log",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["user", "-sent_at"], name="tenders_email_log_user_idx"),
+            models.Index(fields=["sent_at"], name="tenders_email_log_sent_idx"),
+        ]
+        ordering = ["-sent_at"]
+
+    def __str__(self):
+        return f"{self.user} - {self.notification_id} - {self.sent_at}"

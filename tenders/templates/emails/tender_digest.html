@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:#020617;color:#ffffff;padding:24px;">
+              <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#cbd5e1;">GPFE PROC HUB</div>
+              <h1 style="margin:8px 0 0;font-size:24px;line-height:1.25;">Ringkasan Tender Baru</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px;">
+              <p style="margin:0 0 12px;font-size:16px;">Halo {{ nama }}</p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">
+                Ada <strong>{{ jumlah }}</strong> tender baru yang sesuai dengan preferensi kakak.
+              </p>
+
+              <h2 style="margin:0 0 12px;font-size:16px;">Watchlist LPSE</h2>
+              {% if watchlist_items %}
+                {% for item in watchlist_items %}
+                <div style="border-top:1px solid #e2e8f0;padding:14px 0;">
+                  <a href="{{ item.url }}" style="font-size:15px;font-weight:700;color:#0f172a;text-decoration:none;">{{ item.title }}</a>
+                  <div style="margin-top:6px;font-size:13px;color:#64748b;">{{ item.lpse_name }}{% if item.tanggal %} • {{ item.tanggal }}{% endif %}</div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Tidak ada tender baru dari Watchlist LPSE pada digest ini.</p>
+              {% endif %}
+
+              <h2 style="margin:24px 0 12px;font-size:16px;">AI Match Tinggi</h2>
+              {% if ai_match_items %}
+                {% for item in ai_match_items %}
+                <div style="border-top:1px solid #e2e8f0;padding:14px 0;">
+                  <a href="{{ item.url }}" style="font-size:15px;font-weight:700;color:#0f172a;text-decoration:none;">{{ item.title }}</a>
+                  <div style="margin-top:6px;font-size:13px;color:#64748b;">{{ item.instansi }}{% if item.tanggal %} • {{ item.tanggal }}{% endif %}</div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Tidak ada tender AI Match Tinggi pada digest ini.</p>
+              {% endif %}
+
+              {% if extra_count %}
+              <p style="margin:20px 0 0;font-size:14px;color:#475569;">... dan {{ extra_count }} tender lainnya.</p>
+              {% endif %}
+
+              <p style="margin:28px 0 0;">
+                <a href="{{ tender_list_url }}" style="display:inline-block;background:#020617;color:#ffffff;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;text-decoration:none;">Lihat Semua Tender</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f8fafc;padding:18px 24px;font-size:12px;color:#64748b;">
+              Pengaturan email dapat diubah melalui Profile Settings.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

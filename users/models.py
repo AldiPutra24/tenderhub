@@ -15,6 +15,15 @@ from django.contrib.auth.models import User
 
 
 class VendorProfile(models.Model):
+    DAILY = "DAILY"
+    THREE_DAYS = "THREE_DAYS"
+    WEEKLY = "WEEKLY"
+    EMAIL_DIGEST_FREQUENCY_CHOICES = [
+        (DAILY, "Setiap Hari"),
+        (THREE_DAYS, "Setiap 3 Hari"),
+        (WEEKLY, "Mingguan"),
+    ]
+
     LOCATION_TYPE_CHOICES = [
         ("indonesia", "Indonesia"),
         ("international", "Internasional"),
@@ -55,6 +64,16 @@ class VendorProfile(models.Model):
     preferred_procurement_types = models.TextField(blank=True, default="")
 
     preferred_locations = models.TextField(blank=True, default="")
+
+    email_verified = models.BooleanField(default=False)
+    email_verified_at = models.DateTimeField(blank=True, null=True)
+    email_notifications_enabled = models.BooleanField(default=True)
+    email_digest_frequency = models.CharField(
+        max_length=20,
+        choices=EMAIL_DIGEST_FREQUENCY_CHOICES,
+        default=THREE_DAYS,
+    )
+    last_digest_sent_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return self.company_name

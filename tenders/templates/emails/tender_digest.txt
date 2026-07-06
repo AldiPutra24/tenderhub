@@ -1,0 +1,27 @@
+Halo {{ nama }}
+
+Ada {{ jumlah }} tender baru yang sesuai dengan preferensi kakak.
+
+Ringkasan:
+
+Watchlist LPSE
+{% if watchlist_items %}{% for item in watchlist_items %}
+- {{ item.title }}{% if item.lpse_name %} ({{ item.lpse_name }}){% endif %}
+  {{ item.url }}
+{% endfor %}{% else %}
+- Tidak ada tender baru dari Watchlist LPSE pada digest ini.
+{% endif %}
+
+AI Match Tinggi
+{% if ai_match_items %}{% for item in ai_match_items %}
+- {{ item.title }}{% if item.instansi %} ({{ item.instansi }}){% endif %}
+  {{ item.url }}
+{% endfor %}{% else %}
+- Tidak ada tender AI Match Tinggi pada digest ini.
+{% endif %}
+
+{% if extra_count %}... dan {{ extra_count }} tender lainnya.
+{% endif %}
+Lihat Semua Tender: {{ tender_list_url }}
+
+Pengaturan email dapat diubah melalui Profile Settings.

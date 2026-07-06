@@ -192,7 +192,7 @@
                 </div>
             </div>
 
-            <a href="{% url 'settings' %}"
+            <a href="{% url 'vendor_profile' %}"
                class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition {% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'vendor_profile' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75h4.5l.55 2.2a7.4 7.4 0 0 1 1.55.9l2.16-.67 2.25 3.9-1.62 1.57c.04.26.06.53.06.8s-.02.54-.06.8l1.62 1.57-2.25 3.9-2.16-.67a7.4 7.4 0 0 1-1.55.9l-.55 2.2h-4.5l-.55-2.2a7.4 7.4 0 0 1-1.55-.9l-2.16.67-2.25-3.9 1.62-1.57a5.4 5.4 0 0 1-.06-.8c0-.27.02-.54.06-.8L3.26 10.08l2.25-3.9 2.16.67a7.4 7.4 0 0 1 1.55-.9l.53-2.2Z"/>

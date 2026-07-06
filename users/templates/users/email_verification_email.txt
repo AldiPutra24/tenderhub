@@ -1,0 +1,12 @@
+Salam,
+
+Terima kasih sudah mendaftar di GPFE PROC HUB.
+
+Silakan verifikasi email kakak melalui link berikut:
+{{ verification_url }}
+
+Setelah email terverifikasi, akun masih menunggu approval admin sebelum mendapat akses penuh ke fitur tender.
+
+Jika tidak merasa mendaftar, abaikan email ini.
+
+GPFE PROC HUB

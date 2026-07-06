@@ -23,6 +23,12 @@
 {% block content %}
 {% admin_dashboard_stats as dashboard_stats %}
 <div id="content-main">
+    <div class="gpfe-section-heading">
+        <div>
+            <p class="gpfe-eyebrow">Monitoring</p>
+            <h2>Email Digest Statistics</h2>
+        </div>
+    </div>
     <section class="gpfe-stat-grid" aria-label="Ringkasan data">
         {% for stat in dashboard_stats %}
         <article class="gpfe-stat-card gpfe-stat-{{ stat.tone }}">

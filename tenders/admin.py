@@ -1,7 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import InaprocInstansi, LPSEWatchlist, Tender, TenderBookmark, TenderNotification
+from .models import (
+    InaprocInstansi,
+    LPSEWatchlist,
+    Tender,
+    TenderBookmark,
+    TenderNotification,
+    TenderNotificationEmailLog,
+)
 
 
 @admin.register(Tender)
@@ -217,6 +224,33 @@ class TenderNotificationAdmin(admin.ModelAdmin):
     list_per_page = 50
     ordering = ("-created_at",)
     date_hierarchy = "created_at"
+
+
+@admin.register(TenderNotificationEmailLog)
+class TenderNotificationEmailLogAdmin(admin.ModelAdmin):
+    list_display = ("user", "notification", "notification_type", "tender", "sent_at")
+    list_filter = ("sent_at", "notification__notification_type")
+    search_fields = (
+        "user__username",
+        "user__email",
+        "notification__title",
+        "notification__tender__kode_tender",
+        "notification__tender__nama_paket",
+    )
+    list_select_related = ("user", "notification", "notification__tender")
+    autocomplete_fields = ("user", "notification")
+    readonly_fields = ("sent_at",)
+    list_per_page = 50
+    ordering = ("-sent_at",)
+    date_hierarchy = "sent_at"
+
+    @admin.display(description="Type", ordering="notification__notification_type")
+    def notification_type(self, obj):
+        return obj.notification.get_notification_type_display()
+
+    @admin.display(description="Tender", ordering="notification__tender")
+    def tender(self, obj):
+        return obj.notification.tender
 
 
 @admin.register(InaprocInstansi)

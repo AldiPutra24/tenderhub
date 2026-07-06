@@ -2,6 +2,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.cache import cache
 from django.utils import timezone
 import logging
@@ -17,6 +18,7 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         **AuthenticationForm.error_messages,
         "invalid_login": "Login gagal. Periksa kembali email/username dan password.",
         "inactive": "Login gagal. Akun anda belum aktif atau masih menunggu approval admin.",
+        "unverified": "Email kakak belum diverifikasi. Silakan cek email untuk verifikasi akun.",
         "locked": "Terlalu banyak percobaan login gagal.",
     }
 
@@ -34,13 +36,15 @@ class ApprovedAuthenticationForm(AuthenticationForm):
             logger.warning("Login blocked by throttle for username=%s ip=%s", username, self.get_client_ip())
             raise self.get_locked_error()
 
-        if username and User.objects.filter(username=username, is_active=False).exists():
-            if self.record_failed_attempt(username, reason="inactive"):
-                raise self.get_locked_error()
-            raise forms.ValidationError(
-                self.error_messages["inactive"],
-                code="inactive",
-            )
+        if username:
+            inactive_user = User.objects.filter(username=username, is_active=False).first()
+            if inactive_user and not self.is_email_verified(inactive_user):
+                if self.record_failed_attempt(username, reason="unverified"):
+                    raise self.get_locked_error()
+                raise forms.ValidationError(
+                    self.error_messages["unverified"],
+                    code="unverified",
+                )
 
         try:
             cleaned_data = super().clean()
@@ -54,6 +58,20 @@ class ApprovedAuthenticationForm(AuthenticationForm):
 
         self.reset_failed_attempts(username)
         return cleaned_data
+
+    def confirm_login_allowed(self, user):
+        if user.is_active or self.is_email_verified(user):
+            return
+        raise forms.ValidationError(
+            self.error_messages["unverified"],
+            code="unverified",
+        )
+
+    def is_email_verified(self, user):
+        try:
+            return bool(user.vendor_profile.email_verified)
+        except ObjectDoesNotExist:
+            return False
 
     def get_client_ip(self):
         if not self.request:
@@ -188,6 +206,11 @@ class VendorRegisterForm(forms.Form):
 
         return cleaned_data
 
+
+class ResendVerificationForm(forms.Form):
+    email = forms.EmailField(label="Email Aktif")
+
+
 class VendorProfileForm(forms.ModelForm):
     preferred_procurement_types_text = forms.CharField(
         label="Jenis Pengadaan yang Diminati",
@@ -221,11 +244,15 @@ class VendorProfileForm(forms.ModelForm):
             "country",
             "min_project_value",
             "max_project_value",
+            "email_notifications_enabled",
+            "email_digest_frequency",
         ]
 
         labels = {
             "min_project_value": "Minimal Nilai Proyek",
             "max_project_value": "Maksimal Nilai Proyek",
+            "email_notifications_enabled": "Enable Email Notification",
+            "email_digest_frequency": "Email Digest Frequency",
         }
 
     def __init__(self, *args, **kwargs):

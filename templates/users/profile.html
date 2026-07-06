@@ -46,6 +46,14 @@
                     <span class="h-2 w-2 rounded-full bg-slate-400"></span>
                     Lokasi Favorit
                 </a>
+                <a href="#email-notifications" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Email Notifications
+                </a>
+                <a href="{% url 'password_reset' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    Reset Password
+                </a>
             </nav>
         </aside>
 
@@ -164,6 +172,36 @@
                         <label for="id_preferred_locations_text" class="mb-1.5 block text-sm font-medium text-slate-700">Lokasi Tender yang Diminati</label>
                         <textarea id="id_preferred_locations_text" name="preferred_locations_text" rows="4" class="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Contoh:&#10;Jawa Timur&#10;Nganjuk&#10;Surabaya">{{ form.preferred_locations_text.value|default_if_none:'' }}</textarea>
                         {% if form.preferred_locations_text.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.preferred_locations_text.errors|striptags }}</p>{% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section id="email-notifications" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-base font-semibold text-slate-950">Email Notifications</h2>
+                    <p class="mt-1 text-sm text-slate-500">GPFE PROC HUB akan mengirim ringkasan tender baru sesuai preferensi kakak.</p>
+                </div>
+                <div class="grid gap-5 p-5 sm:p-6">
+                    <label for="id_email_notifications_enabled" class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-950">Enable Email Notification</span>
+                            <span class="mt-1 block text-sm text-slate-500">ON untuk menerima email digest, OFF untuk berhenti menerima ringkasan email.</span>
+                        </span>
+                        <span class="inline-flex items-center gap-3">
+                            <span class="text-xs font-bold uppercase tracking-wide text-slate-500">OFF</span>
+                            <input id="id_email_notifications_enabled" name="email_notifications_enabled" type="checkbox" value="on" {% if form.email_notifications_enabled.value %}checked{% endif %} class="h-5 w-5 rounded border-slate-300 text-slate-950 focus:ring-slate-300">
+                            <span class="text-xs font-bold uppercase tracking-wide text-slate-500">ON</span>
+                        </span>
+                    </label>
+
+                    <div>
+                        <label for="id_email_digest_frequency" class="mb-1.5 block text-sm font-medium text-slate-700">Email Digest Frequency</label>
+                        <select id="id_email_digest_frequency" name="email_digest_frequency" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                            <option value="DAILY" {% if form.email_digest_frequency.value == "DAILY" %}selected{% endif %}>Setiap Hari</option>
+                            <option value="THREE_DAYS" {% if form.email_digest_frequency.value == "THREE_DAYS" or not form.email_digest_frequency.value %}selected{% endif %}>Setiap 3 Hari</option>
+                            <option value="WEEKLY" {% if form.email_digest_frequency.value == "WEEKLY" %}selected{% endif %}>Mingguan</option>
+                        </select>
+                        {% if form.email_digest_frequency.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.email_digest_frequency.errors|striptags }}</p>{% endif %}
                     </div>
                 </div>
             </section>

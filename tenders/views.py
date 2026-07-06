@@ -415,6 +415,11 @@ def build_dashboard_overview(request):
 
 
 def dashboard(request):
+    if request.user.is_authenticated and not request.user.is_active:
+        return render(request, "dashboard/index.html", {
+            "pending_approval": True,
+        })
+
     context = {
         **build_dashboard_overview(request),
     }
