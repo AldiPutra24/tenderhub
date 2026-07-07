@@ -459,13 +459,181 @@
                 setHidden(document.querySelector("[data-tender-modal]"), true);
             }
 
-            function syncLocationFields(container) {
-                var select = container.querySelector("[data-location-select]");
-                if (!select) return;
-                var value = select.value || "indonesia";
-                container.querySelectorAll("[data-location-section]").forEach(function (section) {
-                    section.hidden = section.getAttribute("data-location-section") !== value;
+            function normalizeLocationName(value) {
+                return String(value || "")
+                    .trim()
+                    .toLowerCase()
+                    .replace(/^(kabupaten|kab\.|kota)\s+/, "")
+                    .replace(/\s+/g, " ");
+            }
+
+            function setLocationError(form, message) {
+                var error = form.querySelector("[data-location-error]");
+                if (!error) return;
+                error.textContent = message || "";
+                error.classList.toggle("hidden", !message);
+            }
+
+            function setSelectOptions(select, placeholder, items, selectedId, selectedName) {
+                select.innerHTML = "";
+                var placeholderOption = document.createElement("option");
+                placeholderOption.value = "";
+                placeholderOption.textContent = placeholder;
+                select.appendChild(placeholderOption);
+
+                (items || []).forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    option.dataset.name = item.name;
+                    select.appendChild(option);
                 });
+
+                if (selectedId) {
+                    select.value = selectedId;
+                }
+                if (!select.value && selectedName) {
+                    var normalizedSelected = normalizeLocationName(selectedName);
+                    Array.prototype.some.call(select.options, function (option) {
+                        if (normalizeLocationName(option.dataset.name || option.textContent) === normalizedSelected) {
+                            select.value = option.value;
+                            return true;
+                        }
+                        return false;
+                    });
+                }
+            }
+
+            function updateLocationNames(form) {
+                var provinceSelect = form.querySelector("[data-province-select]");
+                var citySelect = form.querySelector("[data-city-select]");
+                var provinceName = form.querySelector("[data-province-name]");
+                var cityName = form.querySelector("[data-city-name]");
+                var selectedProvince = provinceSelect && provinceSelect.options[provinceSelect.selectedIndex];
+                var selectedCity = citySelect && citySelect.options[citySelect.selectedIndex];
+
+                if (provinceName) provinceName.value = selectedProvince && selectedProvince.value ? (selectedProvince.dataset.name || selectedProvince.textContent) : "";
+                if (cityName) cityName.value = selectedCity && selectedCity.value ? (selectedCity.dataset.name || selectedCity.textContent) : "";
+            }
+
+            function isIndonesiaCountry(value) {
+                return String(value || "").trim().toLowerCase() === "indonesia";
+            }
+
+            function syncLocationFields(container) {
+                var form = container.closest ? container.closest("[data-location-form]") : container;
+                if (!form || !form.querySelector) return;
+
+                var countrySelect = form.querySelector("[data-country-select]");
+                var legacySelect = form.querySelector("[data-location-select]");
+                var locationType = form.querySelector("[data-location-type]");
+                var country = countrySelect ? countrySelect.value : "";
+                var indonesia = countrySelect ? isIndonesiaCountry(country || "Indonesia") : ((legacySelect && legacySelect.value) || "indonesia") === "indonesia";
+                var mode = indonesia ? "indonesia" : "international";
+
+                if (locationType) locationType.value = mode;
+
+                form.querySelectorAll("[data-location-section]").forEach(function (section) {
+                    section.hidden = section.getAttribute("data-location-section") !== mode;
+                });
+
+                var provinceSelect = form.querySelector("[data-province-select]");
+                var citySelect = form.querySelector("[data-city-select]");
+                var internationalInput = form.querySelector("[name='international_location']");
+                if (provinceSelect) provinceSelect.required = indonesia;
+                if (citySelect) {
+                    citySelect.required = indonesia;
+                    citySelect.disabled = !indonesia || !provinceSelect || !provinceSelect.value || citySelect.dataset.loading === "true";
+                }
+                if (internationalInput) internationalInput.required = !indonesia;
+
+                updateLocationNames(form);
+                if (indonesia && provinceSelect && !provinceSelect.dataset.loaded && provinceSelect.dataset.loading !== "true") {
+                    loadProvinces(form);
+                }
+            }
+
+            async function fetchLocationJson(url) {
+                var response = await fetch(url, {headers: {"Accept": "application/json"}});
+                var data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data && data.error ? data.error : "Data lokasi gagal dimuat.");
+                }
+                return data;
+            }
+
+            async function loadProvinces(form) {
+                var provinceSelect = form.querySelector("[data-province-select]");
+                if (!provinceSelect) return;
+
+                provinceSelect.dataset.loading = "true";
+                provinceSelect.innerHTML = '<option value="">Memuat provinsi...</option>';
+                setLocationError(form, "");
+
+                try {
+                    var provinces = await fetchLocationJson("/api/locations/provinces/");
+                    setSelectOptions(
+                        provinceSelect,
+                        "Pilih provinsi",
+                        provinces,
+                        provinceSelect.dataset.selectedId || provinceSelect.value,
+                        provinceSelect.dataset.selectedName
+                    );
+                    provinceSelect.dataset.loaded = "true";
+                    updateLocationNames(form);
+                    if (provinceSelect.value) {
+                        await loadRegencies(form, false);
+                    }
+                } catch (error) {
+                    provinceSelect.innerHTML = '<option value="">Gagal memuat provinsi</option>';
+                    provinceSelect.dataset.loaded = "true";
+                    setLocationError(form, error.message || "Provinsi gagal dimuat.");
+                } finally {
+                    provinceSelect.dataset.loading = "false";
+                    syncLocationFields(form);
+                }
+            }
+
+            async function loadRegencies(form, resetSelection) {
+                var provinceSelect = form.querySelector("[data-province-select]");
+                var citySelect = form.querySelector("[data-city-select]");
+                if (!provinceSelect || !citySelect) return;
+
+                if (resetSelection) {
+                    citySelect.dataset.selectedId = "";
+                    citySelect.dataset.selectedName = "";
+                }
+
+                if (!provinceSelect.value) {
+                    citySelect.innerHTML = '<option value="">Pilih kota/kabupaten</option>';
+                    citySelect.disabled = true;
+                    updateLocationNames(form);
+                    return;
+                }
+
+                citySelect.dataset.loading = "true";
+                citySelect.disabled = true;
+                citySelect.innerHTML = '<option value="">Memuat kota/kabupaten...</option>';
+                setLocationError(form, "");
+
+                try {
+                    var regencies = await fetchLocationJson("/api/locations/regencies/?province_id=" + encodeURIComponent(provinceSelect.value));
+                    setSelectOptions(
+                        citySelect,
+                        regencies.length ? "Pilih kota/kabupaten" : "Tidak ada data kota/kabupaten",
+                        regencies,
+                        citySelect.dataset.selectedId || citySelect.value,
+                        citySelect.dataset.selectedName
+                    );
+                    citySelect.disabled = !regencies.length;
+                    updateLocationNames(form);
+                } catch (error) {
+                    citySelect.innerHTML = '<option value="">Gagal memuat kota/kabupaten</option>';
+                    setLocationError(form, error.message || "Kota/kabupaten gagal dimuat.");
+                } finally {
+                    citySelect.dataset.loading = "false";
+                    syncLocationFields(form);
+                }
             }
 
             document.addEventListener("click", function (event) {
@@ -522,8 +690,23 @@
                     return;
                 }
 
-                if (!event.target.matches("[data-location-select]")) return;
-                syncLocationFields(event.target.closest("[data-location-form]") || document);
+                var locationForm = event.target.closest("[data-location-form]");
+                if (!locationForm) return;
+
+                if (event.target.matches("[data-country-select], [data-location-select]")) {
+                    syncLocationFields(locationForm);
+                    return;
+                }
+
+                if (event.target.matches("[data-province-select]")) {
+                    updateLocationNames(locationForm);
+                    loadRegencies(locationForm, true);
+                    return;
+                }
+
+                if (event.target.matches("[data-city-select]")) {
+                    updateLocationNames(locationForm);
+                }
             });
 
             document.addEventListener("htmx:afterSwap", function (event) {

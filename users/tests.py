@@ -9,6 +9,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from unittest.mock import patch
 
+from users.forms import VendorRegisterForm
 from users.tokens import email_verification_token
 from users.models import VendorProfile
 
@@ -402,3 +403,104 @@ class VendorProfilePreferenceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Notifikasi Email")
         self.assertContains(response, "Setiap 3 Hari")
+
+
+class LocationApiTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    @patch("users.services.locations.fetch_provider_json")
+    def test_provinces_endpoint_returns_internal_json(self, mocked_fetch):
+        mocked_fetch.return_value = [{"id": "35", "name": "Jawa Timur"}]
+
+        response = self.client.get(reverse("api_location_provinces"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{"id": "35", "name": "Jawa Timur"}])
+        self.assertEqual(response["X-Location-Source"], "provider")
+        mocked_fetch.assert_called_once_with("provinces.json")
+
+    @patch("users.services.locations.fetch_provider_json")
+    def test_regencies_endpoint_returns_city_for_selected_province(self, mocked_fetch):
+        mocked_fetch.return_value = [{"id": "3578", "name": "Kota Surabaya"}]
+
+        response = self.client.get(reverse("api_location_regencies"), {"province_id": "35"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{"id": "3578", "name": "Kota Surabaya"}])
+        mocked_fetch.assert_called_once_with("regencies/35.json")
+
+    def test_regencies_endpoint_requires_province_id(self):
+        response = self.client.get(reverse("api_location_regencies"))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "province_id wajib diisi."})
+
+
+class DynamicLocationValidationTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def register_payload(self, **overrides):
+        payload = {
+            "full_name": "Vendor Test",
+            "whatsapp_number": "08123456789",
+            "institution_email": "dynamic-location@example.com",
+            "password": "StrongPass123!",
+            "password_confirm": "StrongPass123!",
+            "company_name": "PT Vendor Test",
+            "business_field": "Konstruksi",
+            "location_type": "indonesia",
+            "country": "Indonesia",
+            "province_id": "35",
+            "province_name": "Jawa Timur",
+            "city_id": "3578",
+            "city_name": "Kota Surabaya",
+            "international_location": "",
+        }
+        payload.update(overrides)
+        return payload
+
+    def fetch_locations(self, path):
+        if path == "provinces.json":
+            return [{"id": "35", "name": "Jawa Timur"}]
+        if path == "regencies/35.json":
+            return [{"id": "3578", "name": "Kota Surabaya"}]
+        return []
+
+    @patch("users.services.locations.fetch_provider_json")
+    def test_indonesia_location_ids_are_validated_and_names_are_derived(self, mocked_fetch):
+        mocked_fetch.side_effect = self.fetch_locations
+        form = VendorRegisterForm(
+            data=self.register_payload(province_name="Nama palsu", city_name="Nama palsu")
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data["province_name"], "Jawa Timur")
+        self.assertEqual(form.cleaned_data["city_name"], "Kota Surabaya")
+        self.assertEqual(form.cleaned_data["province"], "Jawa Timur")
+        self.assertEqual(form.cleaned_data["city_or_regency"], "Kota Surabaya")
+
+    @patch("users.services.locations.fetch_provider_json")
+    def test_indonesia_requires_city(self, mocked_fetch):
+        mocked_fetch.side_effect = self.fetch_locations
+        form = VendorRegisterForm(data=self.register_payload(city_id="", city_name=""))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("city_id", form.errors)
+
+    def test_international_requires_international_location(self):
+        form = VendorRegisterForm(
+            data=self.register_payload(
+                location_type="international",
+                country="Singapore",
+                province_id="",
+                province_name="",
+                city_id="",
+                city_name="",
+                international_location="",
+            )
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("international_location", form.errors)

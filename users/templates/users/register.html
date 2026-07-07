@@ -137,30 +137,41 @@
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
-                            <div class="md:col-span-2">
-                                <label for="id_location_type" class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Lokasi</label>
-                                <select id="id_location_type" name="location_type" data-location-select class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
-                                    <option value="indonesia" {% if form.location_type.value == "indonesia" or not form.location_type.value %}selected{% endif %}>Indonesia</option>
-                                    <option value="international" {% if form.location_type.value == "international" %}selected{% endif %}>Internasional</option>
-                                </select>
-                                {% if form.location_type.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.location_type.errors|striptags }}</p>{% endif %}
-                            </div>
+                            <input id="id_location_type" name="location_type" type="hidden" value="{{ form.location_type.value|default:'indonesia' }}" data-location-type>
+                            <input id="id_province_name" name="province_name" type="hidden" value="{{ form.province_name.value|default:form.province.value|default_if_none:'' }}" data-province-name>
+                            <input id="id_city_name" name="city_name" type="hidden" value="{{ form.city_name.value|default:form.city_or_regency.value|default_if_none:'' }}" data-city-name>
 
-                            <div data-location-section="indonesia" {% if form.location_type.value == "international" %}hidden{% endif %}>
-                                <label for="id_province" class="mb-1.5 block text-sm font-medium text-slate-700">Provinsi</label>
-                                <input id="id_province" name="province" type="text" value="{{ form.province.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Jawa Timur">
-                                {% if form.province.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.province.errors|striptags }}</p>{% endif %}
-                            </div>
-                            <div data-location-section="indonesia" {% if form.location_type.value == "international" %}hidden{% endif %}>
-                                <label for="id_city_or_regency" class="mb-1.5 block text-sm font-medium text-slate-700">Kota/Kabupaten</label>
-                                <input id="id_city_or_regency" name="city_or_regency" type="text" value="{{ form.city_or_regency.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Surabaya">
-                                {% if form.city_or_regency.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.city_or_regency.errors|striptags }}</p>{% endif %}
-                            </div>
-                            <div class="md:col-span-2" data-location-section="international" {% if form.location_type.value != "international" %}hidden{% endif %}>
+                            <div class="md:col-span-2">
                                 <label for="id_country" class="mb-1.5 block text-sm font-medium text-slate-700">Negara</label>
-                                <input id="id_country" name="country" type="text" value="{{ form.country.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Singapore">
+                                <select id="id_country" name="country" data-country-select class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                                    <option value="">Pilih negara</option>
+                                    {% for value, label in form.country.field.choices %}
+                                    <option value="{{ value }}" {% if form.country.value == value or not form.country.value and value == "Indonesia" %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
                                 {% if form.country.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.country.errors|striptags }}</p>{% endif %}
                             </div>
+
+                            <div data-location-section="indonesia">
+                                <label for="id_province_id" class="mb-1.5 block text-sm font-medium text-slate-700">Provinsi</label>
+                                <select id="id_province_id" name="province_id" data-province-select data-selected-id="{{ form.province_id.value|default_if_none:'' }}" data-selected-name="{{ form.province_name.value|default:form.province.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200">
+                                    <option value="">Pilih provinsi</option>
+                                </select>
+                                {% if form.province_id.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.province_id.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div data-location-section="indonesia">
+                                <label for="id_city_id" class="mb-1.5 block text-sm font-medium text-slate-700">Kota/Kabupaten</label>
+                                <select id="id_city_id" name="city_id" data-city-select data-selected-id="{{ form.city_id.value|default_if_none:'' }}" data-selected-name="{{ form.city_name.value|default:form.city_or_regency.value|default_if_none:'' }}" disabled class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200 disabled:bg-slate-50 disabled:text-slate-400">
+                                    <option value="">Pilih kota/kabupaten</option>
+                                </select>
+                                {% if form.city_id.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.city_id.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <div class="md:col-span-2" data-location-section="international">
+                                <label for="id_international_location" class="mb-1.5 block text-sm font-medium text-slate-700">Lokasi Internasional</label>
+                                <input id="id_international_location" name="international_location" type="text" value="{{ form.international_location.value|default_if_none:'' }}" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Contoh: Singapore, Kuala Lumpur, atau wilayah operasional">
+                                {% if form.international_location.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.international_location.errors|striptags }}</p>{% endif %}
+                            </div>
+                            <p class="md:col-span-2 hidden text-sm text-red-600" data-location-error></p>
                         </div>
                     </section>
 

@@ -150,7 +150,7 @@ def calculate_tender_match(tender, vendor_profile):
 
     location_preferences = []
     location_preferences.extend(safe_list(getattr(vendor_profile, "preferred_locations", [])))
-    for field in ("province", "city_or_regency", "country"):
+    for field in ("province_name", "city_name", "international_location", "province", "city_or_regency", "country"):
         location_preferences.extend(safe_list(getattr(vendor_profile, field, "")))
 
     if location_preferences and _list_match(location_preferences, tender_location):

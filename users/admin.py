@@ -117,6 +117,9 @@ class UserAdmin(DjangoUserAdmin):
         "username",
         "email",
         "company_name",
+        "country",
+        "province_name",
+        "city_name",
         "email_notifications_enabled",
         "email_digest_frequency",
         "last_digest_sent_at",
@@ -143,6 +146,10 @@ class UserAdmin(DjangoUserAdmin):
         "last_name",
         "vendor_profile__company_name",
         "vendor_profile__full_name",
+        "vendor_profile__country",
+        "vendor_profile__province_name",
+        "vendor_profile__city_name",
+        "vendor_profile__international_location",
     )
     actions = [
         approve_users,
@@ -173,6 +180,21 @@ class UserAdmin(DjangoUserAdmin):
     def company_name(self, obj):
         profile = getattr(obj, "vendor_profile", None)
         return profile.company_name if profile else "-"
+
+    @admin.display(description="Negara")
+    def country(self, obj):
+        profile = getattr(obj, "vendor_profile", None)
+        return profile.country if profile else "-"
+
+    @admin.display(description="Provinsi")
+    def province_name(self, obj):
+        profile = getattr(obj, "vendor_profile", None)
+        return profile.province_name or profile.province if profile else "-"
+
+    @admin.display(description="Kota/Kabupaten")
+    def city_name(self, obj):
+        profile = getattr(obj, "vendor_profile", None)
+        return profile.city_name or profile.city_or_regency if profile else "-"
 
     @admin.display(boolean=True, description="Email verified")
     def email_verified(self, obj):
@@ -222,9 +244,10 @@ class VendorProfileAdmin(admin.ModelAdmin):
         "whatsapp_number",
         "business_field",
         "location_type",
-        "province",
-        "city_or_regency",
         "country",
+        "province_name",
+        "city_name",
+        "international_location",
         "created_at",
         "email_verified_at",
     )
@@ -236,14 +259,19 @@ class VendorProfileAdmin(admin.ModelAdmin):
         "institution_email",
         "whatsapp_number",
         "business_field",
+        "country",
+        "province_name",
+        "city_name",
+        "international_location",
     )
 
     list_filter = (
         "email_notifications_enabled",
         "email_digest_frequency",
         "location_type",
-        "province",
         "country",
+        "province_name",
+        "city_name",
         "created_at",
         "email_verified",
     )
@@ -287,9 +315,12 @@ class VendorProfileAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "location_type",
-                    "province",
-                    "city_or_regency",
                     "country",
+                    "province_id",
+                    "province_name",
+                    "city_id",
+                    "city_name",
+                    "international_location",
                 )
             },
         ),

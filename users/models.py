@@ -44,6 +44,11 @@ class VendorProfile(models.Model):
     city_or_regency = models.CharField(max_length=100, blank=True, null=True)
 
     country = models.CharField(max_length=100, blank=True, null=True)
+    province_id = models.CharField(max_length=20, blank=True, null=True)
+    province_name = models.CharField(max_length=100, blank=True, null=True)
+    city_id = models.CharField(max_length=20, blank=True, null=True)
+    city_name = models.CharField(max_length=100, blank=True, null=True)
+    international_location = models.CharField(max_length=255, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

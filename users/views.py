@@ -73,6 +73,11 @@ def register_view(request):
                 province=form.cleaned_data.get("province"),
                 city_or_regency=form.cleaned_data.get("city_or_regency"),
                 country=form.cleaned_data.get("country"),
+                province_id=form.cleaned_data.get("province_id"),
+                province_name=form.cleaned_data.get("province_name"),
+                city_id=form.cleaned_data.get("city_id"),
+                city_name=form.cleaned_data.get("city_name"),
+                international_location=form.cleaned_data.get("international_location"),
                 email_verified=False,
                 email_verified_at=None,
             )

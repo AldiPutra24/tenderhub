@@ -8,9 +8,101 @@ from django.utils import timezone
 import logging
 import math
 from .models import VendorProfile
+from .services.locations import validate_indonesia_location
 
 
 logger = logging.getLogger(__name__)
+
+
+COUNTRY_CHOICES = [
+    ("Indonesia", "Indonesia"),
+    ("Malaysia", "Malaysia"),
+    ("Singapore", "Singapura"),
+    ("Thailand", "Thailand"),
+    ("Vietnam", "Vietnam"),
+    ("Philippines", "Filipina"),
+    ("Brunei Darussalam", "Brunei Darussalam"),
+    ("Australia", "Australia"),
+    ("China", "China"),
+    ("Japan", "Jepang"),
+    ("South Korea", "Korea Selatan"),
+    ("Other", "Lainnya"),
+]
+
+
+class CountryField(forms.CharField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("max_length", 100)
+        kwargs.setdefault("required", False)
+        kwargs.setdefault("initial", "Indonesia")
+        kwargs.setdefault("widget", forms.Select(choices=COUNTRY_CHOICES))
+        super().__init__(*args, **kwargs)
+        self.choices = COUNTRY_CHOICES
+
+
+def is_indonesia(country):
+    return (country or "").strip().casefold() == "indonesia"
+
+
+def add_country_choice(field, country):
+    country = (country or "").strip()
+    if not country:
+        return
+
+    choices = list(field.widget.choices)
+    if country not in [value for value, _label in choices]:
+        choices.append((country, country))
+        field.widget.choices = choices
+        field.choices = choices
+
+
+class DynamicLocationFormMixin:
+    def clean_dynamic_location(self, cleaned_data):
+        country = (cleaned_data.get("country") or "").strip()
+        location_type = cleaned_data.get("location_type") or "indonesia"
+
+        if not country and location_type == "indonesia":
+            country = "Indonesia"
+
+        if is_indonesia(country):
+            cleaned_data["location_type"] = "indonesia"
+            location = validate_indonesia_location(
+                cleaned_data.get("province_id"),
+                cleaned_data.get("city_id"),
+                cleaned_data.get("province_name") or cleaned_data.get("province"),
+                cleaned_data.get("city_name") or cleaned_data.get("city_or_regency"),
+            )
+            if not location:
+                if not cleaned_data.get("province_id") and not cleaned_data.get("province"):
+                    self.add_error("province_id", "Provinsi wajib diisi.")
+                if not cleaned_data.get("city_id") and not cleaned_data.get("city_or_regency"):
+                    self.add_error("city_id", "Kota/Kabupaten wajib diisi.")
+                if cleaned_data.get("province_id") or cleaned_data.get("city_id"):
+                    raise forms.ValidationError("Data lokasi Indonesia tidak valid atau belum tersedia.")
+                return cleaned_data
+
+            cleaned_data.update(location)
+            cleaned_data["province"] = location["province_name"]
+            cleaned_data["city_or_regency"] = location["city_name"]
+            cleaned_data["country"] = "Indonesia"
+            cleaned_data["international_location"] = ""
+            return cleaned_data
+
+        cleaned_data["location_type"] = "international"
+        cleaned_data["country"] = country
+        international_location = (cleaned_data.get("international_location") or "").strip()
+        if not country:
+            self.add_error("country", "Negara wajib diisi.")
+        if not international_location:
+            self.add_error("international_location", "Lokasi internasional wajib diisi.")
+
+        cleaned_data["province_id"] = ""
+        cleaned_data["province_name"] = ""
+        cleaned_data["city_id"] = ""
+        cleaned_data["city_name"] = ""
+        cleaned_data["province"] = ""
+        cleaned_data["city_or_regency"] = ""
+        return cleaned_data
 
 
 class ApprovedAuthenticationForm(AuthenticationForm):
@@ -152,7 +244,7 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         cache.delete(cache_key)
 
 
-class VendorRegisterForm(forms.Form):
+class VendorRegisterForm(DynamicLocationFormMixin, forms.Form):
     full_name = forms.CharField(label="Nama Lengkap", max_length=150)
     whatsapp_number = forms.CharField(label="Nomor WA", max_length=30)
     institution_email = forms.EmailField(label="Email Aktif")
@@ -165,12 +257,23 @@ class VendorRegisterForm(forms.Form):
 
     location_type = forms.ChoiceField(
         label="Jenis Lokasi",
-        choices=VendorProfile.LOCATION_TYPE_CHOICES
+        choices=VendorProfile.LOCATION_TYPE_CHOICES,
+        initial="indonesia",
+        widget=forms.HiddenInput,
     )
 
     province = forms.CharField(label="Provinsi", max_length=100, required=False)
     city_or_regency = forms.CharField(label="Kota/Kabupaten", max_length=100, required=False)
-    country = forms.CharField(label="Negara", max_length=100, required=False)
+    country = CountryField(label="Negara")
+    province_id = forms.CharField(label="Provinsi", max_length=20, required=False)
+    province_name = forms.CharField(max_length=100, required=False)
+    city_id = forms.CharField(label="Kota/Kabupaten", max_length=20, required=False)
+    city_name = forms.CharField(max_length=100, required=False)
+    international_location = forms.CharField(label="Lokasi Internasional", max_length=255, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        add_country_choice(self.fields["country"], self.data.get("country") if self.is_bound else self.initial.get("country"))
 
     def clean_institution_email(self):
         email = self.cleaned_data["institution_email"]
@@ -185,33 +288,22 @@ class VendorRegisterForm(forms.Form):
 
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
-        location_type = cleaned_data.get("location_type")
-
-        province = cleaned_data.get("province")
-        city_or_regency = cleaned_data.get("city_or_regency")
-        country = cleaned_data.get("country")
-
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError("Kata sandi dan konfirmasi kata sandi tidak sama.")
 
-        if location_type == "indonesia":
-            if not province:
-                self.add_error("province", "Provinsi wajib diisi.")
-            if not city_or_regency:
-                self.add_error("city_or_regency", "Kota/Kabupaten wajib diisi.")
-
-        if location_type == "international":
-            if not country:
-                self.add_error("country", "Negara wajib diisi.")
-
-        return cleaned_data
+        return self.clean_dynamic_location(cleaned_data)
 
 
 class ResendVerificationForm(forms.Form):
     email = forms.EmailField(label="Email Aktif")
 
 
-class VendorProfileForm(forms.ModelForm):
+class VendorProfileForm(DynamicLocationFormMixin, forms.ModelForm):
+    country = CountryField(label="Negara")
+    province_id = forms.CharField(label="Provinsi", max_length=20, required=False)
+    city_id = forms.CharField(label="Kota/Kabupaten", max_length=20, required=False)
+    international_location = forms.CharField(label="Lokasi Internasional", max_length=255, required=False)
+
     preferred_procurement_types_text = forms.CharField(
         label="Jenis Pengadaan yang Diminati",
         required=False,
@@ -242,6 +334,11 @@ class VendorProfileForm(forms.ModelForm):
             "province",
             "city_or_regency",
             "country",
+            "province_id",
+            "province_name",
+            "city_id",
+            "city_name",
+            "international_location",
             "min_project_value",
             "max_project_value",
             "email_notifications_enabled",
@@ -255,8 +352,18 @@ class VendorProfileForm(forms.ModelForm):
             "email_digest_frequency": "Frekuensi Ringkasan Email",
         }
 
+        widgets = {
+            "location_type": forms.HiddenInput,
+            "province": forms.HiddenInput,
+            "city_or_regency": forms.HiddenInput,
+            "province_name": forms.HiddenInput,
+            "city_name": forms.HiddenInput,
+        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        current_country = self.data.get("country") if self.is_bound else getattr(self.instance, "country", None)
+        add_country_choice(self.fields["country"], current_country)
 
         if self.instance:
             self.fields["preferred_procurement_types_text"].initial = (
@@ -265,6 +372,14 @@ class VendorProfileForm(forms.ModelForm):
             self.fields["preferred_locations_text"].initial = (
                 self.instance.preferred_locations or ""
             )
+            if not self.fields["province_name"].initial:
+                self.fields["province_name"].initial = self.instance.province_name or self.instance.province
+            if not self.fields["city_name"].initial:
+                self.fields["city_name"].initial = self.instance.city_name or self.instance.city_or_regency
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return self.clean_dynamic_location(cleaned_data)
 
     def save(self, commit=True):
         instance = super().save(commit=False)

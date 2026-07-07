@@ -929,12 +929,6 @@
 
     const formStatus = document.getElementById("formStatus");
 
-    /*
-      API wilayah statis.
-      Provinsi: https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json
-      Kota/Kab: https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{province_id}.json
-    */
-
     document.querySelectorAll(".openWaitingModal").forEach(btn => {
       btn.addEventListener("click", () => {
         waitingModal.classList.remove("hidden");
@@ -956,7 +950,10 @@
 
     async function loadProvinsi() {
       try {
-        const response = await fetch("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json");
+        const response = await fetch("/api/locations/provinces/");
+        if (!response.ok) {
+          throw new Error("Gagal memuat provinsi");
+        }
         const provinces = await response.json();
 
         provinsiSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
@@ -977,15 +974,19 @@
       kotaSelect.innerHTML = '<option value="">Memuat Kota/Kabupaten...</option>';
 
       try {
-        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`);
+        const response = await fetch(`/api/locations/regencies/?province_id=${encodeURIComponent(provinceId)}`);
+        if (!response.ok) {
+          throw new Error("Gagal memuat kota/kabupaten");
+        }
         const regencies = await response.json();
 
         kotaSelect.innerHTML = '<option value="">Pilih Kota/Kabupaten</option>';
 
         regencies.forEach((regency) => {
           const option = document.createElement("option");
-          option.value = regency.name;
+          option.value = regency.id;
           option.textContent = regency.name;
+          option.dataset.name = regency.name;
           kotaSelect.appendChild(option);
         });
       } catch (error) {
@@ -1045,6 +1046,8 @@
 
       const selectedProvinsi = provinsiSelect.options[provinsiSelect.selectedIndex];
       const provinsiName = selectedProvinsi?.dataset?.name || "";
+      const selectedKota = kotaSelect.options[kotaSelect.selectedIndex];
+      const kotaName = selectedKota?.dataset?.name || "";
 
       const data = {
         nama_lengkap: this.nama_lengkap.value,
@@ -1054,7 +1057,7 @@
         bidang_usaha: this.bidang_usaha.value,
         jenis_lokasi: this.jenis_lokasi.value,
         provinsi: this.jenis_lokasi.value === "Indonesia" ? provinsiName : "",
-        kota_kabupaten: this.jenis_lokasi.value === "Indonesia" ? this.kota_kabupaten.value : "",
+        kota_kabupaten: this.jenis_lokasi.value === "Indonesia" ? kotaName : "",
         negara: this.jenis_lokasi.value === "Internasional" ? this.negara.value : ""
       };
 
