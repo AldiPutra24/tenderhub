@@ -14,7 +14,7 @@
                 </div>
             </a>
             <a href="{% url 'login' %}" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
-                Login
+                Masuk
             </a>
         </header>
 
@@ -41,7 +41,7 @@
                     </div>
                     <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <p class="text-sm font-semibold text-slate-950">Akses dashboard</p>
-                        <p class="mt-1 text-sm text-slate-500">Admin akan mengaktifkan akun sebelum dashboard bisa dipakai.</p>
+                        <p class="mt-1 text-sm text-slate-500">Administrator akan meninjau akun sebelum akses dashboard diberikan.</p>
                     </div>
                 </div>
             </aside>
@@ -172,20 +172,20 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-sm font-semibold text-slate-950">Akun & Password</h3>
-                                <p class="text-sm text-slate-500">Gunakan password yang kuat untuk akun utama.</p>
+                                <h3 class="text-sm font-semibold text-slate-950">Akun & Kata Sandi</h3>
+                                <p class="text-sm text-slate-500">Gunakan kata sandi yang kuat untuk akun utama.</p>
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label for="id_password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                                <label for="id_password" class="mb-1.5 block text-sm font-medium text-slate-700">Kata Sandi</label>
                                 <input id="id_password" name="password" type="password" autocomplete="new-password" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Minimal 8 karakter">
                                 {% if form.password.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.password.errors|striptags }}</p>{% endif %}
                             </div>
                             <div>
-                                <label for="id_password_confirm" class="mb-1.5 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
-                                <input id="id_password_confirm" name="password_confirm" type="password" autocomplete="new-password" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Ulangi password">
+                                <label for="id_password_confirm" class="mb-1.5 block text-sm font-medium text-slate-700">Konfirmasi Kata Sandi</label>
+                                <input id="id_password_confirm" name="password_confirm" type="password" autocomplete="new-password" class="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200" placeholder="Ulangi kata sandi">
                                 {% if form.password_confirm.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.password_confirm.errors|striptags }}</p>{% endif %}
                             </div>
                         </div>
@@ -193,7 +193,7 @@
                 </div>
 
                 <div class="sticky bottom-0 flex items-center justify-between gap-4 rounded-b-2xl border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
-                    <p class="hidden text-sm text-slate-500 sm:block">Akun akan menunggu approval admin setelah pendaftaran berhasil.</p>
+                    <p class="hidden text-sm text-slate-500 sm:block">Akun akan melalui peninjauan administrator setelah pendaftaran berhasil.</p>
                     <button type="submit" class="ml-auto inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
                         Buat Akun Vendor
                     </button>

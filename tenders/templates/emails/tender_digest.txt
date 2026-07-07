@@ -1,6 +1,6 @@
-Halo {{ nama }}
+Halo,
 
-Ada {{ jumlah }} tender baru yang sesuai dengan preferensi kakak.
+Berikut adalah ringkasan tender terbaru yang sesuai dengan preferensi akun Anda.
 
 Ringkasan:
 
@@ -22,6 +22,12 @@ AI Match Tinggi
 
 {% if extra_count %}... dan {{ extra_count }} tender lainnya.
 {% endif %}
-Lihat Semua Tender: {{ tender_list_url }}
+Untuk melihat seluruh daftar tender, silakan masuk ke GPFE PROC HUB.
 
-Pengaturan email dapat diubah melalui Profile Settings.
+{{ tender_list_url }}
+
+Pengaturan notifikasi email dapat diubah melalui halaman Profil.
+
+Hormat kami,
+
+GPFE PROC HUB

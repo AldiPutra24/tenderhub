@@ -90,10 +90,10 @@ LPSE_WATCHLIST_LIMIT = 5
 LOGIN_REQUIRED_MATCH = {
     "score": None,
     "level": "Low",
-    "label": "Login untuk melihat AI Match",
+    "label": "Masuk untuk melihat AI Match",
     "reasons": [],
     "missing": [
-        "Login untuk melihat AI Match.",
+        "Masuk untuk melihat AI Match.",
     ],
     "requires_login": True,
     "requires_profile": False,

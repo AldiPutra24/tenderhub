@@ -59,14 +59,14 @@ class ApprovedUserRequiredMiddleware:
                 logger.warning("Inactive session blocked path=%s", path)
                 messages.warning(
                     request,
-                    "Akun kakak belum aktif. Silakan tunggu approval admin.",
+                    "Akun Anda masih dalam proses peninjauan oleh administrator. Anda akan dapat mengakses sistem setelah proses persetujuan selesai.",
                 )
                 return redirect(reverse("inactive_account"))
 
             logger.info("Anonymous access redirected path=%s", path)
             messages.info(
                 request,
-                "Silakan login terlebih dahulu untuk mengakses halaman tersebut.",
+                "Silakan masuk terlebih dahulu untuk mengakses halaman tersebut.",
             )
             return redirect_to_login(request.get_full_path(), login_url=settings.LOGIN_URL)
 
@@ -75,7 +75,7 @@ class ApprovedUserRequiredMiddleware:
             logger.warning("Unverified user blocked user_id=%s path=%s", request.user.id, path)
             messages.warning(
                 request,
-                "Email kakak belum diverifikasi. Silakan cek email untuk verifikasi akun.",
+                "Email belum diverifikasi. Silakan lakukan verifikasi melalui tautan yang telah dikirim ke alamat email Anda.",
             )
             return redirect(reverse("resend_verification"))
 
@@ -83,7 +83,7 @@ class ApprovedUserRequiredMiddleware:
             logger.warning("Pending approval user blocked user_id=%s path=%s", request.user.id, path)
             messages.warning(
                 request,
-                "Akun kakak sudah terverifikasi, tetapi masih menunggu approval admin untuk mengakses fitur tender.",
+                "Email telah berhasil diverifikasi. Akun Anda masih menunggu persetujuan administrator sebelum dapat mengakses seluruh fitur GPFE PROC HUB.",
             )
             return redirect(reverse("dashboard"))
 

@@ -27,7 +27,7 @@ def send_verification_email(request, user):
         },
     )
     send_mail(
-        subject="Verifikasi Email GPFE PROC HUB",
+        subject="Verifikasi Email - GPFE PROC HUB",
         message=body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],

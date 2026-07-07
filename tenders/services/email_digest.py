@@ -93,7 +93,7 @@ def send_digest_email(user, notifications):
     text_body = render_to_string("emails/tender_digest.txt", context)
     html_body = render_to_string("emails/tender_digest.html", context)
     email = EmailMultiAlternatives(
-        subject="GPFE PROC HUB • Ringkasan Tender Baru",
+        subject="Ringkasan Tender Terbaru - GPFE PROC HUB",
         body=text_body,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[recipient],

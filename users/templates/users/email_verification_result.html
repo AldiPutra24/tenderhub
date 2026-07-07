@@ -22,18 +22,18 @@
 
             <p class="text-sm font-medium text-slate-500">Verifikasi email</p>
             <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                {% if verified %}Email terverifikasi{% else %}Link tidak valid{% endif %}
+                {% if verified %}Verifikasi email berhasil{% else %}Tautan tidak valid{% endif %}
             </h1>
             <p class="mt-3 text-sm leading-6 text-slate-600">
                 {% if verified %}
-                Kakak bisa login dan melengkapi profil sambil menunggu approval admin.
+                Email Anda telah berhasil diverifikasi. Selanjutnya, akun akan melalui proses peninjauan oleh administrator. Anda akan memperoleh akses ke sistem setelah akun disetujui.
                 {% else %}
-                Silakan minta link verifikasi baru jika akun belum terverifikasi.
+                Silakan minta tautan verifikasi baru jika akun belum terverifikasi.
                 {% endif %}
             </p>
             <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <a href="{% url 'login' %}" class="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
-                    Login
+                    Masuk
                 </a>
                 <a href="{% url 'resend_verification' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
                     Kirim ulang verifikasi

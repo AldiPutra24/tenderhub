@@ -3,16 +3,59 @@ from django.contrib import messages
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse
+import logging
 
 from .models import VendorProfile
 
 
+logger = logging.getLogger(__name__)
+
+
+def build_login_url(request):
+    if request:
+        return request.build_absolute_uri(reverse("login"))
+    return f"{getattr(settings, 'APP_BASE_URL', 'https://inaprochub.gpfe.id').rstrip('/')}{reverse('login')}"
+
+
+def send_account_approved_email(user, request=None):
+    recipient = user.email or getattr(getattr(user, "vendor_profile", None), "institution_email", "")
+    if not recipient:
+        return False
+
+    body = render_to_string(
+        "users/account_approved_email.txt",
+        {"user": user, "login_url": build_login_url(request)},
+    )
+    try:
+        send_mail(
+            subject="Akun GPFE PROC HUB Telah Disetujui",
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception("Failed to send account approval email for user_id=%s", user.pk)
+        return False
+    return True
+
+
 @admin.action(description="Approve selected users")
 def approve_users(modeladmin, request, queryset):
-    updated = queryset.filter(is_active=False).update(is_active=True)
+    users_to_notify = list(queryset.filter(is_active=False).select_related("vendor_profile"))
+    updated = queryset.filter(pk__in=[user.pk for user in users_to_notify]).update(is_active=True)
+    sent_count = 0
+    for user in users_to_notify:
+        user.is_active = True
+        if send_account_approved_email(user, request=request):
+            sent_count += 1
     modeladmin.message_user(
         request,
-        f"{updated} user berhasil diaktifkan.",
+        f"{updated} user berhasil diaktifkan. Email persetujuan terkirim ke {sent_count} user.",
         messages.SUCCESS,
     )
 
@@ -30,31 +73,31 @@ def deactivate_users(modeladmin, request, queryset):
     )
 
 
-@admin.action(description="Enable Email Notification")
+@admin.action(description="Aktifkan Notifikasi Email")
 def enable_email_notifications(modeladmin, request, queryset):
     updated = VendorProfile.objects.filter(user__in=queryset).update(email_notifications_enabled=True)
     modeladmin.message_user(request, f"{updated} profil berhasil diaktifkan email digest-nya.", messages.SUCCESS)
 
 
-@admin.action(description="Disable Email Notification")
+@admin.action(description="Nonaktifkan Notifikasi Email")
 def disable_email_notifications(modeladmin, request, queryset):
     updated = VendorProfile.objects.filter(user__in=queryset).update(email_notifications_enabled=False)
     modeladmin.message_user(request, f"{updated} profil berhasil dinonaktifkan email digest-nya.", messages.SUCCESS)
 
 
-@admin.action(description="Set Frequency: Daily")
+@admin.action(description="Atur Frekuensi: Harian")
 def set_digest_daily(modeladmin, request, queryset):
     updated = VendorProfile.objects.filter(user__in=queryset).update(email_digest_frequency=VendorProfile.DAILY)
     modeladmin.message_user(request, f"{updated} profil diatur ke digest harian.", messages.SUCCESS)
 
 
-@admin.action(description="Set Frequency: 3 Hari")
+@admin.action(description="Atur Frekuensi: 3 Hari")
 def set_digest_three_days(modeladmin, request, queryset):
     updated = VendorProfile.objects.filter(user__in=queryset).update(email_digest_frequency=VendorProfile.THREE_DAYS)
     modeladmin.message_user(request, f"{updated} profil diatur ke digest 3 hari.", messages.SUCCESS)
 
 
-@admin.action(description="Set Frequency: Weekly")
+@admin.action(description="Atur Frekuensi: Mingguan")
 def set_digest_weekly(modeladmin, request, queryset):
     updated = VendorProfile.objects.filter(user__in=queryset).update(email_digest_frequency=VendorProfile.WEEKLY)
     modeladmin.message_user(request, f"{updated} profil diatur ke digest mingguan.", messages.SUCCESS)
@@ -116,6 +159,16 @@ class UserAdmin(DjangoUserAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("vendor_profile")
 
+    def save_model(self, request, obj, form, change):
+        was_inactive = False
+        if change and obj.pk:
+            was_inactive = not User.objects.filter(pk=obj.pk, is_active=True).exists()
+
+        super().save_model(request, obj, form, change)
+
+        if was_inactive and obj.is_active:
+            send_account_approved_email(obj, request=request)
+
     @admin.display(description="Nama perusahaan")
     def company_name(self, obj):
         profile = getattr(obj, "vendor_profile", None)
@@ -131,17 +184,17 @@ class UserAdmin(DjangoUserAdmin):
         profile = getattr(obj, "vendor_profile", None)
         return profile.email_verified_at if profile else None
 
-    @admin.display(boolean=True, description="Notification Enabled")
+    @admin.display(boolean=True, description="Notifikasi Email Aktif")
     def email_notifications_enabled(self, obj):
         profile = getattr(obj, "vendor_profile", None)
         return bool(profile and profile.email_notifications_enabled)
 
-    @admin.display(description="Digest Frequency")
+    @admin.display(description="Frekuensi Ringkasan")
     def email_digest_frequency(self, obj):
         profile = getattr(obj, "vendor_profile", None)
         return profile.get_email_digest_frequency_display() if profile else "-"
 
-    @admin.display(description="Last Digest Sent")
+    @admin.display(description="Ringkasan Terakhir Dikirim")
     def last_digest_sent_at(self, obj):
         profile = getattr(obj, "vendor_profile", None)
         return profile.last_digest_sent_at if profile else None
@@ -208,7 +261,7 @@ class VendorProfileAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Account", {"fields": ("user", "created_at", "email_verified", "email_verified_at")}),
         (
-            "Email Notifications",
+            "Notifikasi Email",
             {
                 "fields": (
                     "email_notifications_enabled",

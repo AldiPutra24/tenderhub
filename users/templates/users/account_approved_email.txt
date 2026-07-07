@@ -1,0 +1,15 @@
+Halo,
+
+Akun GPFE PROC HUB Anda telah disetujui.
+
+Kini Anda dapat masuk dan menggunakan seluruh fitur yang tersedia.
+
+Masuk ke sistem:
+
+{{ login_url }}
+
+Selamat menggunakan GPFE PROC HUB.
+
+Hormat kami,
+
+GPFE PROC HUB

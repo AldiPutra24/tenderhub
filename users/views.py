@@ -42,7 +42,7 @@ class GPFEPasswordResetConfirmView(PasswordResetConfirmView):
 
 class GPFEPasswordResetCompleteView(PasswordResetCompleteView):
     def dispatch(self, request, *args, **kwargs):
-        messages.success(request, "Password berhasil diubah. Silakan login kembali.")
+        messages.success(request, "Kata sandi berhasil diperbarui. Silakan masuk menggunakan kata sandi baru.")
         return redirect("login")
 
 
@@ -81,7 +81,7 @@ def register_view(request):
             if email_sent:
                 messages.success(
                     request,
-                    "Pendaftaran berhasil. Silakan cek email kakak untuk verifikasi akun.",
+                    "Pendaftaran berhasil. Silakan periksa email Anda untuk melakukan verifikasi akun.",
                 )
             else:
                 messages.success(
@@ -90,7 +90,7 @@ def register_view(request):
                 )
                 messages.warning(
                     request,
-                    "Silakan gunakan kirim ulang verifikasi dari halaman login.",
+                    "Silakan gunakan kirim ulang verifikasi dari halaman masuk.",
                 )
             return redirect("login")
 
@@ -103,7 +103,7 @@ def register_view(request):
 def verify_email_view(request, uidb64, token):
     user = get_user_from_uid(uidb64)
     if not user or not email_verification_token.check_token(user, token):
-        messages.error(request, "Link verifikasi tidak valid atau sudah kedaluwarsa.")
+        messages.error(request, "Tautan verifikasi tidak valid atau sudah kedaluwarsa.")
         return render(request, "users/email_verification_result.html", {"verified": False})
 
     profile = get_or_create_profile(user)
@@ -114,7 +114,7 @@ def verify_email_view(request, uidb64, token):
 
     messages.success(
         request,
-        "Email berhasil diverifikasi. Kakak sudah bisa login dan melengkapi profil, namun akses tender masih menunggu approval admin.",
+        "Verifikasi email berhasil. Akun Anda akan melalui proses peninjauan oleh administrator.",
     )
     return render(request, "users/email_verification_result.html", {"verified": True})
 
@@ -123,15 +123,21 @@ def resend_verification_view(request):
     if request.user.is_authenticated:
         profile = get_or_create_profile(request.user)
         if profile.email_verified:
-            messages.info(request, "Email kakak sudah terverifikasi.")
+            messages.info(request, "Email Anda telah diverifikasi.")
             return redirect("dashboard")
 
         if request.method == "POST":
-            send_verification_with_rate_limit(request, request.user, request.user.email)
-            messages.success(
-                request,
-                "Jika email belum terverifikasi, link verifikasi akan dikirim ulang.",
-            )
+            email_sent = send_verification_with_rate_limit(request, request.user, request.user.email)
+            if email_sent:
+                messages.success(
+                    request,
+                    "Email verifikasi telah dikirim kembali. Silakan periksa kotak masuk atau folder spam pada email Anda.",
+                )
+            else:
+                messages.warning(
+                    request,
+                    "Permintaan pengiriman ulang terlalu sering. Silakan coba kembali dalam beberapa menit.",
+                )
             return redirect("resend_verification")
 
         return render(request, "users/resend_verification.html", {"form": None, "profile": profile})
@@ -141,11 +147,24 @@ def resend_verification_view(request):
         if form.is_valid():
             email = form.cleaned_data["email"].strip()
             user = User.objects.filter(email__iexact=email).select_related("vendor_profile").first()
-            send_verification_with_rate_limit(request, user, email)
-            messages.success(
-                request,
-                "Jika email belum terverifikasi, link verifikasi akan dikirim ulang.",
-            )
+            if not user:
+                messages.success(
+                    request,
+                    "Email verifikasi telah dikirim kembali. Silakan periksa kotak masuk atau folder spam pada email Anda.",
+                )
+                return redirect("resend_verification")
+
+            email_sent = send_verification_with_rate_limit(request, user, email)
+            if not email_sent:
+                messages.warning(
+                    request,
+                    "Permintaan pengiriman ulang terlalu sering. Silakan coba kembali dalam beberapa menit.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Email verifikasi telah dikirim kembali. Silakan periksa kotak masuk atau folder spam pada email Anda.",
+                )
             return redirect("resend_verification")
     else:
         form = ResendVerificationForm()

@@ -106,6 +106,44 @@ class UserAdminTests(TestCase):
         user.vendor_profile.refresh_from_db()
         self.assertEqual(user.vendor_profile.email_digest_frequency, VendorProfile.WEEKLY)
 
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        DEFAULT_FROM_EMAIL="GPFE PROC HUB <noreply@inaprochub.gpfe.id>",
+    )
+    def test_approve_action_sends_account_approved_email(self):
+        user = User.objects.create_user(
+            username="pending-approval@example.com",
+            email="pending-approval@example.com",
+            password="test-password",
+            is_active=False,
+        )
+        VendorProfile.objects.create(
+            user=user,
+            full_name="Pending Approval",
+            whatsapp_number="08123456789",
+            institution_email="pending-approval@example.com",
+            company_name="PT Pending Approval",
+            business_field="Konstruksi",
+            email_verified=True,
+        )
+
+        response = self.client.post(
+            reverse("admin:auth_user_changelist"),
+            {
+                "action": "approve_users",
+                "_selected_action": [user.pk],
+                "select_across": "0",
+                "index": "0",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Akun GPFE PROC HUB Telah Disetujui")
+        self.assertIn("Akun GPFE PROC HUB Anda telah disetujui.", mail.outbox[0].body)
+
 
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
@@ -126,11 +164,11 @@ class PasswordResetTests(TestCase):
         self.assertRedirects(response, reverse("password_reset_done"))
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
-        self.assertEqual(message.subject, "Reset Password GPFE PROC HUB")
+        self.assertEqual(message.subject, "Reset Password - GPFE PROC HUB")
         self.assertEqual(message.from_email, "GPFE PROC HUB <noreply@inaprochub.gpfe.id>")
-        self.assertIn("Salam", message.body)
+        self.assertIn("Halo,", message.body)
         self.assertIn("/accounts/reset/", message.body)
-        self.assertIn("Jika Anda tidak meminta reset password, abaikan email ini.", message.body)
+        self.assertIn("Apabila Anda tidak pernah mengajukan permintaan ini", message.body)
 
     def test_unknown_email_does_not_leak_registration_status(self):
         response = self.client.post(reverse("password_reset"), {"email": "unknown@example.com"})
@@ -148,7 +186,7 @@ class PasswordResetTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Link reset password tidak valid")
+        self.assertContains(response, "Tautan reset kata sandi tidak valid")
 
     def test_new_password_can_be_used_to_login(self):
         uidb64 = urlsafe_base64_encode(force_bytes(self.user.pk))
@@ -172,7 +210,7 @@ class PasswordResetTests(TestCase):
         )
 
         self.assertRedirects(response, reverse("login"))
-        self.assertContains(response, "Password berhasil diubah. Silakan login kembali.")
+        self.assertContains(response, "Kata sandi berhasil diperbarui. Silakan masuk menggunakan kata sandi baru.")
         self.assertTrue(self.client.login(username=self.user.username, password="NewStrongPass123!"))
 
 
@@ -225,7 +263,7 @@ class EmailVerificationTests(TestCase):
         self.assertFalse(user.vendor_profile.email_verified)
         self.assertIsNone(user.vendor_profile.email_verified_at)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Verifikasi Email GPFE PROC HUB")
+        self.assertEqual(mail.outbox[0].subject, "Verifikasi Email - GPFE PROC HUB")
         self.assertIn("/accounts/verify-email/", mail.outbox[0].body)
 
     @patch("users.email_verification.send_mail", side_effect=Exception("SMTP down"))
@@ -253,7 +291,7 @@ class EmailVerificationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Email kakak belum diverifikasi")
+        self.assertContains(response, "Email belum diverifikasi")
 
     def test_valid_verification_link_marks_profile_verified(self):
         user = self.create_pending_user(verified=False)
@@ -362,5 +400,5 @@ class VendorProfilePreferenceTests(TestCase):
         response = self.client.get(reverse("vendor_profile"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Email Notifications")
+        self.assertContains(response, "Notifikasi Email")
         self.assertContains(response, "Setiap 3 Hari")

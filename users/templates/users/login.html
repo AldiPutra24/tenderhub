@@ -80,11 +80,11 @@
                         <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
                              data-lockout-alert
                              data-lockout-seconds="{{ form.lockout_remaining_seconds }}">
-                            <p class="font-semibold">⚠️ Terlalu banyak percobaan login gagal.</p>
+                            <p class="font-semibold">Terlalu banyak percobaan masuk yang gagal.</p>
                             <p class="mt-1">Silakan coba lagi dalam:</p>
                             <p class="mt-2 text-lg font-bold tabular-nums" data-lockout-countdown>01:00</p>
                             <p class="mt-2 hidden font-semibold text-emerald-700" data-lockout-finished>
-                                Lockout selesai. Silakan coba login kembali.
+                                Batas percobaan telah selesai. Silakan coba masuk kembali.
                             </p>
                         </div>
                         {% elif form.non_field_errors %}
@@ -109,15 +109,15 @@
 
                         <div>
                             <div class="mb-1.5 flex items-center justify-between">
-                                <label for="id_password" class="block text-sm font-medium text-slate-700">Password</label>
-                                <a href="{% url 'password_reset' %}" class="text-xs font-semibold text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline">Lupa password?</a>
+                                <label for="id_password" class="block text-sm font-medium text-slate-700">Kata Sandi</label>
+                                <a href="{% url 'password_reset' %}" class="text-xs font-semibold text-slate-600 underline-offset-4 hover:text-slate-950 hover:underline">Lupa kata sandi?</a>
                             </div>
                             <input id="id_password"
                                    name="password"
                                    type="password"
                                    autocomplete="current-password"
                                    class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
-                                   placeholder="Masukkan password">
+                                   placeholder="Masukkan kata sandi">
                             {% if form.password.errors %}
                             <p class="mt-1.5 text-sm text-red-600">{{ form.password.errors|striptags }}</p>
                             {% endif %}
@@ -127,7 +127,7 @@
                                 data-login-submit
                                 {% if form.lockout_remaining_seconds %}disabled{% endif %}
                                 class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
-                            Login
+                            Masuk
                         </button>
                     </form>
 

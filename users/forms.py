@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 class ApprovedAuthenticationForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
-        "invalid_login": "Login gagal. Periksa kembali email/username dan password.",
-        "inactive": "Login gagal. Akun anda belum aktif atau masih menunggu approval admin.",
-        "unverified": "Email kakak belum diverifikasi. Silakan cek email untuk verifikasi akun.",
+        "invalid_login": "Gagal masuk. Periksa kembali email dan kata sandi.",
+        "inactive": "Akun Anda masih dalam proses peninjauan oleh administrator. Anda akan dapat mengakses sistem setelah proses persetujuan selesai.",
+        "unverified": "Email belum diverifikasi. Silakan lakukan verifikasi melalui tautan yang telah dikirim ke alamat email Anda.",
         "locked": "Terlalu banyak percobaan login gagal.",
     }
 
@@ -157,8 +157,8 @@ class VendorRegisterForm(forms.Form):
     whatsapp_number = forms.CharField(label="Nomor WA", max_length=30)
     institution_email = forms.EmailField(label="Email Aktif")
 
-    password = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password_confirm = forms.CharField(label="Konfirmasi Password", widget=forms.PasswordInput)
+    password = forms.CharField(label="Kata Sandi", widget=forms.PasswordInput)
+    password_confirm = forms.CharField(label="Konfirmasi Kata Sandi", widget=forms.PasswordInput)
 
     company_name = forms.CharField(label="Nama Perusahaan", max_length=200)
     business_field = forms.CharField(label="Bidang Usaha", max_length=200)
@@ -192,7 +192,7 @@ class VendorRegisterForm(forms.Form):
         country = cleaned_data.get("country")
 
         if password and password_confirm and password != password_confirm:
-            raise forms.ValidationError("Password dan konfirmasi password tidak sama.")
+            raise forms.ValidationError("Kata sandi dan konfirmasi kata sandi tidak sama.")
 
         if location_type == "indonesia":
             if not province:
@@ -251,8 +251,8 @@ class VendorProfileForm(forms.ModelForm):
         labels = {
             "min_project_value": "Minimal Nilai Proyek",
             "max_project_value": "Maksimal Nilai Proyek",
-            "email_notifications_enabled": "Enable Email Notification",
-            "email_digest_frequency": "Email Digest Frequency",
+            "email_notifications_enabled": "Aktifkan Notifikasi Email",
+            "email_digest_frequency": "Frekuensi Ringkasan Email",
         }
 
     def __init__(self, *args, **kwargs):

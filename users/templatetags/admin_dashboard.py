@@ -62,7 +62,7 @@ def admin_dashboard_stats(context):
             "tone": "amber",
         },
         {
-            "label": "Notification Enabled",
+            "label": "Notifikasi Email Aktif",
             "value": (
                 VendorProfile.objects.filter(email_notifications_enabled=True).count()
                 if can_view_profiles
@@ -71,7 +71,7 @@ def admin_dashboard_stats(context):
             "tone": "emerald",
         },
         {
-            "label": "Notification Disabled",
+            "label": "Notifikasi Email Nonaktif",
             "value": (
                 VendorProfile.objects.filter(email_notifications_enabled=False).count()
                 if can_view_profiles
@@ -80,7 +80,7 @@ def admin_dashboard_stats(context):
             "tone": "slate",
         },
         {
-            "label": "Daily Users",
+            "label": "User Harian",
             "value": (
                 VendorProfile.objects.filter(email_digest_frequency=VendorProfile.DAILY).count()
                 if can_view_profiles
@@ -89,7 +89,7 @@ def admin_dashboard_stats(context):
             "tone": "slate",
         },
         {
-            "label": "Every 3 Days Users",
+            "label": "User Setiap 3 Hari",
             "value": (
                 VendorProfile.objects.filter(email_digest_frequency=VendorProfile.THREE_DAYS).count()
                 if can_view_profiles
@@ -98,7 +98,7 @@ def admin_dashboard_stats(context):
             "tone": "amber",
         },
         {
-            "label": "Weekly Users",
+            "label": "User Mingguan",
             "value": (
                 VendorProfile.objects.filter(email_digest_frequency=VendorProfile.WEEKLY).count()
                 if can_view_profiles
@@ -107,7 +107,7 @@ def admin_dashboard_stats(context):
             "tone": "slate",
         },
         {
-            "label": "Email Digest Sent Today",
+            "label": "Ringkasan Email Hari Ini",
             "value": (
                 VendorProfile.objects.filter(last_digest_sent_at__date=today).count()
                 if can_view_profiles
@@ -116,7 +116,7 @@ def admin_dashboard_stats(context):
             "tone": "emerald",
         },
         {
-            "label": "Email Digest Sent This Week",
+            "label": "Ringkasan Email Minggu Ini",
             "value": (
                 VendorProfile.objects.filter(last_digest_sent_at__date__gte=week_start).count()
                 if can_view_profiles
