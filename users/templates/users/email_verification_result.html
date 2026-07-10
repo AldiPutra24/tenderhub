@@ -5,8 +5,8 @@
 {% block body %}
 <main class="min-h-screen bg-slate-50">
     <section class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
-        <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-soft sm:p-8">
-            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">
+        <div class="app-panel w-full max-w-lg p-6 text-center sm:p-8">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl app-gradient text-sm font-bold text-white">
                 GP
             </div>
 
@@ -32,10 +32,10 @@
                 {% endif %}
             </p>
             <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <a href="{% url 'login' %}" class="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                <a href="{% url 'login' %}" class="btn-primary h-11 px-5 text-sm">
                     Masuk
                 </a>
-                <a href="{% url 'resend_verification' %}" class="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100">
+                <a href="{% url 'resend_verification' %}" class="btn-secondary h-11 px-5 text-sm">
                     Kirim ulang verifikasi
                 </a>
             </div>

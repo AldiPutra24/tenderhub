@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.utils.dateparse import parse_date as django_parse_date
 
 from tenders.models import Tender
+from tenders.services.spse_slug_mapping import sync_slug_mapping
 from tenders.year_utils import extract_budget_years, normalize_budget_years
 
 
@@ -475,11 +476,21 @@ class Command(BaseCommand):
         parser.add_argument("--max-pages", type=int, help="Maximum DataTables pages per slug")
         parser.add_argument("--limit-slugs", type=int, help="Limit number of slugs when using --all-slugs")
         parser.add_argument("--offset-slugs", type=int, default=0, help="Skip this many slugs when using --all-slugs")
+        parser.add_argument(
+            "--no-refresh-slugs",
+            action="store_true",
+            help="Skip automatic lpse_slug_mapping.json refresh before --all-slugs",
+        )
         parser.add_argument("--sleep-min", type=float, default=DEFAULT_SLEEP_MIN_SECONDS, help="Minimum random sleep between pages and slugs")
         parser.add_argument("--sleep-max", type=float, default=DEFAULT_SLEEP_MAX_SECONDS, help="Maximum random sleep between pages and slugs")
         parser.add_argument("--length", type=int, default=DEFAULT_PAGE_LENGTH, help="DataTables page length")
         parser.add_argument("--enrich-detail", action="store_true", help="Fetch each tender detail page after list scrape")
         parser.add_argument("--detail-only", action="store_true", help="Enrich existing Tender rows without scraping DataTables")
+        parser.add_argument(
+            "--then-detail-only",
+            action="store_true",
+            help="After list scraping finishes, run detail-only enrichment for the same slug set",
+        )
         parser.add_argument("--limit-details", type=int, help="Limit detail enrichment count")
         parser.add_argument(
             "--missing-detail-only",
@@ -500,6 +511,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
+
+        if options.get("all_slugs") and not options.get("no_refresh_slugs"):
+            self.refresh_slug_mapping()
 
         slug_mapping = self.load_slug_mapping()
         self.validate_options(options)
@@ -609,15 +623,37 @@ class Command(BaseCommand):
         if failed_slugs:
             self.stderr.write(self.style.WARNING(f"FAILED_SLUGS {', '.join(failed_slugs)}"))
 
+        if options.get("then_detail_only"):
+            self.stdout.write("START_DETAIL_PHASE after list scraping")
+            detail_created, detail_updated, detail_skipped, detail_failed, detail_slugs_processed = self.enrich_all_existing_details(
+                slugs,
+                tahun,
+                options.get("limit_details"),
+                sleep_min,
+                sleep_max,
+                detail_statuses,
+                missing_detail_only,
+            )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"DETAIL_TOTAL slugs_processed={detail_slugs_processed} created={detail_created} "
+                    f"updated={detail_updated} skipped={detail_skipped} failed={detail_failed}"
+                )
+            )
+
     def validate_options(self, options):
         if options.get("kode_tender"):
             if options.get("all_slugs"):
                 raise CommandError("--kode-tender cannot be combined with --all-slugs")
+            if options.get("then_detail_only"):
+                raise CommandError("--kode-tender cannot be combined with --then-detail-only")
             if not options.get("enrich_detail"):
                 raise CommandError("--kode-tender requires --enrich-detail")
             return
 
         if options.get("detail_only"):
+            if options.get("then_detail_only"):
+                raise CommandError("--detail-only cannot be combined with --then-detail-only")
             if bool(options.get("slug")) == bool(options.get("all_slugs")):
                 raise CommandError("--detail-only requires exactly one of --slug or --all-slugs")
             if not options.get("tahun"):
@@ -628,6 +664,21 @@ class Command(BaseCommand):
             raise CommandError("Use exactly one of --slug or --all-slugs")
         if not options.get("tahun"):
             raise CommandError("--tahun is required for list scraping")
+
+    def refresh_slug_mapping(self):
+        try:
+            result = sync_slug_mapping(session=self.session)
+        except Exception as exc:
+            self.stderr.write(self.style.WARNING(f"SPSE slug refresh skipped: {exc}"))
+            return
+
+        self.stdout.write(
+            "SPSE slug refresh: "
+            f"discovered={result['discovered_count']} "
+            f"added={len(result['added'])} "
+            f"updated={len(result['updated'])} "
+            f"final={result['final_count']}"
+        )
 
     def parse_status_filter(self, raw_values, option_name):
         if not raw_values:

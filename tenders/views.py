@@ -8,6 +8,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import slugify
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_POST
 
@@ -160,7 +161,6 @@ def get_filter_options():
         "klpd_instansi": sorted(value for value in klpd_values if value)[:150],
         "lpse": sorted(value for value in lpse_values if value)[:150],
         "tahun": get_year_options(base_queryset),
-        "source": SOURCE_FILTER_OPTIONS,
         "sort": SORT_OPTIONS,
     }
 
@@ -178,7 +178,15 @@ def get_year_options(queryset=None):
         for value in values
         for year in extract_budget_years(value)
     }
+    years.add(str(timezone.localdate().year))
     return sorted(years, reverse=True)
+
+
+def get_selected_year_filter(request):
+    selected_year = request.GET.get("tahun")
+    if selected_year is None:
+        selected_year = request.GET.get("tahun_anggaran", str(timezone.localdate().year))
+    return selected_year.strip()
 
 
 def get_lpse_tender_filter_options(queryset):
@@ -206,11 +214,8 @@ def get_selected_filters(request, sort_options=None):
         "jenis_pengadaan": request.GET.get("jenis_pengadaan", "").strip(),
         "klpd_instansi": request.GET.get("klpd_instansi", "").strip(),
         "lpse": request.GET.get("lpse", "").strip(),
-        "source": request.GET.get("source", "operational").strip() or "operational",
-        "tahun": request.GET.get(
-            "tahun",
-            request.GET.get("tahun_anggaran", ""),
-        ).strip(),
+        "source": "operational",
+        "tahun": get_selected_year_filter(request),
         "sort": sort,
     }
 
@@ -234,6 +239,7 @@ def get_page_number(request):
 def get_pagination_query(request, per_page):
     params = request.GET.copy()
     params.pop("page", None)
+    params.pop("source", None)
     params["per_page"] = str(per_page)
     return params.urlencode()
 
@@ -339,10 +345,7 @@ def get_lpse_label_expression():
 
 def build_dashboard_overview(request):
     base_queryset = get_operational_queryset()
-    selected_tahun = request.GET.get(
-        "tahun",
-        request.GET.get("tahun_anggaran", ""),
-    ).strip()
+    selected_tahun = get_selected_year_filter(request)
     tahun_options = get_year_options(base_queryset)
     if selected_tahun:
         base_queryset = base_queryset.filter(tahun_anggaran__contains=selected_tahun)

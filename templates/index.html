@@ -9,12 +9,24 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
-      --navy: #0f2748;
-      --blue: #2563eb;
-      --cyan: #06b6d4;
-      --green: #10b981;
-      --amber: #f59e0b;
-      --ink: #102033;
+      --primary-red: #C80000;
+      --primary-navy: #01106F;
+      --transition-red: #9E0022;
+      --soft-purple: #5E0056;
+      --light-navy: #1E3A8A;
+      --navy: #01106F;
+      --blue: #01106F;
+      --cyan: #1E3A8A;
+      --green: #C80000;
+      --amber: #9E0022;
+      --ink: #0f172a;
+      --surface: #ffffff;
+      --surface-muted: #f8fafc;
+      --border: #e2e8f0;
+      --text-muted: #64748b;
+      --brand-gradient: linear-gradient(120deg, rgb(200,0,0) 0%, rgb(158,0,34) 35%, rgb(94,0,86) 60%, rgb(1,16,111) 100%);
+      --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.08), 0 14px 34px rgba(15, 23, 42, 0.06);
+      --shadow-hover: 0 22px 48px rgba(15, 23, 42, 0.12);
     }
 
     html {
@@ -24,61 +36,495 @@
     body {
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--ink);
-      background: #f7fbff;
+      background: var(--surface-muted);
+      overflow-x: hidden;
     }
 
     .grid-bg {
       background-image:
-        linear-gradient(rgba(15, 39, 72, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(15, 39, 72, 0.05) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
       background-size: 28px 28px;
     }
 
     .shadow-soft {
-      box-shadow: 0 18px 50px rgba(16, 32, 51, 0.12);
+      box-shadow: var(--shadow-soft);
     }
 
     .shadow-card {
-      box-shadow: 0 12px 30px rgba(16, 32, 51, 0.08);
+      box-shadow: var(--shadow-soft);
     }
 
     .glass-line {
-      background: linear-gradient(90deg, rgba(37, 99, 235, 0), rgba(37, 99, 235, 0.24), rgba(6, 182, 212, 0));
+      background: linear-gradient(90deg, rgba(200, 0, 0, 0), rgba(200, 0, 0, 0.26), rgba(1, 16, 111, 0));
     }
 
     .gradient-brand {
-      background: linear-gradient(135deg, #01106F 0%, #45006B 50%, #C80000 100%);
+      background: var(--brand-gradient);
+    }
+
+    .app-card {
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+    }
+
+    .app-card:hover {
+      border-color: rgba(1, 16, 111, 0.22);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .app-panel {
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .app-stat {
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .app-stat:hover {
+      border-color: rgba(1, 16, 111, 0.22);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .app-btn-primary {
+      border-radius: 0.75rem;
+      background: var(--primary-red);
+      color: #ffffff;
+      box-shadow: 0 12px 24px rgba(200, 0, 0, 0.18);
+      transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .app-btn-primary:hover {
+      background: var(--transition-red);
+      box-shadow: 0 18px 32px rgba(158, 0, 34, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .app-btn-primary:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(200, 0, 0, 0.16), 0 12px 24px rgba(200, 0, 0, 0.18);
+    }
+
+    .app-btn-secondary {
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: #ffffff;
+      color: var(--primary-navy);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+    }
+
+    .app-btn-secondary:hover {
+      border-color: var(--primary-red);
+      background: var(--primary-red);
+      color: #ffffff;
+      box-shadow: 0 12px 24px rgba(200, 0, 0, 0.14);
+    }
+
+    .app-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      border: 1px solid #e2e8f0;
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1rem;
+    }
+
+    .app-badge-emerald {
+      border-color: rgba(200, 0, 0, 0.18);
+      background: rgba(200, 0, 0, 0.07);
+      color: #9E0022;
+    }
+
+    .app-badge-blue {
+      border-color: rgba(1, 16, 111, 0.18);
+      background: rgba(1, 16, 111, 0.07);
+      color: var(--primary-navy);
+    }
+
+    .app-badge-amber {
+      border-color: rgba(158, 0, 34, 0.18);
+      background: rgba(158, 0, 34, 0.07);
+      color: #9E0022;
+    }
+
+    .app-badge-slate {
+      border-color: #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    .status-open,
+    .status-ongoing,
+    .app-badge-status-open,
+    .app-badge-status-ongoing {
+      border-color: rgba(16, 185, 129, 0.26) !important;
+      background: rgba(16, 185, 129, 0.12) !important;
+      color: #047857 !important;
+    }
+
+    .status-finish,
+    .app-badge-status-finish {
+      border-color: rgba(1, 16, 111, 0.20) !important;
+      background: rgba(1, 16, 111, 0.08) !important;
+      color: var(--primary-navy) !important;
+    }
+
+    .status-failed,
+    .app-badge-status-failed {
+      border-color: rgba(200, 0, 0, 0.20) !important;
+      background: rgba(200, 0, 0, 0.08) !important;
+      color: var(--primary-red) !important;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(200, 0, 0, 0.46) !important;
+      --tw-ring-color: rgba(200, 0, 0, 0.12) !important;
+    }
+
+    .focus\:border-emerald-500:focus {
+      border-color: rgba(200, 0, 0, 0.46) !important;
+    }
+
+    .focus\:ring-emerald-100:focus {
+      --tw-ring-color: rgba(200, 0, 0, 0.12) !important;
+    }
+
+    .bg-blue-50,
+    .bg-cyan-50 {
+      background-color: rgba(1, 16, 111, 0.07) !important;
+    }
+
+    .text-blue-700,
+    .text-cyan-700 {
+      color: var(--primary-navy) !important;
+    }
+
+    .border-blue-200 {
+      border-color: rgba(1, 16, 111, 0.18) !important;
+    }
+
+    .bg-blue-600,
+    .bg-cyan-600 {
+      background-color: var(--primary-navy) !important;
+    }
+
+    .bg-emerald-50 {
+      background-color: rgba(200, 0, 0, 0.07) !important;
+    }
+
+    .text-emerald-600,
+    .text-emerald-700,
+    .text-emerald-800 {
+      color: var(--transition-red) !important;
+    }
+
+    .border-emerald-100,
+    .border-emerald-200 {
+      border-color: rgba(200, 0, 0, 0.18) !important;
+    }
+
+    .bg-emerald-400,
+    .bg-emerald-500,
+    .bg-emerald-600 {
+      background-color: var(--primary-red) !important;
+    }
+
+    .text-cyan-300 {
+      color: rgba(255, 255, 255, 0.78) !important;
+    }
+
+    #hero {
+      position: relative;
+      background: var(--brand-gradient);
+      isolation: isolate;
+    }
+
+    #hero::before,
+    #hero::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      border-radius: 9999px;
+      filter: blur(22px);
+    }
+
+    #hero::before {
+      inset: 8% auto auto -8rem;
+      width: 24rem;
+      height: 24rem;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    #hero::after {
+      right: -10rem;
+      bottom: -8rem;
+      width: 30rem;
+      height: 30rem;
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    #hero > div > div:first-child > div:first-child {
+      border-color: rgba(255, 255, 255, 0.24) !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      color: #ffffff !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    #hero > div > div:first-child > div:first-child span {
+      background: #ffffff !important;
+    }
+
+    #hero > div > div:first-child > h1,
+    #hero > div > div:first-child > p {
+      color: #ffffff !important;
+      text-shadow: 0 1px 1px rgba(15, 23, 42, 0.18);
+    }
+
+    #hero > div,
+    #hero > div > div,
+    #hero .app-panel,
+    #hero .app-card,
+    #hero .app-stat {
+      min-width: 0;
+    }
+
+    #hero h1 {
+      max-width: 100%;
+      overflow-wrap: break-word;
+    }
+
+    #hero .app-stat > p:last-child {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+      white-space: nowrap;
+      word-break: break-word;
+    }
+
+    #hero > div > div:first-child > p {
+      color: rgba(255, 255, 255, 0.82) !important;
+    }
+
+    #hero > div > div.relative::before {
+      content: "";
+      position: absolute;
+      inset: -1.25rem;
+      z-index: -1;
+      border-radius: 2rem;
+      background: rgba(255, 255, 255, 0.14);
+      filter: blur(18px);
+    }
+
+    #hero > div > div.relative > .app-panel {
+      border-color: rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 30px 70px rgba(1, 16, 111, 0.26);
+      backdrop-filter: blur(18px);
+    }
+
+    #hero .app-stat {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    #hero .app-btn-secondary {
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      backdrop-filter: blur(10px);
+    }
+
+    #hero .app-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.20);
+      color: #ffffff;
+    }
+
+    #hero .app-badge-slate {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      backdrop-filter: blur(10px);
+    }
+
+    #hero > div > div.relative .app-badge-slate,
+    #hero > div > div.relative .app-badge-blue,
+    #hero > div > div.relative .app-badge-emerald {
+      backdrop-filter: none;
+    }
+
+    #hero > div > div.relative .app-badge-slate {
+      border-color: #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+    }
+
+    #hero .text-blue-700,
+    #hero .text-cyan-700,
+    #hero > div > div.relative .text-blue-700,
+    #hero > div > div.relative .text-cyan-700 {
+      color: var(--primary-navy) !important;
+    }
+
+    #hero .text-emerald-600,
+    #hero .text-emerald-700,
+    #hero .text-emerald-800,
+    #hero > div > div.relative .text-emerald-600,
+    #hero > div > div.relative .text-emerald-700,
+    #hero > div > div.relative .text-emerald-800 {
+      color: var(--primary-red) !important;
+    }
+
+    #hero .bg-blue-50,
+    #hero > div > div.relative .bg-blue-50 {
+      background: rgba(1, 16, 111, 0.06) !important;
+    }
+
+    #hero .bg-emerald-50,
+    #hero > div > div.relative .bg-emerald-50 {
+      background: rgba(200, 0, 0, 0.06) !important;
+    }
+
+    #hero .bg-emerald-500,
+    #hero > div > div.relative .bg-emerald-500 {
+      background: var(--primary-red) !important;
+    }
+
+    #hero .bg-blue-600,
+    #hero > div > div.relative .bg-blue-600 {
+      background: var(--primary-navy) !important;
+    }
+
+    #hero .bg-emerald-500,
+    #hero > div > div.relative .bg-emerald-500 {
+      background: var(--primary-red) !important;
+    }
+
+    #tender {
+      background: #f8fafc !important;
+    }
+
+    #tender .app-card {
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+    }
+
+    #tender .app-card .bg-blue-50,
+    #ai .bg-blue-50 {
+      background: rgba(1, 16, 111, 0.06) !important;
+    }
+
+    #tender .bg-emerald-50,
+    #ai .bg-emerald-50 {
+      background: rgba(200, 0, 0, 0.06) !important;
+    }
+
+    #tender .border-emerald-200,
+    #ai .border-emerald-200 {
+      border-color: rgba(200, 0, 0, 0.16) !important;
+    }
+
+    #tender .bg-blue-600,
+    #ai .bg-blue-600 {
+      background: var(--primary-navy) !important;
+    }
+
+    #tender .bg-emerald-500,
+    #tender .bg-emerald-600,
+    #ai .bg-emerald-500,
+    #ai .bg-emerald-600 {
+      background: var(--primary-red) !important;
+    }
+
+    #tender .text-blue-700,
+    #ai .text-blue-700 {
+      color: var(--primary-navy) !important;
+    }
+
+    #tender .text-emerald-700,
+    #ai .text-emerald-700 {
+      color: var(--primary-red) !important;
+    }
+
+    #ai > div > div.app-panel {
+      border-radius: 1.25rem;
+      border-color: rgba(1, 16, 111, 0.14);
+      box-shadow: var(--shadow-soft);
+    }
+
+    #ai > div > div.app-panel:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 767px) {
+      #hero > div > div:first-child,
+      #hero > div > div.relative {
+        width: 100%;
+        max-width: min(100%, 21rem);
+      }
+
+      #hero > div {
+        justify-items: start;
+      }
+
+      #hero > div > div.relative .app-panel {
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      #hero h1 {
+        font-size: 2rem;
+        line-height: 1.14;
+      }
     }
   </style>
 </head>
-<body class="antialiased">
-  <header class="sticky top-0 z-50 border-slate-200/80 bg-[#01106F] backdrop-blur">
+<body class="bg-slate-50 antialiased">
+  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
       <a href="#hero" class="flex items-center gap-3">
-        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl gradient-brand text-white shadow-sm">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M5 19V5h14v14H5Z" stroke="currentColor" stroke-width="2"/>
             <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
         <span>
-          <span class="block text-sm font-bold text-slate-950" style="color: #ffffff;">GPFE PROC HUB</span>
-          <span class="block text-xs font-semibold text-slate-500" style="color: #ffffff;">AI Procurement Intelligence Platform</span>
+          <span class="block text-sm font-bold text-slate-950">GPFE PROC HUB</span>
+          <span class="block text-xs font-semibold text-slate-500">AI Procurement Intelligence Platform</span>
         </span>
       </a>
 
-      <div class="hidden items-center gap-7 text-sm font-semibold text-white lg:flex">
-        <a href="#solusi" class="hover:text-blue-700">Solusi</a>
-        <a href="#fitur" class="hover:text-blue-700">Fitur</a>
-        <a href="#tender" class="hover:text-blue-700">Tender Terbaru</a>
-        <a href="#ai" class="hover:text-blue-700">AI Intelligence</a>
+      <div class="hidden items-center gap-7 text-sm font-semibold text-slate-600 lg:flex">
+        <a href="#solusi" class="transition hover:text-slate-950">Solusi</a>
+        <a href="#fitur" class="transition hover:text-slate-950">Fitur</a>
+        <a href="#tender" class="transition hover:text-slate-950">Tender Terbaru</a>
+        <a href="#ai" class="transition hover:text-slate-950">AI Intelligence</a>
       </div>
 
       <div class="hidden items-center gap-3 sm:flex">
-        <a href="{% url 'login' %}" class="rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white hover:bg-white/10">
+        <a href="{% url 'login' %}" class="app-btn-secondary px-4 py-2.5 text-sm font-semibold">
           Masuk
         </a>
-        <a href="{% url 'register' %}" class="rounded-lg bg-[#C80000] px-4 py-2.5 text-sm font-bold text-white shadow-card hover:bg-[#45006B]">
+        <a href="{% url 'register' %}" class="app-btn-primary px-4 py-2.5 text-sm font-semibold">
           Daftar
         </a>
       </div>
@@ -86,15 +532,15 @@
   </header>
 
   <main>
-    <section id="hero" class="grid-bg overflow-hidden bg-white">
+    <section id="hero" class="grid-bg overflow-hidden bg-slate-50">
       <div class="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:pb-24 lg:pt-20">
         <div>
-          <div class="mb-6 inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-800">
-            <span class="h-2 w-2 rounded-lg bg-emerald-500"></span>
+          <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
             Tender monitoring system nasional berbasis AI
           </div>
 
-          <h1 class="max-w-3xl text-4xl font-black leading-[1.08] text-slate-950 sm:text-5xl lg:text-6xl">
+          <h1 class="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
             Pantau Tender Pemerintah Seluruh Indonesia dalam Satu Dashboard
           </h1>
 
@@ -109,7 +555,7 @@
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
               href="{% url 'register' %}"
-              class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#C80000] px-6 py-3.5 text-sm font-black text-white shadow-card hover:bg-[#45006B]"
+              class="app-btn-primary inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-300"
             >
               Daftar Vendor
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -118,69 +564,89 @@
             </a>
             <a
               href="{% url 'login' %}"
-              class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-card hover:border-[#C80000]/30 hover:text-[#C80000]"
+              class="app-btn-secondary inline-flex items-center justify-center px-6 py-3.5 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-200"
             >
               Masuk
             </a>
           </div>
 
           <div class="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
-              <p class="text-2xl font-black text-slate-950">31</p>
-              <p class="mt-1 text-xs font-semibold text-slate-500">Tender open</p>
+            <div class="app-stat p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-medium text-slate-500">Tender open</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </div>
+              <p class="mt-4 text-2xl font-semibold tracking-tight text-slate-950">31</p>
             </div>
-            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
-              <p class="text-2l font-black text-slate-950">Rp282,4M</p>
-              <p class="mt-1 text-xs font-semibold text-slate-500">Total HPS sampel</p>
+            <div class="app-stat p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-medium text-slate-500">Total HPS sampel</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.75 7.75h14.5M7.75 4.75v14.5M16.25 4.75v14.5M4.75 16.25h14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+              </div>
+              <p class="mt-4 text-2xl font-semibold tracking-tight text-slate-950">Rp282,4M</p>
             </div>
-            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
-              <p class="text-2xl font-black text-slate-950">5</p>
-              <p class="mt-1 text-xs font-semibold text-slate-500">Jenis pengadaan</p>
+            <div class="app-stat p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-medium text-slate-500">Jenis pengadaan</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 6.75h14M5 12h14M5 17.25h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+              </div>
+              <p class="mt-4 text-2xl font-semibold tracking-tight text-slate-950">5</p>
             </div>
-            <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
-              <p class="text-2xl font-black text-emerald-600">4</p>
-              <p class="mt-1 text-xs font-semibold text-slate-500">Low competition</p>
+            <div class="app-stat p-4">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-medium text-slate-500">Low competition</p>
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2 7.5 14 3 9.6l6.2-.9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                </span>
+              </div>
+              <p class="mt-4 text-2xl font-semibold tracking-tight text-emerald-700">4</p>
             </div>
           </div>
 
-          <div class="mt-7 flex flex-wrap gap-2 text-xs font-bold text-slate-600">
-            <span class="rounded-lg border border-slate-200 bg-white px-3 py-2">Kontraktor</span>
-            <span class="rounded-lg border border-slate-200 bg-white px-3 py-2">Vendor Pengadaan</span>
-            <span class="rounded-lg border border-slate-200 bg-white px-3 py-2">Distributor</span>
-            <span class="rounded-lg border border-slate-200 bg-white px-3 py-2">Perusahaan IT</span>
-            <span class="rounded-lg border border-slate-200 bg-white px-3 py-2">Konsultan</span>
+          <div class="mt-7 flex flex-wrap gap-2 text-xs font-semibold">
+            <span class="app-badge app-badge-slate">Kontraktor</span>
+            <span class="app-badge app-badge-slate">Vendor Pengadaan</span>
+            <span class="app-badge app-badge-slate">Distributor</span>
+            <span class="app-badge app-badge-slate">Perusahaan IT</span>
+            <span class="app-badge app-badge-slate">Konsultan</span>
           </div>
         </div>
 
         <div class="relative">
-          <div class="absolute -left-5 top-10 hidden rounded-lg border border-emerald-200 bg-white p-4 shadow-card xl:block">
+          <div class="absolute -top-8 left-8 z-20 hidden app-card p-4 xl:block">
             <p class="text-xs font-bold text-slate-500">AI Match Alert</p>
             <p class="mt-1 text-sm font-black text-slate-950">Skor relevansi 92%</p>
             <p class="mt-2 text-xs font-semibold text-emerald-700">2 peserta, HPS Rp3,66M</p>
           </div>
 
-          <div class="rounded-lg border border-slate-200 bg-white shadow-soft">
+          <div class="app-panel overflow-hidden">
             <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div class="flex items-center gap-2">
-                <span class="h-3 w-3 rounded-lg bg-red-400"></span>
-                <span class="h-3 w-3 rounded-lg bg-amber-400"></span>
-                <span class="h-3 w-3 rounded-lg bg-emerald-400"></span>
+                <span class="h-3 w-3 rounded-xl bg-red-400"></span>
+                <span class="h-3 w-3 rounded-xl bg-amber-400"></span>
+                <span class="h-3 w-3 rounded-xl bg-emerald-400"></span>
               </div>
-              <div class="hidden rounded-lg bg-slate-100 px-4 py-2 text-xs font-bold text-slate-500 sm:block">
+              <div class="hidden rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-500 sm:block">
                 GPFE PROC HUB
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">LIVE</span>
+              <span class="app-badge app-badge-emerald">LIVE</span>
             </div>
 
             <div class="grid min-h-[540px] grid-cols-1 lg:grid-cols-[150px_1fr]">
-              <aside class="hidden border-r border-slate-200 bg-[#01106F] p-4 text-white lg:block">
-                <div class="mb-6 h-9 rounded-lg bg-white/10"></div>
+              <aside class="hidden border-r border-slate-200 bg-slate-950 p-4 text-white lg:block">
+                <div class="mb-6 h-9 rounded-xl bg-white/10"></div>
                 <div class="space-y-2 text-xs font-bold">
-                  <div class="rounded-lg bg-[#C80000] px-3 py-2.5">Overview</div>
-                  <div class="rounded-lg px-3 py-2.5 text-slate-300">Tender Feed</div>
-                  <div class="rounded-lg px-3 py-2.5 text-slate-300">AI Match</div>
-                  <div class="rounded-lg px-3 py-2.5 text-slate-300">Watchlist</div>
-                  <div class="rounded-lg px-3 py-2.5 text-slate-300">Digest</div>
+                  <div class="rounded-xl bg-slate-800 px-3 py-2.5">Overview</div>
+                  <div class="rounded-xl px-3 py-2.5 text-slate-300">Tender Feed</div>
+                  <div class="rounded-xl px-3 py-2.5 text-slate-300">AI Match</div>
+                  <div class="rounded-xl px-3 py-2.5 text-slate-300">Watchlist</div>
+                  <div class="rounded-xl px-3 py-2.5 text-slate-300">Digest</div>
                 </div>
               </aside>
 
@@ -191,25 +657,25 @@
                     <h2 class="mt-1 text-xl font-black text-slate-950">Tender Intelligence Dashboard</h2>
                   </div>
                   <div class="flex gap-2">
-                    <span class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600">Lokasi: Semua</span>
-                    <span class="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">AI Filter On</span>
+                    <span class="app-badge app-badge-slate">Lokasi: Semua</span>
+                    <span class="app-badge app-badge-blue">AI Filter On</span>
                   </div>
                 </div>
 
                 <div class="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                  <div class="rounded-lg border border-slate-200 bg-white p-3">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Open</p>
                     <p class="mt-1 text-2xl font-black text-slate-950">31</p>
                   </div>
-                  <div class="rounded-lg border border-slate-200 bg-white p-3">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Avg peserta</p>
                     <p class="mt-1 text-2xl font-black text-slate-950">30,2</p>
                   </div>
-                  <div class="rounded-lg border border-slate-200 bg-white p-3">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Low comp.</p>
                     <p class="mt-1 text-2xl font-black text-emerald-600">4</p>
                   </div>
-                  <div class="rounded-lg border border-slate-200 bg-white p-3">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Instansi</p>
                     <p class="mt-1 text-2xl font-black text-slate-950">5</p>
                   </div>
@@ -217,42 +683,42 @@
 
                 <div class="grid gap-4 xl:grid-cols-[1fr_260px]">
                   <div class="space-y-3">
-                    <article class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
+                    <article class="app-card p-4">
                       <div class="flex items-start justify-between gap-4">
                         <div>
                           <p class="text-xs font-black text-blue-700">10129999000</p>
                           <h3 class="mt-1 text-sm font-black leading-5 text-slate-950">Pengadaan Peralatan, Analisis, Pengiriman Passive Sampler 514 Kabupaten/Kota Tahun 2026</h3>
                         </div>
-                        <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700">OPEN</span>
+                        <span class="app-badge app-badge-status-open">OPEN</span>
                       </div>
                       <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
-                        <div class="rounded-lg bg-slate-50 p-2">
+                        <div class="rounded-xl bg-slate-50 p-2">
                           <p class="font-bold text-slate-500">HPS</p>
                           <p class="mt-1 font-black text-slate-900">Rp3,66M</p>
                         </div>
-                        <div class="rounded-lg bg-slate-50 p-2">
+                        <div class="rounded-xl bg-slate-50 p-2">
                           <p class="font-bold text-slate-500">Peserta</p>
                           <p class="mt-1 font-black text-emerald-700">2</p>
                         </div>
-                        <div class="rounded-lg bg-slate-50 p-2">
+                        <div class="rounded-xl bg-slate-50 p-2">
                           <p class="font-bold text-slate-500">AI Score</p>
                           <p class="mt-1 font-black text-blue-700">92%</p>
                         </div>
                       </div>
                     </article>
 
-                    <article class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
+                    <article class="app-card p-4">
                       <div class="flex items-start justify-between gap-4">
                         <div>
                           <p class="text-xs font-black text-blue-700">10130002000</p>
                           <h3 class="mt-1 text-sm font-black leading-5 text-slate-950">EQU-5B IT Software Tender Ulang</h3>
                           <p class="mt-1 text-xs font-semibold text-slate-500">Universitas Lampung - Bandar Lampung</p>
                         </div>
-                        <span class="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-700">IT</span>
+                        <span class="app-badge app-badge-blue">IT</span>
                       </div>
                     </article>
 
-                    <article class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
+                    <article class="app-card p-4">
                       <div class="flex items-center justify-between gap-4">
                         <div>
                           <p class="text-xs font-black text-blue-700">10127865000</p>
@@ -263,7 +729,7 @@
                     </article>
                   </div>
 
-                  <aside class="rounded-lg border border-slate-200 bg-white p-4 shadow-card">
+                  <aside class="app-card p-4">
                     <p class="text-xs font-black uppercase text-cyan-700">AI Insight</p>
                     <h3 class="mt-2 text-base font-black text-slate-950">Peluang prioritas minggu ini</h3>
                     <div class="mt-4 space-y-4">
@@ -271,19 +737,19 @@
                         <div class="mb-2 flex justify-between text-xs font-bold text-slate-500">
                           <span>Kecocokan vendor</span><span>92%</span>
                         </div>
-                        <div class="h-2 rounded-lg bg-slate-100">
-                          <div class="h-2 w-[92%] rounded-lg bg-blue-600"></div>
+                        <div class="h-2 rounded-xl bg-slate-100">
+                          <div class="h-2 w-[92%] rounded-xl bg-blue-600"></div>
                         </div>
                       </div>
                       <div>
                         <div class="mb-2 flex justify-between text-xs font-bold text-slate-500">
                           <span>Kompetisi rendah</span><span>86%</span>
                         </div>
-                        <div class="h-2 rounded-lg bg-slate-100">
-                          <div class="h-2 w-[86%] rounded-lg bg-emerald-500"></div>
+                        <div class="h-2 rounded-xl bg-slate-100">
+                          <div class="h-2 w-[86%] rounded-xl bg-emerald-500"></div>
                         </div>
                       </div>
-                      <p class="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-800">
+                      <p class="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-800">
                         Nilai tinggi dengan peserta rendah -> peluang tinggi.
                       </p>
                     </div>
@@ -307,19 +773,19 @@
         </div>
 
         <div class="grid gap-3 lg:grid-cols-4">
-          <div class="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div class="rounded-2xl border border-slate-700 bg-white/5 p-4">
           <p class="text-sm font-black text-cyan-300">Tender monitoring system</p>
           <p class="mt-1 text-xs font-semibold text-slate-300">Pantau semua tender dalam satu feed nasional.</p>
           </div>
-          <div class="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div class="rounded-2xl border border-slate-700 bg-white/5 p-4">
           <p class="text-sm font-black text-cyan-300">Tender filtering engine</p>
           <p class="mt-1 text-xs font-semibold text-slate-300">Saring lokasi, nilai, instansi, jenis, dan tahap.</p>
           </div>
-          <div class="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div class="rounded-2xl border border-slate-700 bg-white/5 p-4">
           <p class="text-sm font-black text-cyan-300">AI Procurement Intelligence Platform</p>
           <p class="mt-1 text-xs font-semibold text-slate-300">Ubah data mentah menjadi prioritas bisnis.</p>
           </div>
-          <div class="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div class="rounded-2xl border border-slate-700 bg-white/5 p-4">
           <p class="text-sm font-black text-cyan-300">AI-powered matching &amp; insight</p>
           <p class="mt-1 text-xs font-semibold text-slate-300">Prioritas peluang sesuai profil perusahaan.</p>
           </div>
@@ -335,44 +801,44 @@
             Peluang tender sering lewat karena datanya tersebar.
           </h2>
           <div class="mt-8 space-y-4">
-            <div class="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-lg bg-blue-600"></span>
+            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
               <p class="font-semibold text-slate-700">Harus buka banyak LPSE satu per satu.</p>
             </div>
-            <div class="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-lg bg-blue-600"></span>
+            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
               <p class="font-semibold text-slate-700">Sulit menemukan tender yang relevan.</p>
             </div>
-            <div class="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-lg bg-blue-600"></span>
+            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
               <p class="font-semibold text-slate-700">Informasi tersebar dan tidak terstruktur.</p>
             </div>
-            <div class="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-lg bg-blue-600"></span>
+            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
               <p class="font-semibold text-slate-700">Rawan telat ikut tender.</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg border border-blue-100 bg-blue-50 p-6 shadow-card">
+        <div class="app-panel p-6">
           <p class="text-sm font-black uppercase text-blue-700">Solusi Platform</p>
           <h2 class="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">
             Dari listing tender menjadi intelligence workflow.
           </h2>
           <div class="mt-8 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-lg bg-white p-5 shadow-card">
+            <div class="app-card p-5">
               <p class="font-black text-slate-950">Agregasi data tender nasional</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Data dari berbagai LPSE/SPSE disatukan ke dashboard pusat.</p>
             </div>
-            <div class="rounded-lg bg-white p-5 shadow-card">
+            <div class="app-card p-5">
               <p class="font-black text-slate-950">Real-time monitoring</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Feed tender baru dipantau agar tim tidak tertinggal jadwal.</p>
             </div>
-            <div class="rounded-lg bg-white p-5 shadow-card">
+            <div class="app-card p-5">
               <p class="font-black text-slate-950">Smart filtering</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Filter cepat berdasarkan wilayah, nilai, jenis, dan instansi.</p>
             </div>
-            <div class="rounded-lg bg-white p-5 shadow-card">
+            <div class="app-card p-5">
               <p class="font-black text-slate-950">AI insight &amp; prioritization</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Prioritaskan tender yang paling relevan dengan profil perusahaan.</p>
             </div>
@@ -391,96 +857,96 @@
         </div>
 
         <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19h16M7 16V8m5 8V5m5 11v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Monitoring tender nasional</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Pantau tender dari berbagai LPSE dalam satu dashboard.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Filter cerdas</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Lokasi, nilai, instansi, jenis pengadaan, metode, dan tahap.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Notifikasi otomatis</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Email dan dashboard alert untuk tender baru yang relevan.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-5.5-2.1 2.1M8.6 15.4l-2.1 2.1m11 0-2.1-2.1M8.6 8.6 6.5 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">AI insight tender</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Ringkasan peluang, risiko, kompetisi, dan prioritas aksi.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">AI relevancy matching</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Cocokkan tender dengan profil industri, layanan, dan kapasitas.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Tautan langsung ke LPSE</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Buka halaman tender asli langsung dari kartu dashboard.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 7h8M8 11h8M8 15h5M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Summary tender otomatis</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Ubah uraian panjang menjadi poin singkat untuk decision maker.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Watchlist tender</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Simpan peluang penting dan pantau perubahan tahap tender.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v16H4V4Zm0 5h16M8 2v4m8-4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Email digest harian</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Daftar tender prioritas dikirim rutin ke tim sales dan tender.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2 7.5 14 3 9.6l6.2-.9L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Tender scoring</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Estimasi potensi menang dari relevansi, nilai, peserta, dan tahap.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Histori tender instansi</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Lihat pola paket, nilai, dan kategori pengadaan per instansi.</p>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
-            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+          <article class="app-card p-5">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm14 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <h3 class="font-black text-slate-950">Analisis kompetitor</h3>
@@ -502,171 +968,171 @@
           </div>
 
           <div class="flex flex-wrap gap-2 text-xs font-black text-slate-600">
-            <span class="rounded-lg bg-blue-50 px-3 py-2 text-blue-700">OPEN only</span>
-            <span class="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700">Low competition</span>
-            <span class="rounded-lg bg-amber-50 px-3 py-2 text-amber-700">High value</span>
+            <span class="app-badge app-badge-status-open">OPEN only</span>
+            <span class="app-badge app-badge-emerald">Low competition</span>
+            <span class="app-badge app-badge-amber">High value</span>
           </div>
         </div>
 
         <div class="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10129999000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">Pengadaan Peralatan, Analisis, Pengiriman Passive Sampler 514 Kabupaten/Kota Tahun 2026</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Lingkungan Hidup/Badan Pengendalian Lingkungan Hidup</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Jakarta Selatan - Jakarta Selatan (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Lainnya</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">2 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Lainnya</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">2 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 3.665.000.000,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 3.664.985.790,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 3.665.000.000,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 3.664.985.790,00</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10129999000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10129999000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10130002000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">EQU-5B IT Software Tender Ulang</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">17 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">17 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 6.319.723.667,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 6.319.723.667,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 6.319.723.667,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 6.319.723.667,00</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10130002000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10130002000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10127865000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">EQU-2B Radiology and Supporting Radiology Service Equipment's</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">19 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">19 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 30.515.784.467,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 30.515.784.467,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 30.515.784.467,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 30.515.784.467,00</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10127865000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10127865000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10126649000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">Pengawasan Rekonstruksi Jaringan Distribusi Tenaga Listrik Universitas Tadulako</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Jl. Soekarno Hatta No.KM. 9, Tondo, Palu</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Konsultansi Konstruksi</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">3 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Konsultansi Konstruksi</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">3 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Pagu Anggaran</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 666.656.000,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 666.656.000,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 666.656.000,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 666.656.000,00</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Prakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10126649000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10126649000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10126072000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">Jasa Konsultansi Pengawasan Rehabilitasi Kantor DPRD Kabupaten Tulang Bawang</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kab. Tulang Bawang</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Kab. Tulang Bawang - Tulang Bawang (Kab.)</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Konsultansi Konstruksi</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">4 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Jasa Konsultansi Konstruksi</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-emerald-700">4 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Kualitas dan Biaya</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 170.000.000,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 169.999.999,83</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 170.000.000,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 169.999.999,83</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Prakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10126072000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10126072000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="rounded-lg border border-slate-200 bg-white p-5 shadow-card">
+          <article class="app-card p-5">
             <div class="flex items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black text-blue-700">Kode Tender 10127862000</p>
                 <h3 class="mt-2 text-lg font-black leading-6 text-slate-950">EQU-2A General Care and Laboratory Service Equipment</h3>
               </div>
-              <span class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">OPEN</span>
+              <span class="app-badge app-badge-status-open">OPEN</span>
             </div>
             <div class="mt-5 space-y-3 text-sm">
               <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
               <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
-                <div class="rounded-lg bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">20 peserta</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-black text-slate-950">Pengadaan Barang</p></div>
+                <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-black text-slate-950">20 peserta</p></div>
               </div>
               <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 37.595.610.084,00</p></div>
-                <div class="rounded-lg bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 37.595.610.084,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-black text-slate-950">Rp. 37.595.610.084,00</p></div>
+                <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-black text-slate-950">Rp. 37.595.610.084,00</p></div>
               </div>
               <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-black text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
-                <a href="https://spse.inaproc.id/nasional/lelang/10127862000/pengumumanlelang" target="_blank" rel="noreferrer" class="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">LPSE</a>
+                <a href="https://spse.inaproc.id/nasional/lelang/10127862000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
@@ -674,72 +1140,72 @@
       </div>
     </section>
 
-    <section id="ai" class="gradient-brand py-20 text-white">
+    <section id="ai" class="bg-slate-50 py-20 text-slate-950">
       <div class="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div>
-          <p class="text-sm font-black uppercase text-cyan-300">AI Layer</p>
+          <p class="text-sm font-black uppercase text-blue-700">AI Layer</p>
           <h2 class="mt-3 text-3xl font-black leading-tight sm:text-5xl">AI-Powered Tender Intelligence</h2>
-          <p class="mt-5 text-lg leading-8 text-slate-300">
+          <p class="mt-5 text-lg leading-8 text-slate-600">
             Mesin AI membantu tim tender membaca sinyal yang biasanya tersembunyi di dokumen panjang, jumlah peserta, nilai paket, dan profil instansi.
           </p>
 
           <div class="mt-8 grid gap-3 sm:grid-cols-2">
-            <div class="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p class="font-black text-white">Auto summary tender</p>
-              <p class="mt-2 text-sm leading-6 text-slate-300">Tender panjang jadi ringkasan singkat dan siap dibagikan.</p>
+            <div class="app-card p-4">
+              <p class="font-black text-slate-950">Auto summary tender</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Tender panjang jadi ringkasan singkat dan siap dibagikan.</p>
             </div>
-            <div class="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p class="font-black text-white">Prioritas relevan</p>
-              <p class="mt-2 text-sm leading-6 text-slate-300">Peluang diprioritaskan sesuai bidang perusahaan.</p>
+            <div class="app-card p-4">
+              <p class="font-black text-slate-950">Prioritas relevan</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Peluang diprioritaskan sesuai bidang perusahaan.</p>
             </div>
-            <div class="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p class="font-black text-white">Insight peluang tender</p>
-              <p class="mt-2 text-sm leading-6 text-slate-300">Nilai, tahap, dan metode dibaca sebagai sinyal bisnis.</p>
+            <div class="app-card p-4">
+              <p class="font-black text-slate-950">Insight peluang tender</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Nilai, tahap, dan metode dibaca sebagai sinyal bisnis.</p>
             </div>
-            <div class="rounded-lg border border-white/10 bg-white/5 p-4">
-              <p class="font-black text-white">Deteksi low competition</p>
-              <p class="mt-2 text-sm leading-6 text-slate-300">Jumlah peserta rendah langsung ditandai untuk follow-up cepat.</p>
+            <div class="app-card p-4">
+              <p class="font-black text-slate-950">Deteksi low competition</p>
+              <p class="mt-2 text-sm leading-6 text-slate-600">Jumlah peserta rendah langsung ditandai untuk follow-up cepat.</p>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg border border-white/10 bg-white p-5 text-slate-950 shadow-soft">
+        <div class="app-panel p-5 text-slate-950 transition duration-300 hover:shadow-lg">
           <div class="flex items-center justify-between border-b border-slate-200 pb-4">
             <div>
               <p class="text-xs font-black text-blue-700">AI Tender Brief</p>
               <h3 class="mt-1 text-xl font-black">Prioritas peluang</h3>
             </div>
-            <span class="rounded-lg bg-cyan-50 px-3 py-1.5 text-xs font-black text-cyan-700">Generated</span>
+            <span class="app-badge app-badge-blue">Generated</span>
           </div>
 
           <div class="mt-5 grid gap-4 lg:grid-cols-2">
-            <article class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <article class="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p class="text-xs font-black text-slate-500">Insight 01</p>
               <p class="mt-2 text-lg font-black leading-7 text-slate-950">"Tender ini cocok untuk perusahaan konstruksi skala kecil-menengah"</p>
               <div class="mt-4 flex items-center justify-between text-xs font-bold text-slate-500">
                 <span>Kategori</span><span>Konstruksi</span>
               </div>
-              <div class="mt-2 h-2 rounded-lg bg-slate-200">
-                <div class="h-2 w-[82%] rounded-lg bg-blue-600"></div>
+              <div class="mt-2 h-2 rounded-xl bg-slate-200">
+                <div class="h-2 w-[82%] rounded-xl bg-blue-600"></div>
               </div>
             </article>
 
-            <article class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+            <article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
               <p class="text-xs font-black text-emerald-700">Insight 02</p>
               <p class="mt-2 text-lg font-black leading-7 text-slate-950">"Nilai tinggi dengan peserta rendah -> peluang tinggi"</p>
               <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div class="rounded-lg bg-white p-3">
+                <div class="rounded-xl bg-white p-3">
                   <p class="text-xs font-bold text-slate-500">Peserta</p>
                   <p class="mt-1 font-black text-emerald-700">2</p>
                 </div>
-                <div class="rounded-lg bg-white p-3">
+                <div class="rounded-xl bg-white p-3">
                   <p class="text-xs font-bold text-slate-500">HPS</p>
                   <p class="mt-1 font-black text-slate-950">Rp3,66M</p>
                 </div>
               </div>
             </article>
 
-            <article class="rounded-lg border border-slate-200 bg-white p-4 lg:col-span-2">
+            <article class="rounded-xl border border-slate-200 bg-white p-4 lg:col-span-2">
               <div class="grid gap-4 sm:grid-cols-3">
                 <div>
                   <p class="text-xs font-bold text-slate-500">Ringkasan otomatis</p>
@@ -768,18 +1234,18 @@
         </div>
 
         <div class="mt-10 grid gap-5 lg:grid-cols-3">
-          <article class="rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-card">
-            <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600 text-lg font-black text-white">1</span>
+          <article class="app-card bg-slate-50/70 p-6">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-lg font-black text-white">1</span>
             <h3 class="mt-5 text-xl font-black text-slate-950">Ambil data tender nasional</h3>
             <p class="mt-3 leading-7 text-slate-600">Sistem mengumpulkan data tender pemerintah dari berbagai LPSE/SPSE dan menyusunnya dalam format dashboard.</p>
           </article>
-          <article class="rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-card">
-            <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-600 text-lg font-black text-white">2</span>
+          <article class="app-card bg-slate-50/70 p-6">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-lg font-black text-white">2</span>
             <h3 class="mt-5 text-xl font-black text-slate-950">AI memproses relevansi</h3>
             <p class="mt-3 leading-7 text-slate-600">AI membaca nama paket, instansi, lokasi, metode, nilai, peserta, dan tahapan untuk memberi sinyal peluang.</p>
           </article>
-          <article class="rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-card">
-            <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-600 text-lg font-black text-white">3</span>
+          <article class="app-card bg-slate-50/70 p-6">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-lg font-black text-white">3</span>
             <h3 class="mt-5 text-xl font-black text-slate-950">User menerima insight</h3>
             <p class="mt-3 leading-7 text-slate-600">Tim menerima notifikasi, digest, scoring, dan tautan langsung LPSE untuk menindaklanjuti tender yang paling relevan.</p>
           </article>
@@ -789,7 +1255,7 @@
 
     <section id="cta" class="bg-slate-50 py-20">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="rounded-lg border border-slate-200 bg-white p-8 shadow-soft lg:p-12">
+        <div class="app-panel p-8 lg:p-12">
           <div class="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-center">
             <div>
               <p class="text-sm font-black uppercase text-blue-700">Siap untuk B2B pilot</p>
@@ -802,17 +1268,17 @@
             </div>
 
             <div class="grid gap-3">
-              <a href="{% url 'register' %}" class="flex items-center justify-between rounded-lg bg-[#C80000] px-5 py-4 font-black text-white shadow-card hover:bg-[#45006B]">
+              <a href="{% url 'register' %}" class="flex items-center justify-between app-btn-primary px-5 py-4 font-semibold">
                 Daftar Vendor
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
 
-              <a href="{% url 'login' %}" class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-950 hover:border-[#C80000]/30 hover:text-[#C80000]">
+              <a href="{% url 'login' %}" class="flex items-center justify-between app-btn-secondary px-5 py-4 font-semibold">
                 Masuk Vendor
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
 
-              <a href="#tender" class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-950 hover:border-[#C80000]/30 hover:text-[#C80000]">
+              <a href="#tender" class="flex items-center justify-between app-btn-secondary px-5 py-4 font-semibold">
                 Lihat Tender
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </a>
@@ -824,8 +1290,8 @@
     </section>
   </main>
 
-  <footer class="border-t border-slate-200 py-8" style="background-color: #01106F;">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-6 text-sm font-semibold text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8" style="color: #ffffff;">
+  <footer class="border-t border-white/10 bg-[#01106F] py-8">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-6 text-sm font-semibold text-white/80 sm:flex-row sm:items-center sm:justify-between lg:px-8">
       <p>AI Procurement Intelligence Platform</p>
       <p>&copy; 2026 GPFE PROC HUB</p>
     </div>
@@ -836,14 +1302,14 @@
       <button
         type="button"
         id="closeWaitingModal"
-        class="absolute right-4 top-4 rounded-lg bg-slate-100 px-3 py-1 text-sm font-black text-slate-700 hover:bg-slate-200"
+        class="absolute right-4 top-4 rounded-xl bg-slate-100 px-3 py-1 text-sm font-black text-slate-700 hover:bg-slate-200"
       >
         ✕
       </button>
 
       <div class="mb-6">
-        <p class="text-sm font-black uppercase text-[#C80000]">Waiting List</p>
-        <h2 class="mt-2 text-2xl font-black text-[#01106F]">Daftar Early Access GPFE PROC HUB</h2>
+        <p class="text-sm font-black uppercase text-emerald-700">Waiting List</p>
+        <h2 class="mt-2 text-2xl font-black text-slate-950">Daftar Early Access GPFE PROC HUB</h2>
         <p class="mt-2 text-sm font-semibold text-slate-600">
           Isi data di bawah ini untuk mendapatkan update dan akses awal platform.
         </p>
@@ -852,32 +1318,32 @@
       <form id="waitingListForm" class="grid gap-4 sm:grid-cols-2">
         <div class="sm:col-span-2">
           <label class="mb-1 block text-sm font-bold text-slate-700">Nama Lengkap *</label>
-          <input name="nama_lengkap" required type="text" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="Nama lengkap">
+          <input name="nama_lengkap" required type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="Nama lengkap">
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-bold text-slate-700">Nomor WA</label>
-          <input name="nomor_wa" type="tel" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="08xxxxxxxxxx">
+          <input name="nomor_wa" type="tel" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="08xxxxxxxxxx">
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-bold text-slate-700">Email Aktif*</label>
-          <input name="email_instansi" required type="email" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="nama@perusahaan.com">
+          <input name="email_instansi" required type="email" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="nama@perusahaan.com">
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-bold text-slate-700">Nama Perusahaan *</label>
-          <input name="nama_perusahaan" required type="text" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="PT / CV / Instansi">
+          <input name="nama_perusahaan" required type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="PT / CV / Instansi">
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-bold text-slate-700">Bidang Usaha *</label>
-          <input name="bidang_usaha" required type="text" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="Konstruksi, IT, Distributor, dll">
+          <input name="bidang_usaha" required type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="Konstruksi, IT, Distributor, dll">
         </div>
 
         <div>
           <label class="mb-1 block text-sm font-bold text-slate-700">Jenis Lokasi *</label>
-          <select id="jenisLokasi" name="jenis_lokasi" required class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]">
+          <select id="jenisLokasi" name="jenis_lokasi" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
             <option value="">Pilih lokasi</option>
             <option value="Indonesia">Indonesia</option>
             <option value="Internasional">Internasional</option>
@@ -886,25 +1352,25 @@
 
         <div id="provinsiWrap">
           <label class="mb-1 block text-sm font-bold text-slate-700">Provinsi *</label>
-          <select id="provinsiSelect" name="provinsi" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]">
+          <select id="provinsiSelect" name="provinsi" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
             <option value="">Pilih Provinsi</option>
           </select>
         </div>
 
         <div id="kotaWrap">
           <label class="mb-1 block text-sm font-bold text-slate-700">Kota/Kabupaten *</label>
-          <select id="kotaSelect" name="kota_kabupaten" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]">
+          <select id="kotaSelect" name="kota_kabupaten" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
             <option value="">Pilih Kota/Kabupaten</option>
           </select>
         </div>
 
         <div id="negaraWrap" class="hidden">
           <label class="mb-1 block text-sm font-bold text-slate-700">Negara *</label>
-          <input id="negaraInput" name="negara" type="text" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#C80000]" placeholder="Contoh: Singapore, Malaysia">
+          <input id="negaraInput" name="negara" type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" placeholder="Contoh: Singapore, Malaysia">
         </div>
 
         <div class="sm:col-span-2">
-          <button type="submit" class="w-full rounded-lg bg-[#C80000] px-5 py-3.5 text-sm font-black text-white shadow-card hover:bg-[#45006B]">
+          <button type="submit" class="app-btn-primary w-full px-5 py-3.5 text-sm font-semibold">
             Kirim Waiting List
           </button>
           <p id="formStatus" class="mt-3 hidden text-center text-sm font-bold"></p>
@@ -1040,7 +1506,7 @@
       submitBtn.textContent = "Mengirim data...";
       submitBtn.classList.add("opacity-70", "cursor-not-allowed");
 
-      formStatus.className = "mt-3 text-center text-sm font-bold text-[#01106F]";
+      formStatus.className = "mt-3 text-center text-sm font-bold text-slate-950";
       formStatus.textContent = "Mohon tunggu, data Anda sedang dikirim.";
       formStatus.classList.remove("hidden");
 
@@ -1095,6 +1561,6 @@
     if (document.querySelector(".openWaitingModal")) {
       loadProvinsi();
     }
-  </script>
+</script>
 </body>
 </html>

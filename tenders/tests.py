@@ -1,14 +1,17 @@
+from collections import OrderedDict
 from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.management.base import CommandError
 from django.core.management import call_command
 from django.test import override_settings
-from django.test import SimpleTestCase, TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from tenders.management.commands.scrape_spse_live import (
+    Command as ScrapeSpseLiveCommand,
     append_year_to_sumber_dana,
     normalize_status,
     parse_jenis_pengadaan_tahun,
@@ -21,7 +24,9 @@ from tenders.services.inaproc_realisasi_client import (
 )
 from tenders.services.inaproc_realisasi_importer import upsert_realisasi_row
 from tenders.services.email_digest import send_digest_for_user
+from tenders.services.spse_slug_mapping import merge_slug_mapping, parse_portal_entries
 from tenders.models import Tender, TenderNotification, TenderNotificationEmailLog
+from tenders.views import get_selected_filters
 from users.models import VendorProfile
 from tenders.year_utils import extract_budget_years, normalize_budget_years
 
@@ -106,6 +111,80 @@ class TenderStatusNormalizationTests(SimpleTestCase):
 
     def test_active_stage_remains_ongoing(self):
         self.assertEqual(normalize_status("Evaluasi Penawaran"), "ONGOING")
+
+
+class TenderFilterDefaultYearTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_year_defaults_to_current_year_when_missing(self):
+        request = self.factory.get("/tenders/")
+
+        selected = get_selected_filters(request)
+
+        self.assertEqual(selected["tahun"], str(timezone.localdate().year))
+
+    def test_empty_year_parameter_still_allows_all_years(self):
+        request = self.factory.get("/tenders/", {"tahun": ""})
+
+        selected = get_selected_filters(request)
+
+        self.assertEqual(selected["tahun"], "")
+
+
+class SpseSlugMappingTests(SimpleTestCase):
+    def test_parse_portal_entries_extracts_safe_unique_slugs(self):
+        script_text = (
+            'let n=[{name:"LPSE Kota Test",oldUrl:"https://lpse.test.go.id",newUrlPath:"kotatest"},'
+            '{name:"LPSE Kota Test Duplicate",oldUrl:"https://lpse.test.go.id",newUrlPath:"kotatest"},'
+            '{name:"Govtech Dev",oldUrl:"https://spse-latihan.eproc.dev",newUrlPath:"latihan"},'
+            '{name:"Unsafe",oldUrl:"https://unsafe.go.id",newUrlPath:"../unsafe"}];'
+        )
+
+        mapping = parse_portal_entries(script_text)
+
+        self.assertEqual(mapping, OrderedDict([("kotatest", "LPSE Kota Test")]))
+
+    def test_merge_slug_mapping_adds_new_and_updates_existing_names(self):
+        existing = OrderedDict([
+            ("jakarta", "Old Jakarta"),
+            ("bandung", "LPSE Kota Bandung"),
+        ])
+        discovered = OrderedDict([
+            ("jakarta", "Provinsi DKI Jakarta > LPSE Provinsi DKI Jakarta"),
+            ("surabaya", "LPSE Kota Surabaya"),
+        ])
+
+        result = merge_slug_mapping(existing, discovered)
+
+        self.assertEqual(result["mapping"]["jakarta"], "Provinsi DKI Jakarta > LPSE Provinsi DKI Jakarta")
+        self.assertEqual(result["mapping"]["surabaya"], "LPSE Kota Surabaya")
+        self.assertIn("jakarta", result["updated"])
+        self.assertIn("surabaya", result["added"])
+
+
+class ScrapeSpseLiveCommandOptionTests(SimpleTestCase):
+    def setUp(self):
+        self.command = ScrapeSpseLiveCommand()
+
+    def base_options(self, **overrides):
+        options = {
+            "kode_tender": None,
+            "slug": None,
+            "all_slugs": True,
+            "tahun": 2026,
+            "detail_only": False,
+            "then_detail_only": False,
+        }
+        options.update(overrides)
+        return options
+
+    def test_then_detail_only_can_follow_all_slugs_list_scrape(self):
+        self.command.validate_options(self.base_options(then_detail_only=True))
+
+    def test_then_detail_only_cannot_be_combined_with_detail_only(self):
+        with self.assertRaisesMessage(CommandError, "--detail-only cannot be combined with --then-detail-only"):
+            self.command.validate_options(self.base_options(detail_only=True, then_detail_only=True))
 
 
 class InaprocRealisasiClientTests(SimpleTestCase):

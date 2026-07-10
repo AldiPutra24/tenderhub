@@ -123,7 +123,7 @@
                     </div>
                 </div>
                 <p class="mt-4 text-3xl font-semibold tracking-tight text-slate-950">{{ dashboard_stats.tender_aktif }}</p>
-                <p class="mt-2 inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">OPEN + ONGOING</p>
+                <p class="status-open mt-2 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold">OPEN + ONGOING</p>
             </div>
         </div>
     </section>
@@ -224,10 +224,10 @@
                         <td class="whitespace-nowrap px-5 py-4 font-semibold text-slate-800">{{ tender.nilai_hps|rupiah_compact }}</td>
                         <td class="px-5 py-4">
                             <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold
-                                {% if tender.status == 'OPEN' %}border-emerald-200 bg-emerald-50 text-emerald-700
-                                {% elif tender.status == 'ONGOING' %}border-blue-200 bg-blue-50 text-blue-700
-                                {% elif tender.status == 'FINISH' %}border-slate-200 bg-slate-100 text-slate-600
-                                {% elif tender.status == 'FAILED' %}border-red-200 bg-red-50 text-red-700
+                                {% if tender.status == 'OPEN' %}status-open
+                                {% elif tender.status == 'ONGOING' %}status-ongoing
+                                {% elif tender.status == 'FINISH' %}status-finish
+                                {% elif tender.status == 'FAILED' %}status-failed
                                 {% else %}border-slate-200 bg-slate-100 text-slate-600{% endif %}">
                                 {{ tender.status|default:"UNKNOWN" }}
                             </span>

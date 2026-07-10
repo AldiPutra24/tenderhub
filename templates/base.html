@@ -23,15 +23,22 @@
                     colors: {
                         brand: {
                             navy: "#01106F",
-                            blue: "#2563eb",
-                            cyan: "#06b6d4",
-                            green: "#10b981",
+                            blue: "#01106F",
+                            cyan: "#1E3A8A",
+                            green: "#C80000",
                             amber: "#f59e0b",
                             red: "#C80000",
-                            purple: "#45006B",
-                            ink: "#102033",
-                            bg: "#f7fbff",
+                            purple: "#5E0056",
+                            ink: "#0F172A",
+                            bg: "#F8FAFC",
                         },
+                        "primary-red": "#C80000",
+                        "primary-navy": "#01106F",
+                        "primary-purple": "#5E0056",
+                        surface: "#FFFFFF",
+                        "border-subtle": "#E2E8F0",
+                        "text-primary": "#0F172A",
+                        "text-muted": "#64748B",
                     },
                 },
             },
@@ -42,22 +49,33 @@
 
     <style>
         [hidden] { display: none !important; }
+        *,
+        *::before,
+        *::after { box-sizing: border-box; }
         :root {
             --primary: #01106F;
-            --primary-hover: #45006B;
-            --primary-soft: #eef4ff;
+            --primary-red: #C80000;
+            --primary-navy: #01106F;
+            --transition-red: #9E0022;
+            --primary-purple: #5E0056;
+            --primary-hover: #9E0022;
+            --primary-soft: rgba(1, 16, 111, 0.07);
             --accent: #C80000;
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #C80000;
+            --app-gradient: linear-gradient(120deg, rgb(200,0,0) 0%, rgb(158,0,34) 35%, rgb(94,0,86) 60%, rgb(1,16,111) 100%);
             --surface: #ffffff;
-            --surface-muted: #f7fbff;
-            --border-subtle: #dbe4f0;
-            --text-primary: #102033;
+            --surface-muted: #F8FAFC;
+            --border-subtle: #E2E8F0;
+            --text-primary: #0F172A;
             --text-secondary: #475569;
             --text-muted: #64748b;
+            --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.08), 0 14px 34px rgba(15, 23, 42, 0.06);
+            --shadow-hover: 0 22px 48px rgba(15, 23, 42, 0.12);
         }
-        .primary { background: var(--primary); color: #fff; }
+        body { background: var(--surface-muted); color: var(--text-primary); }
+        .primary { background: var(--primary-red); color: #fff; }
         .primary-hover:hover { background: var(--primary-hover); color: #fff; }
         .primary-soft { background: var(--primary-soft); color: var(--primary); }
         .success { background: rgba(16, 185, 129, 0.1); color: #047857; border-color: rgba(16, 185, 129, 0.24); }
@@ -67,15 +85,129 @@
         .surface-muted { background: var(--surface-muted); }
         .border-subtle { border-color: var(--border-subtle); }
         .text-primary { color: var(--primary); }
+        .bg-primary { background-color: var(--primary-red); }
+        .border-primary { border-color: var(--primary-red); }
         .text-primary-ink { color: var(--text-primary); }
         .text-secondary { color: var(--text-secondary); }
         .text-muted { color: var(--text-muted); }
         .bg-surface { background: var(--surface); }
         .bg-surface-muted { background: var(--surface-muted); }
+        .app-gradient { background: var(--app-gradient); }
+        .app-card,
+        .app-panel {
+            border: 1px solid var(--border-subtle);
+            border-radius: 1rem;
+            background: var(--surface);
+            box-shadow: var(--shadow-soft);
+        }
+        .app-card {
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .app-card:hover {
+            border-color: rgba(1, 16, 111, 0.22);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
+        .btn-primary,
+        .app-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: .75rem;
+            background: var(--primary-red);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 12px 24px rgba(200, 0, 0, 0.18);
+            transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+        }
+        .btn-primary:hover,
+        .app-btn-primary:hover {
+            background: var(--transition-red);
+            color: #fff;
+            box-shadow: 0 18px 32px rgba(158, 0, 34, 0.22);
+            transform: translateY(-1px);
+        }
+        .btn-primary:focus,
+        .app-btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(200, 0, 0, 0.16), 0 12px 24px rgba(200, 0, 0, 0.18);
+        }
+        .btn-secondary,
+        .app-btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-subtle);
+            border-radius: .75rem;
+            background: #fff;
+            color: var(--primary-navy);
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+            transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+        .btn-secondary:hover,
+        .app-btn-secondary:hover {
+            border-color: var(--primary-red);
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(200, 0, 0, 0.14);
+        }
+        .app-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--primary-navy);
+            color: rgba(255, 255, 255, 0.82);
+        }
+        .app-footer a:hover { color: #fecaca; }
+        .app-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 9999px;
+            border: 1px solid var(--border-subtle);
+            padding: .25rem .625rem;
+            font-size: .75rem;
+            font-weight: 700;
+            line-height: 1rem;
+        }
+        .app-badge-primary {
+            border-color: rgba(1, 16, 111, 0.16);
+            background: rgba(1, 16, 111, 0.07);
+            color: var(--primary-navy);
+        }
+        .app-badge-red {
+            border-color: rgba(200, 0, 0, 0.16);
+            background: rgba(200, 0, 0, 0.07);
+            color: var(--transition-red);
+        }
+        .app-badge-success {
+            border-color: rgba(16, 185, 129, 0.22);
+            background: rgba(16, 185, 129, 0.10);
+            color: #047857;
+        }
+        .app-badge-muted {
+            border-color: var(--border-subtle);
+            background: var(--surface-muted);
+            color: var(--text-muted);
+        }
+        .status-open,
+        .status-ongoing {
+            border-color: rgba(16, 185, 129, 0.26) !important;
+            background-color: rgba(16, 185, 129, 0.12) !important;
+            color: #047857 !important;
+        }
+        .status-finish {
+            border-color: rgba(1, 16, 111, 0.20) !important;
+            background-color: rgba(1, 16, 111, 0.08) !important;
+            color: var(--primary-navy) !important;
+        }
+        .status-failed {
+            border-color: rgba(200, 0, 0, 0.20) !important;
+            background-color: rgba(200, 0, 0, 0.08) !important;
+            color: var(--primary-red) !important;
+        }
         .field-control {
             width: 100%;
             height: 2.75rem;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             border: 1px solid var(--border-subtle);
             background: #fff;
             padding: 0 0.75rem;
@@ -85,8 +217,79 @@
             transition: box-shadow .15s ease, border-color .15s ease;
         }
         .field-control:focus {
-            border-color: rgba(1, 16, 111, 0.36);
-            box-shadow: 0 0 0 4px rgba(1, 16, 111, 0.08);
+            border-color: rgba(200, 0, 0, 0.46);
+            box-shadow: 0 0 0 4px rgba(200, 0, 0, 0.10);
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: rgba(200, 0, 0, 0.46) !important;
+            --tw-ring-color: rgba(200, 0, 0, 0.12) !important;
+        }
+        a { text-underline-offset: 4px; }
+        .bg-blue-50 { background-color: rgba(1, 16, 111, 0.07) !important; }
+        .text-blue-700,
+        .text-cyan-700 { color: var(--primary-navy) !important; }
+        .border-blue-200 { border-color: rgba(1, 16, 111, 0.18) !important; }
+        .bg-blue-600,
+        .bg-cyan-600 { background-color: var(--primary-navy) !important; }
+        .hover\:bg-blue-100:hover { background-color: rgba(1, 16, 111, 0.10) !important; }
+        .hover\:bg-blue-50\/60:hover { background-color: rgba(1, 16, 111, 0.07) !important; }
+        .hover\:text-blue-700:hover { color: var(--primary-navy) !important; }
+        .focus\:ring-blue-100:focus { --tw-ring-color: rgba(1, 16, 111, 0.12) !important; }
+        .bg-emerald-50 { background-color: rgba(200, 0, 0, 0.07) !important; }
+        .text-emerald-700,
+        .text-emerald-800 { color: var(--transition-red) !important; }
+        .border-emerald-200,
+        .border-emerald-100 { border-color: rgba(200, 0, 0, 0.18) !important; }
+        .bg-emerald-500,
+        .bg-emerald-600 { background-color: var(--primary-red) !important; }
+        .focus\:border-emerald-500:focus { border-color: rgba(200, 0, 0, 0.46) !important; }
+        .focus\:ring-emerald-100:focus { --tw-ring-color: rgba(200, 0, 0, 0.12) !important; }
+        .bg-slate-950 { background-color: var(--primary-navy) !important; }
+        a.bg-slate-950,
+        button.bg-slate-950 { background-color: var(--primary-red) !important; }
+        .hover\:bg-slate-800:hover { background-color: var(--transition-red) !important; }
+        .text-slate-950 { color: var(--text-primary) !important; }
+        thead.bg-slate-50 { background-color: rgba(1, 16, 111, 0.06) !important; color: var(--primary-navy) !important; }
+        tr.hover\:bg-slate-50:hover { background-color: rgba(200, 0, 0, 0.035) !important; }
+        .shadow-card,
+        .shadow-sm { box-shadow: var(--shadow-soft) !important; }
+        @media (max-width: 767px) {
+            html,
+            body,
+            [data-app-shell],
+            [data-app-shell] .lg\:pl-72,
+            [data-app-shell] main {
+                width: 100vw !important;
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+            [data-app-shell] main > div {
+                width: calc(100vw - 2rem) !important;
+                max-width: calc(100vw - 2rem) !important;
+            }
+            [data-app-shell] section,
+            [data-app-shell] article,
+            [data-app-shell] .app-card,
+            [data-app-shell] .app-panel,
+            [data-app-shell] .max-w-7xl {
+                min-width: 0;
+                max-width: 100%;
+            }
+            [data-app-shell] h1,
+            [data-app-shell] h2,
+            [data-app-shell] h3,
+            [data-app-shell] p {
+                overflow-wrap: break-word;
+            }
+            [data-app-shell] form.flex {
+                flex-wrap: wrap;
+            }
+            [data-app-shell] a,
+            [data-app-shell] button {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -208,15 +411,15 @@
                 {% csrf_token %}
                 <button
                     type="submit"
-                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100"
+                    class="btn-secondary w-full px-3 py-2 text-left text-sm"
                 >
                     Logout
                 </button>
             </form>
             {% else %}
             <div class="space-y-2">
-                <a href="{% url 'login' %}" class="block rounded-xl bg-slate-950 px-3 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800">Masuk</a>
-                <a href="{% url 'register' %}" class="block rounded-xl px-3 py-2.5 text-center text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">Daftar</a>
+                <a href="{% url 'login' %}" class="btn-primary w-full px-3 py-2.5 text-center text-sm">Masuk</a>
+                <a href="{% url 'register' %}" class="btn-secondary w-full px-3 py-2.5 text-center text-sm">Daftar</a>
             </div>
             {% endif %}
         </div>
@@ -300,7 +503,7 @@
                                     <div class="mt-3 flex flex-wrap items-center gap-2">
                                         <form method="post" action="{% url 'tender_notification_open' notification.id %}">
                                             {% csrf_token %}
-                                            <button type="submit" class="inline-flex h-8 items-center justify-center rounded-lg bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-slate-800">
+                                            <button type="submit" class="btn-primary h-8 px-3 text-xs">
                                                 Lihat Tender
                                             </button>
                                         </form>
@@ -334,8 +537,8 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-xs font-semibold uppercase text-white">
+                    <div class="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm sm:flex">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-xl app-gradient text-xs font-semibold uppercase text-white">
                             {% if user.is_authenticated %}{{ user.first_name|default:user.username|slice:":1" }}{% else %}G{% endif %}
                         </div>
                         <div class="hidden leading-tight md:block">
@@ -388,7 +591,7 @@
     </div>
 </div>
 {% endblock %}
-    <footer class="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs font-medium text-slate-500 sm:px-6 lg:px-8">
+    <footer class="app-footer px-4 py-4 text-center text-xs font-medium sm:px-6 lg:px-8">
         &copy; 2026 GPFE PROC HUB
     </footer>
     <script>

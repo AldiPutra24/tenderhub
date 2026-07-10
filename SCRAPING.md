@@ -318,11 +318,30 @@ python manage.py scrape_spse_live --all-slugs --tahun 2026
 
 Command ini akan:
 
+- menyinkronkan slug terbaru dari portal `https://spse.inaproc.id/` ke `tenders/data/lpse_slug_mapping.json`
 - membaca semua slug dari `tenders/data/lpse_slug_mapping.json`
 - mengambil data list DataTables SPSE
 - menyimpan `kode_tender`, `nama_paket`, `instansi`, `klpd_instansi`, `tahapan`, `status`, `nilai_hps`, `jenis_pengadaan`, `tahun_anggaran`, `lpse_slug`, `lpse_name`, dan URL detail
 - mendeteksi badge `Tender Ulang` dari list SPSE dan menyimpan `tender_ulang`
 - tidak mengambil halaman detail tender
+
+Refresh slug otomatis hanya berjalan untuk `--all-slugs`. Jika ingin mengecek tanpa mengubah file:
+
+```bash
+python manage.py sync_spse_slugs --dry-run --show-changes
+```
+
+Jika ingin scrape memakai file lokal tanpa refresh:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --no-refresh-slugs
+```
+
+Jika ingin menjalankan scrape list lalu langsung lanjut detail enrichment untuk tender aktif yang detailnya masih kurang:
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --sleep-min 2 --sleep-max 5 --then-detail-only --missing-detail-only --detail-status OPEN,ONGOING
+```
 
 Untuk satu LPSE saja:
 

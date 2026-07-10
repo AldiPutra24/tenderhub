@@ -5,11 +5,11 @@
 {% block body %}
 <main class="min-h-screen bg-slate-50">
     <div class="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        <section class="relative hidden overflow-hidden bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(148,163,184,0.22),transparent_28%),radial-gradient(circle_at_70%_0%,rgba(59,130,246,0.18),transparent_26%)]"></div>
+        <section class="app-gradient relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.20),transparent_28%),radial-gradient(circle_at_70%_0%,rgba(255,255,255,0.16),transparent_26%)]"></div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-bold text-slate-950">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-bold text-primary-navy">
                         GP
                     </div>
                     <div>
@@ -126,7 +126,7 @@
                         <button type="submit"
                                 data-login-submit
                                 {% if form.lockout_remaining_seconds %}disabled{% endif %}
-                                class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300">
+                                class="btn-primary h-11 w-full px-4 text-sm">
                             Masuk
                         </button>
                     </form>
@@ -134,11 +134,11 @@
                     <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
                         <p class="text-sm text-slate-600">
                             Belum punya akun?
-                            <a href="{% url 'register' %}" class="font-semibold text-slate-950 underline-offset-4 hover:underline">Daftar sebagai vendor</a>
+                            <a href="{% url 'register' %}" class="font-semibold text-primary-red underline-offset-4 hover:underline">Daftar sebagai vendor</a>
                         </p>
                         <p class="mt-2 text-sm text-slate-600">
                             Belum menerima email verifikasi?
-                            <a href="{% url 'resend_verification' %}" class="font-semibold text-slate-950 underline-offset-4 hover:underline">Kirim ulang</a>
+                            <a href="{% url 'resend_verification' %}" class="font-semibold text-primary-navy underline-offset-4 hover:text-primary-red hover:underline">Kirim ulang</a>
                         </p>
                     </div>
                 </div>

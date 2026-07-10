@@ -1,23 +1,25 @@
 :root,
 html[data-theme="light"] {
-    --primary: #059669;
-    --secondary: #0f172a;
-    --accent: #d1fae5;
+    --primary: #01106F;
+    --secondary: #0F172A;
+    --accent: #C80000;
+    --transition-red: #9E0022;
+    --support-purple: #5E0056;
     --primary-fg: #ffffff;
     --body-fg: #334155;
-    --body-bg: #f6f8fb;
+    --body-bg: #F8FAFC;
     --body-quiet-color: #64748b;
     --body-loud-color: #0f172a;
     --header-color: #ffffff;
     --header-branding-color: #ffffff;
-    --header-bg: #0f172a;
+    --header-bg: #01106F;
     --header-link-color: #dbe4ee;
     --breadcrumbs-fg: #64748b;
-    --breadcrumbs-link-fg: #047857;
+    --breadcrumbs-link-fg: #01106F;
     --breadcrumbs-bg: #ffffff;
-    --link-fg: #047857;
-    --link-hover-color: #065f46;
-    --link-selected-fg: #059669;
+    --link-fg: #01106F;
+    --link-hover-color: #C80000;
+    --link-selected-fg: #C80000;
     --hairline-color: #e2e8f0;
     --border-color: #dbe3ec;
     --error-fg: #b91c1c;
@@ -25,12 +27,12 @@ html[data-theme="light"] {
     --message-warning-bg: #fffbeb;
     --message-error-bg: #fef2f2;
     --darkened-bg: #eef2f7;
-    --selected-bg: #ecfdf5;
-    --selected-row: #f0fdf4;
-    --button-bg: #059669;
-    --button-hover-bg: #047857;
-    --default-button-bg: #0f172a;
-    --default-button-hover-bg: #1e293b;
+    --selected-bg: rgba(200, 0, 0, 0.07);
+    --selected-row: rgba(200, 0, 0, 0.04);
+    --button-bg: #C80000;
+    --button-hover-bg: #9E0022;
+    --default-button-bg: #C80000;
+    --default-button-hover-bg: #9E0022;
     --close-button-bg: #475569;
     --close-button-hover-bg: #334155;
     --delete-button-bg: #dc2626;
@@ -38,7 +40,7 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
-    --primary: #34d399;
+    --primary: #fca5a5;
     --secondary: #0f172a;
     --accent: #064e3b;
     --body-fg: #dbe4ee;
@@ -47,14 +49,14 @@ html[data-theme="dark"] {
     --body-loud-color: #f8fafc;
     --breadcrumbs-bg: #111827;
     --breadcrumbs-fg: #94a3b8;
-    --breadcrumbs-link-fg: #6ee7b7;
-    --link-fg: #6ee7b7;
-    --link-hover-color: #a7f3d0;
+    --breadcrumbs-link-fg: #fca5a5;
+    --link-fg: #fca5a5;
+    --link-hover-color: #fecaca;
     --hairline-color: #263244;
     --border-color: #334155;
     --darkened-bg: #111827;
-    --selected-bg: #123c31;
-    --selected-row: #102d27;
+    --selected-bg: rgba(200, 0, 0, 0.18);
+    --selected-row: rgba(200, 0, 0, 0.12);
 }
 
 body {
@@ -83,7 +85,7 @@ body {
 
 .gpfe-brand img {
     border-radius: 9px;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.24);
+    box-shadow: 0 8px 20px rgba(200, 0, 0, 0.24);
 }
 
 .gpfe-brand span {
@@ -138,7 +140,7 @@ body {
 }
 
 #nav-sidebar {
-    background: #111827;
+    background: #01106F;
     border-right: 0;
     padding: 14px 10px;
 }
@@ -181,13 +183,13 @@ body {
 
 #nav-sidebar .current-model th a,
 #nav-sidebar .module th a:hover {
-    background: #1e293b;
-    color: #6ee7b7;
+    background: rgba(255, 255, 255, 0.10);
+    color: #fecaca;
 }
 
 #nav-filter {
-    background: #0f172a;
-    border: 1px solid #334155;
+    background: rgba(15, 23, 42, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 8px;
     color: #e2e8f0;
     margin: 0 4px 14px;
@@ -196,8 +198,8 @@ body {
 }
 
 .toggle-nav-sidebar {
-    background-color: #111827;
-    border-right: 1px solid #263244;
+    background-color: #01106F;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .module,
@@ -248,8 +250,8 @@ select,
 input:focus,
 textarea:focus,
 select:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
+    border-color: #C80000;
+    box-shadow: 0 0 0 3px rgba(200, 0, 0, 0.14);
     outline: 0;
 }
 
@@ -351,7 +353,7 @@ a.button {
 }
 
 .gpfe-eyebrow {
-    color: #059669;
+    color: #C80000;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: .08em;
@@ -390,15 +392,15 @@ a.button {
 }
 
 .gpfe-stat-emerald {
-    border-top: 3px solid #10b981;
+    border-top: 3px solid #C80000;
 }
 
 .gpfe-stat-amber {
-    border-top: 3px solid #f59e0b;
+    border-top: 3px solid #9E0022;
 }
 
 .gpfe-stat-slate {
-    border-top: 3px solid #64748b;
+    border-top: 3px solid #01106F;
 }
 
 .gpfe-admin-section {
