@@ -1,7 +1,7 @@
 from django.urls import path
-from django.contrib.auth.views import LoginView, LogoutView
-from .forms import ApprovedAuthenticationForm
+from django.contrib.auth.views import LogoutView
 from .views import (
+    GPFELoginView,
     GPFEPasswordResetCompleteView,
     GPFEPasswordResetConfirmView,
     GPFEPasswordResetDoneView,
@@ -15,14 +15,7 @@ from .views import (
 
 urlpatterns = [
     path("register/", register_view, name="register"),
-    path(
-        "login/",
-        LoginView.as_view(
-            template_name="users/login.html",
-            authentication_form=ApprovedAuthenticationForm,
-        ),
-        name="login",
-    ),
+    path("login/", GPFELoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(next_page="login"), name="logout"),
     path("password-reset/", GPFEPasswordResetView.as_view(), name="password_reset"),
     path("password-reset/done/", GPFEPasswordResetDoneView.as_view(), name="password_reset_done"),

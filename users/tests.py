@@ -292,7 +292,7 @@ class EmailVerificationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Email belum diverifikasi")
+        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
 
     def test_valid_verification_link_marks_profile_verified(self):
         user = self.create_pending_user(verified=False)
@@ -306,18 +306,16 @@ class EmailVerificationTests(TestCase):
         self.assertTrue(user.vendor_profile.email_verified)
         self.assertIsNotNone(user.vendor_profile.email_verified_at)
 
-    def test_verified_pending_user_has_limited_access(self):
+    def test_verified_pending_user_cannot_login_until_admin_approved(self):
         self.create_pending_user(verified=True)
-        self.assertTrue(self.client.login(username="pending@example.com", password="StrongPass123!"))
+        response = self.client.post(
+            reverse("login"),
+            {"username": "pending@example.com", "password": "StrongPass123!"},
+        )
 
-        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
-        self.assertEqual(self.client.get(reverse("vendor_profile")).status_code, 200)
-
-        tender_response = self.client.get(reverse("tender_list"))
-        self.assertRedirects(tender_response, reverse("dashboard"))
-
-        lpse_response = self.client.get(reverse("lpse_list"))
-        self.assertRedirects(lpse_response, reverse("dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
+        self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_admin_approved_user_gets_full_access(self):
         user = self.create_pending_user(verified=True, active=False)
@@ -341,6 +339,93 @@ class EmailVerificationTests(TestCase):
         response = self.client.post(reverse("resend_verification"), {"email": "unknown@example.com"})
         self.assertRedirects(response, reverse("resend_verification"))
         self.assertEqual(len(mail.outbox), 1)
+
+
+@override_settings(SESSION_COOKIE_AGE=60 * 60 * 24 * 14)
+class LoginSessionTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            username="approved@example.com",
+            email="approved@example.com",
+            password="StrongPass123!",
+            is_active=True,
+        )
+        VendorProfile.objects.create(
+            user=self.user,
+            full_name="Approved Vendor",
+            whatsapp_number="08123456789",
+            institution_email="approved@example.com",
+            company_name="PT Approved",
+            business_field="Konstruksi",
+            email_verified=True,
+        )
+
+    def login_payload(self, **overrides):
+        payload = {
+            "username": "approved@example.com",
+            "password": "StrongPass123!",
+        }
+        payload.update(overrides)
+        return payload
+
+    def test_login_without_remember_me_expires_at_browser_close(self):
+        response = self.client.post(reverse("login"), self.login_payload())
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.assertTrue(self.client.session.get_expire_at_browser_close())
+
+    def test_login_with_remember_me_uses_fourteen_day_session(self):
+        response = self.client.post(reverse("login"), self.login_payload(remember_me="on"))
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.assertFalse(self.client.session.get_expire_at_browser_close())
+        self.assertEqual(self.client.session.get_expiry_age(), 60 * 60 * 24 * 14)
+
+    def test_session_key_rotates_after_login(self):
+        session = self.client.session
+        session["pre_login_marker"] = "exists"
+        session.save()
+        old_session_key = session.session_key
+
+        response = self.client.post(reverse("login"), self.login_payload(remember_me="on"))
+
+        self.assertRedirects(response, reverse("dashboard"))
+        self.assertNotEqual(self.client.session.session_key, old_session_key)
+
+    def test_logout_clears_session(self):
+        self.client.post(reverse("login"), self.login_payload(remember_me="on"))
+        self.assertIn("_auth_user_id", self.client.session)
+
+        response = self.client.post(reverse("logout"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_inactive_user_cannot_login_and_gets_no_session(self):
+        self.user.is_active = False
+        self.user.save(update_fields=["is_active"])
+
+        response = self.client.post(reverse("login"), self.login_payload())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_active_unverified_user_cannot_login_and_gets_no_session(self):
+        self.user.vendor_profile.email_verified = False
+        self.user.vendor_profile.save(update_fields=["email_verified"])
+
+        response = self.client.post(reverse("login"), self.login_payload())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Email belum diverifikasi")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_anonymous_dashboard_redirects_to_login_with_next(self):
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('dashboard')}")
 
 
 class VendorProfilePreferenceTests(TestCase):

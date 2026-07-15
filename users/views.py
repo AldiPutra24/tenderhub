@@ -1,6 +1,8 @@
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import SESSION_KEY
 from django.contrib.auth.views import (
+    LoginView,
     PasswordResetCompleteView,
     PasswordResetConfirmView,
     PasswordResetDoneView,
@@ -14,7 +16,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from .email_verification import send_verification_email
-from .forms import ResendVerificationForm, VendorRegisterForm, VendorProfileForm
+from .forms import ApprovedAuthenticationForm, ResendVerificationForm, VendorRegisterForm, VendorProfileForm
 from .models import VendorProfile
 from .tokens import email_verification_token
 from django.contrib.auth.decorators import login_required
@@ -22,6 +24,19 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+
+
+class GPFELoginView(LoginView):
+    template_name = "users/login.html"
+    authentication_form = ApprovedAuthenticationForm
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if form.cleaned_data.get("remember_me"):
+            self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+        else:
+            self.request.session.set_expiry(0)
+        return response
 
 
 class GPFEPasswordResetView(PasswordResetView):

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import SESSION_KEY
+from django.contrib.auth import SESSION_KEY, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect
@@ -73,19 +73,21 @@ class ApprovedUserRequiredMiddleware:
         email_verified = self.is_email_verified(request.user)
         if not email_verified:
             logger.warning("Unverified user blocked user_id=%s path=%s", request.user.id, path)
+            logout(request)
             messages.warning(
                 request,
                 "Email belum diverifikasi. Silakan lakukan verifikasi melalui tautan yang telah dikirim ke alamat email Anda.",
             )
-            return redirect(reverse("resend_verification"))
+            return redirect(reverse("login"))
 
-        if not request.user.is_active and not self.is_limited_allowed(path):
+        if not request.user.is_active:
             logger.warning("Pending approval user blocked user_id=%s path=%s", request.user.id, path)
+            logout(request)
             messages.warning(
                 request,
-                "Email telah berhasil diverifikasi. Akun Anda masih menunggu persetujuan administrator sebelum dapat mengakses seluruh fitur GPFE PROC HUB.",
+                "Akun kakak belum aktif atau masih menunggu approval admin.",
             )
-            return redirect(reverse("dashboard"))
+            return redirect(reverse("login"))
 
         return self.get_response(request)
 

@@ -109,10 +109,11 @@ class ApprovedAuthenticationForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
         "invalid_login": "Gagal masuk. Periksa kembali email dan kata sandi.",
-        "inactive": "Akun Anda masih dalam proses peninjauan oleh administrator. Anda akan dapat mengakses sistem setelah proses persetujuan selesai.",
+        "inactive": "Akun kakak belum aktif atau masih menunggu approval admin.",
         "unverified": "Email belum diverifikasi. Silakan lakukan verifikasi melalui tautan yang telah dikirim ke alamat email Anda.",
         "locked": "Terlalu banyak percobaan login gagal.",
     }
+    remember_me = forms.BooleanField(label="Ingat saya", required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -130,17 +131,20 @@ class ApprovedAuthenticationForm(AuthenticationForm):
 
         if username:
             inactive_user = User.objects.filter(username=username, is_active=False).first()
-            if inactive_user and not self.is_email_verified(inactive_user):
-                if self.record_failed_attempt(username, reason="unverified"):
+            password = self.cleaned_data.get("password")
+            if inactive_user and password and inactive_user.check_password(password):
+                if self.record_failed_attempt(username, reason="inactive"):
                     raise self.get_locked_error()
                 raise forms.ValidationError(
-                    self.error_messages["unverified"],
-                    code="unverified",
+                    self.error_messages["inactive"],
+                    code="inactive",
                 )
 
         try:
             cleaned_data = super().clean()
-        except forms.ValidationError:
+        except forms.ValidationError as exc:
+            if self.has_error_code(exc, {"inactive", "unverified"}):
+                raise
             if self.record_failed_attempt(username, reason="invalid"):
                 raise self.get_locked_error()
             raise forms.ValidationError(
@@ -152,12 +156,22 @@ class ApprovedAuthenticationForm(AuthenticationForm):
         return cleaned_data
 
     def confirm_login_allowed(self, user):
-        if user.is_active or self.is_email_verified(user):
+        if user.is_staff or user.is_superuser:
+            return
+        if not user.is_active:
+            raise forms.ValidationError(
+                self.error_messages["inactive"],
+                code="inactive",
+            )
+        if self.is_email_verified(user):
             return
         raise forms.ValidationError(
             self.error_messages["unverified"],
             code="unverified",
         )
+
+    def has_error_code(self, error, codes):
+        return any(getattr(item, "code", None) in codes for item in getattr(error, "error_list", []))
 
     def is_email_verified(self, user):
         try:
