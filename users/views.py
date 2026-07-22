@@ -15,16 +15,25 @@ from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
+from django.db import transaction
 from .email_verification import send_verification_email
 from .forms import ApprovedAuthenticationForm, ResendVerificationForm, VendorRegisterForm, VendorProfileForm
 from .models import VendorProfile
 from .tokens import email_verification_token
 from django.contrib.auth.decorators import login_required
+from users.services.turnstile import TurnstileService
 import logging
 
 
 logger = logging.getLogger(__name__)
 
+def get_client_ip(request):
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+
+    return request.META.get("REMOTE_ADDR", "")
 
 class GPFELoginView(LoginView):
     template_name = "users/login.html"
@@ -60,42 +69,70 @@ class GPFEPasswordResetCompleteView(PasswordResetCompleteView):
         messages.success(request, "Kata sandi berhasil diperbarui. Silakan masuk menggunakan kata sandi baru.")
         return redirect("login")
 
-
 def register_view(request):
     if request.method == "POST":
         form = VendorRegisterForm(request.POST)
-
+   
         if form.is_valid():
             email = form.cleaned_data["institution_email"]
             password = form.cleaned_data["password"]
+        
+            # Verify Cloudflare Turnstile
+            client_ip = get_client_ip(request)
 
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=password,
-                first_name=form.cleaned_data["full_name"],
-                is_active=False,
+            success = TurnstileService.verify(
+                request.POST.get("cf-turnstile-response"),
+                client_ip,
             )
 
-            VendorProfile.objects.create(
-                user=user,
-                full_name=form.cleaned_data["full_name"],
-                whatsapp_number=form.cleaned_data["whatsapp_number"],
-                institution_email=email,
-                company_name=form.cleaned_data["company_name"],
-                business_field=form.cleaned_data["business_field"],
-                location_type=form.cleaned_data["location_type"],
-                province=form.cleaned_data.get("province"),
-                city_or_regency=form.cleaned_data.get("city_or_regency"),
-                country=form.cleaned_data.get("country"),
-                province_id=form.cleaned_data.get("province_id"),
-                province_name=form.cleaned_data.get("province_name"),
-                city_id=form.cleaned_data.get("city_id"),
-                city_name=form.cleaned_data.get("city_name"),
-                international_location=form.cleaned_data.get("international_location"),
-                email_verified=False,
-                email_verified_at=None,
-            )
+            if not success:
+                logger.warning(
+                    "Turnstile verification failed",
+                    extra={
+                        "ip": client_ip,
+                        "user_agent": request.META.get("HTTP_USER_AGENT"),
+                    },
+                )
+                messages.error(
+                    request,
+                    "Verifikasi keamanan gagal. Silakan coba lagi."
+                )
+
+                return render(
+                    request,
+                    "users/register.html",
+                    {"form": form},
+                )
+
+            with transaction.atomic():
+
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password,
+                    first_name=form.cleaned_data["full_name"],
+                    is_active=False,
+                )
+
+                VendorProfile.objects.create(
+                    user=user,
+                    full_name=form.cleaned_data["full_name"],
+                    whatsapp_number=form.cleaned_data["whatsapp_number"],
+                    institution_email=email,
+                    company_name=form.cleaned_data["company_name"],
+                    business_field=form.cleaned_data["business_field"],
+                    location_type=form.cleaned_data["location_type"],
+                    province=form.cleaned_data.get("province"),
+                    city_or_regency=form.cleaned_data.get("city_or_regency"),
+                    country=form.cleaned_data.get("country"),
+                    province_id=form.cleaned_data.get("province_id"),
+                    province_name=form.cleaned_data.get("province_name"),
+                    city_id=form.cleaned_data.get("city_id"),
+                    city_name=form.cleaned_data.get("city_name"),
+                    international_location=form.cleaned_data.get("international_location"),
+                    email_verified=False,
+                    email_verified_at=None,
+                )
 
             email_sent = send_verification_with_rate_limit(request, user, email)
             if email_sent:

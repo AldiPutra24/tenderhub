@@ -204,11 +204,29 @@
                     </section>
                 </div>
 
-                <div class="sticky bottom-0 flex items-center justify-between gap-4 rounded-b-2xl border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
-                    <p class="hidden text-sm text-slate-500 sm:block">Akun akan melalui peninjauan administrator setelah pendaftaran berhasil.</p>
-                    <button type="submit" class="btn-primary ml-auto h-11 px-5 text-sm">
-                        Buat Akun Vendor
-                    </button>
+                <div class="sticky bottom-0 rounded-b-2xl border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7">
+
+                    <p class="mb-4 hidden text-sm text-slate-500 sm:block">
+                        Akun akan melalui peninjauan administrator setelah pendaftaran berhasil.
+                    </p>
+
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                        <div class="flex justify-center lg:justify-start">
+                            <div
+                                class="cf-turnstile"
+                                data-sitekey="{{ TURNSTILE_SITE_KEY }}">
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn-primary h-11 px-5 text-sm lg:ml-auto">
+                            Buat Akun Vendor
+                        </button>
+
+                    </div>
+
                 </div>
             </form>
         </section>

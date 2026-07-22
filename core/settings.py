@@ -119,6 +119,13 @@ EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "GPFE PROC HUB <noreply@inaprochub.gpfe.id>")
 SERVER_EMAIL = os.getenv("SERVER_EMAIL", "noreply@inaprochub.gpfe.id")
 
+# CloudFlare Turnstile
+TURNSTILE_VERIFY_URL = (
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+)
+
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
 
 # Application definition
 
@@ -163,6 +170,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'tenders.context_processors.tender_notifications',
+                "core.context_processors.turnstile",
             ],
         },
     },
