@@ -46,6 +46,7 @@ IS_PRODUCTION = ENVIRONMENT == 'production'
 
 # SECURITY WARNING: don't run with debug turned on in production.
 DEBUG = env_bool('DEBUG', default=not IS_PRODUCTION)
+# DEBUG = False  # Disable debug mode for production
 
 # SECRET_KEY must come from the environment in production.
 SECRET_KEY = os.getenv('SECRET_KEY')

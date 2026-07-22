@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}GPFE PROC HUB{% endblock %}
 
@@ -9,9 +10,7 @@
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.20),transparent_28%),radial-gradient(circle_at_70%_0%,rgba(255,255,255,0.16),transparent_26%)]"></div>
             <div class="relative z-10">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-sm font-bold text-primary-navy">
-                        GP
-                    </div>
+                    <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-11 w-11 object-contain">
                     <div>
                         <p class="text-base font-semibold">GPFE PROC HUB</p>
                         <p class="text-sm text-slate-400">AI Procurement Intelligence Platform</p>
@@ -50,9 +49,7 @@
         <section class="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-12">
             <div class="w-full max-w-md">
                 <div class="mb-8 text-center lg:hidden">
-                    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white">
-                        GP
-                    </div>
+                    <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="mx-auto mb-4 h-12 w-12 object-contain">
                     <h1 class="text-2xl font-semibold tracking-tight text-slate-950">GPFE PROC HUB</h1>
                     <p class="mt-1 text-sm text-slate-500">AI Procurement Intelligence Platform</p>
                 </div>

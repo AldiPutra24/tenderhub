@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Verifikasi Email - GPFE PROC HUB{% endblock %}
 
@@ -6,9 +7,7 @@
 <main class="min-h-screen bg-slate-50">
     <section class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
         <div class="app-panel w-full max-w-lg p-6 text-center sm:p-8">
-            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl app-gradient text-sm font-bold text-white">
-                GP
-            </div>
+            <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="mx-auto mb-4 h-12 w-12 object-contain">
 
             {% if messages %}
             <div class="mb-5 space-y-2 text-left">

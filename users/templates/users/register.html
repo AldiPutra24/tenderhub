@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}GPFE PROC HUB{% endblock %}
 
@@ -7,7 +8,7 @@
     <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header class="flex items-center justify-between py-3">
             <a href="{% url 'login' %}" class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-2xl app-gradient text-sm font-bold text-white">GP</div>
+                <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-10 w-10 object-contain">
                 <div>
                     <p class="text-sm font-semibold text-slate-950">GPFE PROC HUB</p>
                     <p class="text-xs text-slate-500">AI Procurement Intelligence Platform</p>

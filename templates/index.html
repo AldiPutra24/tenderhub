@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -500,13 +501,8 @@
 <body class="bg-slate-50 antialiased">
   <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-      <a href="#hero" class="flex items-center gap-3">
-        <span class="flex h-10 w-10 items-center justify-center rounded-xl gradient-brand text-white shadow-sm">
-          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 19V5h14v14H5Z" stroke="currentColor" stroke-width="2"/>
-            <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </span>
+      <a href="/" class="flex items-center gap-3">
+        <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-10 w-10 object-contain">
         <span>
           <span class="block text-sm font-bold text-slate-950">GPFE PROC HUB</span>
           <span class="block text-xs font-semibold text-slate-500">AI Procurement Intelligence Platform</span>

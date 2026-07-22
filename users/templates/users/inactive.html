@@ -1,15 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Akun Menunggu Persetujuan{% endblock %}
 
 {% block body %}
 <main class="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
     <section class="app-panel w-full max-w-lg p-6 text-center sm:p-8">
-        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l3.5 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-            </svg>
-        </div>
+        <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="mx-auto mb-5 h-14 w-14 object-contain">
 
         <p class="mt-5 text-xs font-bold uppercase tracking-[0.22em] text-amber-700">Akun Menunggu Persetujuan</p>
         <p class="mt-3 text-sm leading-6 text-slate-600">
