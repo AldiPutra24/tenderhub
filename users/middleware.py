@@ -85,7 +85,7 @@ class ApprovedUserRequiredMiddleware:
             logout(request)
             messages.warning(
                 request,
-                "Akun kakak belum aktif atau masih menunggu approval admin.",
+                "Akun Anda belum aktif atau masih menunggu approval admin.",
             )
             return redirect(reverse("login"))
 

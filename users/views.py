@@ -197,12 +197,17 @@ def resend_verification_view(request):
                 )
             return redirect("resend_verification")
 
-        return render(request, "users/resend_verification.html", {"form": None, "profile": profile})
+        cache_key = f"email-verification:{(request.user.email or '').strip().casefold()}"
+        remaining_seconds = 0
+        if cache.get(cache_key):
+            remaining_seconds = 60
+        return render(request, "users/resend_verification.html", {"form": None, "profile": profile, "remaining_seconds": remaining_seconds})
 
     if request.method == "POST":
         form = ResendVerificationForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"].strip()
+            request.session["resend_email"] = email
             user = User.objects.filter(email__iexact=email).select_related("vendor_profile").first()
             if not user:
                 messages.success(
@@ -226,7 +231,12 @@ def resend_verification_view(request):
     else:
         form = ResendVerificationForm()
 
-    return render(request, "users/resend_verification.html", {"form": form})
+    resend_email = request.session.pop("resend_email", None) or form.data.get("email", "")
+    cache_key = f"email-verification:{(resend_email or '').strip().casefold()}"
+    remaining_seconds = 0
+    if cache.get(cache_key):
+        remaining_seconds = 60
+    return render(request, "users/resend_verification.html", {"form": form, "remaining_seconds": remaining_seconds})
 
 
 def get_user_from_uid(uidb64):
@@ -258,7 +268,7 @@ def send_verification_with_rate_limit(request, user, email):
     if cache.get(cache_key):
         return False
 
-    cache.set(cache_key, True, 300)
+    cache.set(cache_key, True, 60)
     if not user:
         return False
 

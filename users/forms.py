@@ -109,7 +109,7 @@ class ApprovedAuthenticationForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
         "invalid_login": "Gagal masuk. Periksa kembali email dan kata sandi.",
-        "inactive": "Akun kakak belum aktif atau masih menunggu approval admin.",
+        "inactive": "Akun Anda belum aktif atau masih menunggu approval admin.",
         "unverified": "Email belum diverifikasi. Silakan lakukan verifikasi melalui tautan yang telah dikirim ke alamat email Anda.",
         "locked": "Terlalu banyak percobaan login gagal.",
     }

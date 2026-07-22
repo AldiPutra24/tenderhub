@@ -292,7 +292,7 @@ class EmailVerificationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
+        self.assertContains(response, "Akun Anda belum aktif atau masih menunggu approval admin.")
 
     def test_valid_verification_link_marks_profile_verified(self):
         user = self.create_pending_user(verified=False)
@@ -314,7 +314,7 @@ class EmailVerificationTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
+        self.assertContains(response, "Akun Anda belum aktif atau masih menunggu approval admin.")
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_admin_approved_user_gets_full_access(self):
@@ -409,7 +409,7 @@ class LoginSessionTests(TestCase):
         response = self.client.post(reverse("login"), self.login_payload())
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Akun kakak belum aktif atau masih menunggu approval admin.")
+        self.assertContains(response, "Akun Anda belum aktif atau masih menunggu approval admin.")
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_active_unverified_user_cannot_login_and_gets_no_session(self):

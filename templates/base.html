@@ -152,6 +152,12 @@
             color: #fff;
             box-shadow: 0 12px 24px rgba(200, 0, 0, 0.14);
         }
+        .btn-primary:disabled,
+        .btn-primary.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
         .app-footer {
             border-top: 1px solid rgba(255, 255, 255, 0.12);
             background: var(--primary-navy);

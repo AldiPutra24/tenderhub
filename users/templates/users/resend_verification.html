@@ -41,10 +41,16 @@
                         {% if form.email.errors %}<p class="mt-1.5 text-sm text-red-600">{{ form.email.errors|striptags }}</p>{% endif %}
                     </div>
                     {% endif %}
-                    <button type="submit" class="btn-primary h-11 w-full px-4 text-sm">
+                    <button type="submit" data-resend-button data-remaining-seconds="{{ remaining_seconds }}" class="btn-primary h-11 w-full px-4 text-sm">
                         Kirim Tautan Verifikasi
                     </button>
                 </form>
+
+                {% if remaining_seconds and remaining_seconds > 0 %}
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-slate-500" data-countdown>Kirim ulang tersedia dalam {{ remaining_seconds }} detik</p>
+                </div>
+                {% endif %}
 
                 <div class="mt-6 text-center">
                     <a href="{% url 'login' %}" class="text-sm font-semibold text-primary-navy underline-offset-4 hover:text-primary-red hover:underline">Kembali ke login</a>
@@ -53,4 +59,58 @@
         </div>
     </section>
 </main>
+<script>
+    (function () {
+        const button = document.querySelector('[data-resend-button]');
+        const countdown = document.querySelector('[data-countdown]');
+        const remainingSeconds = parseInt(button?.getAttribute('data-remaining-seconds') || '0', 10);
+
+        if (!button || remainingSeconds <= 0) return;
+
+        button.disabled = true;
+        button.classList.add('cursor-not-allowed', 'opacity-60');
+
+        let remaining = remainingSeconds;
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        }
+
+        function updateCountdown() {
+            if (remaining <= 0) {
+                clearInterval(timer);
+                button.disabled = false;
+                button.classList.remove('cursor-not-allowed', 'opacity-60');
+                button.innerText = 'Kirim Tautan Verifikasi';
+                if (countdown) countdown.textContent = '';
+                return;
+            }
+
+            if (countdown) {
+                countdown.textContent = `Kirim ulang tersedia dalam ${formatTime(remaining)}`;
+            }
+
+            remaining--;
+        }
+
+        const timer = setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Reset countdown after successful email send
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                setTimeout(() => {
+                    clearInterval(timer);
+                    remaining = 60;
+                    button.disabled = true;
+                    button.classList.add('cursor-not-allowed', 'opacity-60');
+                    updateCountdown();
+                }, 500);
+            });
+        }
+    })();
+</script>
 {% endblock %}
