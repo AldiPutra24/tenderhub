@@ -92,17 +92,33 @@ SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000' if ENABLE_
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=ENABLE_SECURE_SSL)
 SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', default=ENABLE_SECURE_SSL)
 
-CONTENT_SECURITY_POLICY = os.getenv(
-    'CONTENT_SECURITY_POLICY',
+CONTENT_SECURITY_POLICY = (
     "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+
+    "script-src 'self' 'unsafe-inline' "
+    "https://cdn.tailwindcss.com "
+    "https://unpkg.com "
+    "https://cdn.jsdelivr.net "
+    "https://challenges.cloudflare.com; "
+
+    "style-src 'self' 'unsafe-inline' "
+    "https://fonts.googleapis.com "
+    "https://cdn.jsdelivr.net; "
+
     "img-src 'self' data: https:; "
+
     "font-src 'self' data: https://fonts.gstatic.com; "
-    "connect-src 'self' https://script.google.com https://script.googleusercontent.com; "
+
+    "connect-src 'self' "
+    "https://script.google.com "
+    "https://script.googleusercontent.com "
+    "https://challenges.cloudflare.com; "
+
+    "frame-src 'self' https://challenges.cloudflare.com; "
+
     "base-uri 'self'; "
     "form-action 'self'; "
-    "frame-ancestors 'none'",
+    "frame-ancestors 'none';"
 )
 
 LOGIN_FAILURE_LIMIT = int(os.getenv('LOGIN_FAILURE_LIMIT', '5'))
