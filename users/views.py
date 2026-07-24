@@ -54,6 +54,29 @@ class GPFEPasswordResetView(PasswordResetView):
     subject_template_name = "users/password_reset_subject.txt"
     success_url = reverse_lazy("password_reset_done")
 
+    def form_valid(self, form):
+        client_ip = get_client_ip(self.request)
+
+        success = TurnstileService.verify(
+            self.request.POST.get("cf-turnstile-response"),
+            client_ip,
+        )
+
+        if not success:
+            logger.warning(
+                "Turnstile verification failed",
+                extra={
+                    "ip": client_ip,
+                    "user_agent": self.request.META.get("HTTP_USER_AGENT"),
+                },
+            )
+            messages.error(
+                self.request,
+                "Verifikasi keamanan gagal. Silakan selesaikan pemeriksaan keamanan dan coba lagi."
+            )
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
 
 class GPFEPasswordResetDoneView(PasswordResetDoneView):
     template_name = "users/password_reset_done.html"
@@ -95,7 +118,7 @@ def register_view(request):
                 )
                 messages.error(
                     request,
-                    "Verifikasi keamanan gagal. Silakan coba lagi."
+                    "Verifikasi keamanan gagal. Silakan selesaikan pemeriksaan keamanan dan coba lagi."
                 )
 
                 return render(
