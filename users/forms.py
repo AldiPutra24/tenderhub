@@ -2,17 +2,19 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.cache import cache
 from django.utils import timezone
 import logging
 import math
+import re
 from .models import VendorProfile
 from .services.locations import validate_indonesia_location
 
-
 logger = logging.getLogger(__name__)
 
+WHATSAPP_REGEX = re.compile(r'^\+?\d{10,15}$')
 
 COUNTRY_CHOICES = [
     ("Indonesia", "Indonesia"),
@@ -29,7 +31,6 @@ COUNTRY_CHOICES = [
     ("Other", "Lainnya"),
 ]
 
-
 class CountryField(forms.CharField):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("max_length", 100)
@@ -39,10 +40,8 @@ class CountryField(forms.CharField):
         super().__init__(*args, **kwargs)
         self.choices = COUNTRY_CHOICES
 
-
 def is_indonesia(country):
     return (country or "").strip().casefold() == "indonesia"
-
 
 def add_country_choice(field, country):
     country = (country or "").strip()
@@ -54,7 +53,6 @@ def add_country_choice(field, country):
         choices.append((country, country))
         field.widget.choices = choices
         field.choices = choices
-
 
 class DynamicLocationFormMixin:
     def clean_dynamic_location(self, cleaned_data):
@@ -103,7 +101,6 @@ class DynamicLocationFormMixin:
         cleaned_data["province"] = ""
         cleaned_data["city_or_regency"] = ""
         return cleaned_data
-
 
 class ApprovedAuthenticationForm(AuthenticationForm):
     error_messages = {
@@ -290,12 +287,49 @@ class VendorRegisterForm(DynamicLocationFormMixin, forms.Form):
         add_country_choice(self.fields["country"], self.data.get("country") if self.is_bound else self.initial.get("country"))
 
     def clean_institution_email(self):
-        email = self.cleaned_data["institution_email"]
+        email = self.cleaned_data["institution_email"].strip().lower()
 
-        if User.objects.filter(username=email).exists():
+        if User.objects.filter(username__iexact=email).exists():
             raise forms.ValidationError("Email ini sudah terdaftar.")
 
         return email
+
+    def clean_full_name(self):
+        full_name = self.cleaned_data["full_name"].strip()
+        if not full_name:
+            raise forms.ValidationError("Nama lengkap wajib diisi.")
+        if len(full_name) < 3:
+            raise forms.ValidationError("Nama lengkap minimal 3 karakter.")
+        return full_name
+
+    def clean_company_name(self):
+        company_name = self.cleaned_data["company_name"].strip()
+        if not company_name:
+            raise forms.ValidationError("Nama perusahaan wajib diisi.")
+        if len(company_name) < 3:
+            raise forms.ValidationError("Nama perusahaan minimal 3 karakter.")
+        return company_name
+
+    def clean_business_field(self):
+        business_field = self.cleaned_data["business_field"].strip()
+        if not business_field:
+            raise forms.ValidationError("Bidang usaha wajib diisi.")
+        if len(business_field) < 3:
+            raise forms.ValidationError("Bidang usaha minimal 3 karakter.")
+        return business_field
+
+    def clean_whatsapp_number(self):
+        whatsapp_number = self.cleaned_data["whatsapp_number"].strip()
+        if not WHATSAPP_REGEX.match(whatsapp_number):
+            raise forms.ValidationError(
+                "Nomor WhatsApp tidak valid. Gunakan format: 081234567890 atau +6281234567890 (10-15 digit)."
+            )
+        return whatsapp_number
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        validate_password(password)
+        return password
 
     def clean(self):
         cleaned_data = super().clean()
@@ -303,7 +337,7 @@ class VendorRegisterForm(DynamicLocationFormMixin, forms.Form):
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
         if password and password_confirm and password != password_confirm:
-            raise forms.ValidationError("Kata sandi dan konfirmasi kata sandi tidak sama.")
+            self.add_error("password_confirm", "Kata sandi dan konfirmasi kata sandi tidak sama.")
 
         return self.clean_dynamic_location(cleaned_data)
 

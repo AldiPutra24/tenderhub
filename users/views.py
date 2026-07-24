@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from .email_verification import send_verification_email
 from .forms import ApprovedAuthenticationForm, ResendVerificationForm, VendorRegisterForm, VendorProfileForm
 from .models import VendorProfile
@@ -95,12 +95,9 @@ class GPFEPasswordResetCompleteView(PasswordResetCompleteView):
 def register_view(request):
     if request.method == "POST":
         form = VendorRegisterForm(request.POST)
-   
+
         if form.is_valid():
-            email = form.cleaned_data["institution_email"]
-            password = form.cleaned_data["password"]
-        
-            # Verify Cloudflare Turnstile
+            # Verify Cloudflare Turnstile AFTER form validation
             client_ip = get_client_ip(request)
 
             success = TurnstileService.verify(
@@ -127,35 +124,50 @@ def register_view(request):
                     {"form": form},
                 )
 
-            with transaction.atomic():
+            email = form.cleaned_data["institution_email"].strip().lower()
+            password = form.cleaned_data["password"]
 
-                user = User.objects.create_user(
-                    username=email,
-                    email=email,
-                    password=password,
-                    first_name=form.cleaned_data["full_name"],
-                    is_active=False,
-                )
+            try:
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=form.cleaned_data["full_name"],
+                        is_active=False,
+                    )
 
-                VendorProfile.objects.create(
-                    user=user,
-                    full_name=form.cleaned_data["full_name"],
-                    whatsapp_number=form.cleaned_data["whatsapp_number"],
-                    institution_email=email,
-                    company_name=form.cleaned_data["company_name"],
-                    business_field=form.cleaned_data["business_field"],
-                    location_type=form.cleaned_data["location_type"],
-                    province=form.cleaned_data.get("province"),
-                    city_or_regency=form.cleaned_data.get("city_or_regency"),
-                    country=form.cleaned_data.get("country"),
-                    province_id=form.cleaned_data.get("province_id"),
-                    province_name=form.cleaned_data.get("province_name"),
-                    city_id=form.cleaned_data.get("city_id"),
-                    city_name=form.cleaned_data.get("city_name"),
-                    international_location=form.cleaned_data.get("international_location"),
-                    email_verified=False,
-                    email_verified_at=None,
+                    VendorProfile.objects.create(
+                        user=user,
+                        full_name=form.cleaned_data["full_name"],
+                        whatsapp_number=form.cleaned_data["whatsapp_number"],
+                        institution_email=email,
+                        company_name=form.cleaned_data["company_name"],
+                        business_field=form.cleaned_data["business_field"],
+                        location_type=form.cleaned_data["location_type"],
+                        province=form.cleaned_data.get("province"),
+                        city_or_regency=form.cleaned_data.get("city_or_regency"),
+                        country=form.cleaned_data.get("country"),
+                        province_id=form.cleaned_data.get("province_id"),
+                        province_name=form.cleaned_data.get("province_name"),
+                        city_id=form.cleaned_data.get("city_id"),
+                        city_name=form.cleaned_data.get("city_name"),
+                        international_location=form.cleaned_data.get("international_location"),
+                        email_verified=False,
+                        email_verified_at=None,
+                    )
+
+            except IntegrityError:
+                logger.warning(
+                    "Duplicate registration attempt",
+                    extra={
+                        "ip": client_ip,
+                        "email": email,
+                        "user_agent": request.META.get("HTTP_USER_AGENT"),
+                    },
                 )
+                form.add_error("institution_email", "Email ini sudah terdaftar.")
+                return render(request, "users/register.html", {"form": form})
 
             email_sent = send_verification_with_rate_limit(request, user, email)
             if email_sent:
