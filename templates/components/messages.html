@@ -1,0 +1,35 @@
+{% if messages %}
+<div class="fixed top-5 right-5 z-[9999] w-full max-w-sm space-y-3">
+    {% for message in messages %}
+    <div
+        class="rounded-xl border px-4 py-3 shadow-lg backdrop-blur-sm transition-all duration-300
+        {% if message.tags == 'success' %}
+            border-emerald-200 bg-emerald-50 text-emerald-800
+        {% elif message.tags == 'error' %}
+            border-red-200 bg-red-50 text-red-800
+        {% elif message.tags == 'warning' %}
+            border-amber-200 bg-amber-50 text-amber-800
+        {% else %}
+            border-blue-200 bg-blue-50 text-blue-800
+        {% endif %}"
+        data-message
+    >
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-message]").forEach(function (el) {
+        setTimeout(function () {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(-10px)";
+            setTimeout(function () {
+                el.remove();
+            }, 300);
+        }, 5000);
+    });
+});
+</script>
+{% endif %}
