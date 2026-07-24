@@ -88,7 +88,7 @@ class Tender(models.Model):
         blank=True,
         null=True,
     )
-    raw_data = models.JSONField(blank=True, null=True)
+    raw_data = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

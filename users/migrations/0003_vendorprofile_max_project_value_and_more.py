@@ -23,11 +23,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='vendorprofile',
             name='preferred_locations',
-            field=models.JSONField(blank=True, default=list),
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
             model_name='vendorprofile',
             name='preferred_procurement_types',
-            field=models.JSONField(blank=True, default=list),
+            field=models.TextField(blank=True, default=""),
         ),
     ]
