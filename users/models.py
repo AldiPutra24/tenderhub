@@ -72,7 +72,7 @@ class VendorProfile(models.Model):
 
     email_verified = models.BooleanField(default=False)
     email_verified_at = models.DateTimeField(blank=True, null=True)
-    email_notifications_enabled = models.BooleanField(default=True)
+    email_notifications_enabled = models.BooleanField(default=False)
     email_digest_frequency = models.CharField(
         max_length=20,
         choices=EMAIL_DIGEST_FREQUENCY_CHOICES,
