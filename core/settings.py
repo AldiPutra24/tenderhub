@@ -123,7 +123,13 @@ CONTENT_SECURITY_POLICY = (
 
 LOGIN_FAILURE_LIMIT = int(os.getenv('LOGIN_FAILURE_LIMIT', '5'))
 LOGIN_LOCKOUT_SECONDS = int(os.getenv('LOGIN_LOCKOUT_SECONDS', '60'))
-ADMIN_URL_PATH = os.getenv('ADMIN_URL_PATH', 'admin').strip('/') or 'admin'
+ADMIN_URL_PATH = os.getenv('ADMIN_URL_PATH').strip('/')
+
+ADMIN_ALLOWED_IPS = [
+    ip.strip()
+    for ip in os.getenv("ADMIN_ALLOWED_IPS", "").split(",")
+    if ip.strip()
+]
 
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
@@ -160,16 +166,23 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'core.middleware.SecurityHeadersMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'users.middleware.ApprovedUserRequiredMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    # Session
+    "django.contrib.sessions.middleware.SessionMiddleware",
+
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+
+    # Custom middleware
+    "core.middleware.SecurityHeadersMiddleware",
+    "core.middleware.AdminIPWhitelistMiddleware",
+    "users.middleware.ApprovedUserRequiredMiddleware",
+
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'

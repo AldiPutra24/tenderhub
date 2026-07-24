@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 import requests
 from django.conf import settings
 
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class TurnstileService:
     @classmethod
-    def verify(cls, token: str, ip: str | None = None) -> bool:
+    def verify(cls, token: str, ip: Optional[str] = None) -> bool:
         if not token:
             return False
 
