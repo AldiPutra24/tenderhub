@@ -1,6 +1,7 @@
 import json
 import random
 import re
+import signal
 import time
 from datetime import datetime
 from html import unescape
@@ -10,7 +11,12 @@ from urllib.parse import urlencode
 import requests
 from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand, CommandError
-from django.db import DatabaseError
+from django.db import (
+    InterfaceError,
+    OperationalError,
+    close_old_connections,
+    connection,
+)
 from django.db.models import Q
 from django.utils.dateparse import parse_date as django_parse_date
 
@@ -32,6 +38,37 @@ USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 )
+DB_RETRY_ATTEMPTS = 3  # maximum retries after the initial attempt
+CHECKPOINT_PATH = Path(__file__).resolve().parents[3] / "cache" / "scrape_progress.json"
+
+
+def reconnect_db():
+    """Force-close a broken DB connection so Django opens a fresh one."""
+    connection.close()
+    close_old_connections()
+
+
+def db_backoff_sleep(retry_number):
+    """Exponential backoff before a retry: 1s, 2s, 4s + 0-500ms jitter."""
+    time.sleep(2 ** (retry_number - 1) + random.uniform(0, 0.5))
+
+def run_db_retry(fn, *args, **kwargs):
+    """Run a DB operation, retrying only broken-connection errors.
+
+    InterfaceError/OperationalError mean the connection died (Neon idle
+    timeout, proxy reset). IntegrityError/DataError/ProgrammingError are
+    logical errors and must NOT be retried.
+    """
+    last_error = None
+    for attempt in range(1, DB_RETRY_ATTEMPTS + 2):  # 1 initial + 3 retries
+        try:
+            return fn(*args, **kwargs)
+        except (InterfaceError, OperationalError) as exc:
+            last_error = exc
+            if attempt <= DB_RETRY_ATTEMPTS:
+                reconnect_db()
+                db_backoff_sleep(attempt)
+    raise last_error
 
 
 def model_has_field(model, field_name):
@@ -467,6 +504,100 @@ def apply_detail_to_tender(tender, parsed):
 class Command(BaseCommand):
     help = "Scrape live SPSE INAPROC tenders using the frontend DataTables endpoint"
 
+    # --- checkpoint / resume helpers ------------------------------------
+
+    def save_checkpoint(self, payload):
+        CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = CHECKPOINT_PATH.with_name(CHECKPOINT_PATH.name + ".tmp")
+        try:
+            with tmp_path.open("w", encoding="utf-8") as handle:
+                json.dump(payload, handle, ensure_ascii=False, indent=2)
+            tmp_path.replace(CHECKPOINT_PATH)
+        except OSError as exc:
+            self.stderr.write(self.style.WARNING(f"Checkpoint save failed: {exc}"))
+
+    def update_checkpoint(self, mode, tahun, slugs, phase, last_slug=""):
+        payload = {
+            "mode": mode,
+            "tahun": tahun,
+            "slugs": list(slugs),
+            "phase": phase,
+            "last_slug": last_slug or "",
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        self._checkpoint_state = payload
+        self.save_checkpoint(payload)
+
+    def load_checkpoint(self):
+        try:
+            with CHECKPOINT_PATH.open("r", encoding="utf-8") as handle:
+                return json.load(handle)
+        except (OSError, ValueError, TypeError):
+            return None
+
+    def clear_checkpoint(self):
+        try:
+            CHECKPOINT_PATH.unlink()
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            self.stderr.write(self.style.WARNING(f"Could not remove checkpoint: {exc}"))
+        self._checkpoint_state = None
+
+    def resolve_resume_state(self, slugs, mode, tahun, options):
+        """Return (checkpoint, resume_index, skip_list_phase)."""
+        if options.get("reset_progress"):
+            self.clear_checkpoint()
+            self.stdout.write("Progress reset. Starting from the first slug.")
+            return None, 0, False
+
+        cp = None
+        if options.get("resume"):
+            cp = self.load_checkpoint()
+            if not cp:
+                self.stdout.write("No checkpoint found. Starting from the first slug.")
+                cp = None
+            elif (
+                cp.get("mode") != mode
+                or cp.get("tahun") != tahun
+                or cp.get("slugs") != list(slugs)
+            ):
+                self.stderr.write(
+                    self.style.WARNING(
+                        "Checkpoint mismatch (mode/tahun/slug list). Starting fresh."
+                    )
+                )
+                cp = None
+
+        if not cp:
+            return None, 0, False
+
+        phase = cp.get("phase", "list")
+        last_slug = cp.get("last_slug", "") or ""
+        resume_idx = (slugs.index(last_slug) + 1) if last_slug in slugs else 0
+
+        if phase == "done":
+            self.stdout.write(f"Progress: {len(slugs)}/{len(slugs)}")
+            self.stdout.write("All slugs already processed. Nothing to do.")
+            return cp, resume_idx, True
+
+        self.stdout.write(f"Progress: {resume_idx}/{len(slugs)}")
+        if last_slug:
+            self.stdout.write(f"Resume from: {last_slug}")
+        return cp, resume_idx, phase == "detail"
+
+    def _sigint_handler(self, signum, frame):
+        state = getattr(self, "_checkpoint_state", None)
+        if state:
+            try:
+                self.save_checkpoint(state)
+            except Exception as exc:
+                self.stderr.write(self.style.WARNING(f"Checkpoint save failed: {exc}"))
+            self.stdout.write("Progress saved. Resume using --resume")
+        else:
+            self.stdout.write("Interrupted.")
+        raise KeyboardInterrupt
+
     def add_arguments(self, parser):
         parser.add_argument("--slug", help="Single SPSE slug, for example pertanian")
         parser.add_argument("--all-slugs", action="store_true", help="Scrape every slug in tenders/data/lpse_slug_mapping.json")
@@ -507,10 +638,30 @@ class Command(BaseCommand):
             action="append",
             help="Filter detail enrichment by status. Can be repeated or comma-separated: OPEN,ONGOING,FINISH,FAILED",
         )
+        parser.add_argument(
+            "--resume",
+            action="store_true",
+            help="Resume from the last checkpoint instead of starting over",
+        )
+        parser.add_argument(
+            "--reset-progress",
+            action="store_true",
+            help="Delete the checkpoint and start from the first slug",
+        )
 
     def handle(self, *args, **options):
+        close_old_connections()
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
+        self._checkpoint_state = None
+        signal.signal(signal.SIGINT, self._sigint_handler)
+        try:
+            self._handle(*args, **options)
+        except KeyboardInterrupt:
+            # _sigint_handler already flushed the checkpoint and printed the message.
+            return
+
+    def _handle(self, *args, **options):
 
         if options.get("all_slugs") and not options.get("no_refresh_slugs"):
             self.refresh_slug_mapping()
@@ -554,14 +705,25 @@ class Command(BaseCommand):
 
         if options.get("detail_only"):
             if options.get("all_slugs"):
+                slugs = self.resolve_slugs(options, slug_mapping)
+                cp, resume_idx, _ = self.resolve_resume_state(slugs, "detail-only", tahun, options)
+                if cp and cp.get("phase") == "done":
+                    return
                 created, updated, skipped, failed, slugs_processed = self.enrich_all_existing_details(
-                    self.resolve_slugs(options, slug_mapping),
+                    slugs,
                     tahun,
                     options.get("limit_details"),
                     sleep_min,
                     sleep_max,
                     detail_statuses,
                     missing_detail_only,
+                    start_from=resume_idx,
+                    on_slug_done=lambda slug, c, u, s, f: self.update_checkpoint(
+                        "detail-only", tahun, slugs, "detail", last_slug=slug
+                    ),
+                )
+                self.update_checkpoint(
+                    "detail-only", tahun, slugs, "done", last_slug=slugs[-1] if slugs else ""
                 )
             else:
                 created, updated, skipped, failed = self.enrich_existing_details(
@@ -583,6 +745,10 @@ class Command(BaseCommand):
             return
 
         slugs = self.resolve_slugs(options, slug_mapping)
+        mode = "then-detail-only" if options.get("then_detail_only") else "list"
+        cp, resume_idx, skip_list = self.resolve_resume_state(slugs, mode, tahun, options)
+        if cp and cp.get("phase") == "done":
+            return
 
         total_created = 0
         total_updated = 0
@@ -590,41 +756,49 @@ class Command(BaseCommand):
         total_failed = 0
         failed_slugs = []
 
-        for slug in slugs:
-            lpse_name = slug_mapping.get(slug, slug)
-            created, updated, skipped, failed = self.scrape_slug(
-                slug,
-                lpse_name,
-                tahun,
-                max_pages,
-                length,
-                sleep_min,
-                sleep_max,
-                options.get("enrich_detail"),
-                options.get("limit_details"),
-                detail_statuses,
-                list_statuses,
-                missing_detail_only,
-            )
-            total_created += created
-            total_updated += updated
-            total_skipped += skipped
-            total_failed += failed
-            if failed:
-                failed_slugs.append(slug)
-            time.sleep(random.uniform(sleep_min, sleep_max))
+        if not skip_list:
+            for idx, slug in enumerate(slugs):
+                if idx < resume_idx:
+                    continue
+                close_old_connections()
+                lpse_name = slug_mapping.get(slug, slug)
+                created, updated, skipped, failed = self.scrape_slug(
+                    slug,
+                    lpse_name,
+                    tahun,
+                    max_pages,
+                    length,
+                    sleep_min,
+                    sleep_max,
+                    options.get("enrich_detail"),
+                    options.get("limit_details"),
+                    detail_statuses,
+                    list_statuses,
+                    missing_detail_only,
+                )
+                total_created += created
+                total_updated += updated
+                total_skipped += skipped
+                total_failed += failed
+                if failed:
+                    failed_slugs.append(slug)
+                self.update_checkpoint(mode, tahun, slugs, "list", last_slug=slug)
+                time.sleep(random.uniform(sleep_min, sleep_max))
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"TOTAL slugs_processed={len(slugs)} created={total_created} "
-                f"updated={total_updated} skipped={total_skipped} failed={total_failed}"
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"TOTAL slugs_processed={len(slugs)} created={total_created} "
+                    f"updated={total_updated} skipped={total_skipped} failed={total_failed}"
+                )
             )
-        )
-        if failed_slugs:
-            self.stderr.write(self.style.WARNING(f"FAILED_SLUGS {', '.join(failed_slugs)}"))
+            if failed_slugs:
+                self.stderr.write(self.style.WARNING(f"FAILED_SLUGS {', '.join(failed_slugs)}"))
 
         if options.get("then_detail_only"):
+            close_old_connections()
             self.stdout.write("START_DETAIL_PHASE after list scraping")
+            if not skip_list:
+                self.update_checkpoint(mode, tahun, slugs, "detail", last_slug="")
             detail_created, detail_updated, detail_skipped, detail_failed, detail_slugs_processed = self.enrich_all_existing_details(
                 slugs,
                 tahun,
@@ -633,12 +807,23 @@ class Command(BaseCommand):
                 sleep_max,
                 detail_statuses,
                 missing_detail_only,
+                start_from=resume_idx if skip_list else 0,
+                on_slug_done=lambda slug, c, u, s, f: self.update_checkpoint(
+                    mode, tahun, slugs, "detail", last_slug=slug
+                ),
+            )
+            self.update_checkpoint(
+                mode, tahun, slugs, "done", last_slug=slugs[-1] if slugs else ""
             )
             self.stdout.write(
                 self.style.SUCCESS(
                     f"DETAIL_TOTAL slugs_processed={detail_slugs_processed} created={detail_created} "
                     f"updated={detail_updated} skipped={detail_skipped} failed={detail_failed}"
                 )
+            )
+        else:
+            self.update_checkpoint(
+                mode, tahun, slugs, "done", last_slug=slugs[-1] if slugs else ""
             )
 
     def validate_options(self, options):
@@ -822,6 +1007,11 @@ class Command(BaseCommand):
             page_skipped = 0
             page_failed = 0
 
+            # Neon closes idle/old server connections; drop stale pooled
+            # connections before this batch so one dead socket cannot poison
+            # every row in the page.
+            close_old_connections()
+
             for row in rows:
                 row_status = normalize_status_from_tahapan(row[3] if isinstance(row, list) and len(row) > 3 else "")
                 if not self.status_matches(row_status, list_statuses):
@@ -830,11 +1020,14 @@ class Command(BaseCommand):
                     continue
 
                 try:
-                    result = self.upsert_row(row, slug, lpse_name)
-                except DatabaseError as exc:
+                    result = run_db_retry(self.upsert_row, row, slug, lpse_name)
+                except (InterfaceError, OperationalError) as exc:
+                    reconnect_db()
                     failed += 1
                     page_failed += 1
-                    self.stderr.write(self.style.WARNING(f"Database row failed: {exc}"))
+                    self.stderr.write(
+                        self.style.WARNING(f"Database row failed after {DB_RETRY_ATTEMPTS} attempts: {exc}")
+                    )
                     continue
                 except Exception as exc:
                     failed += 1
@@ -857,14 +1050,30 @@ class Command(BaseCommand):
                         continue
                     if limit_details is None or detail_count < limit_details:
                         kode_tender = clean_html(row[0])
-                        detail_result = self.enrich_tender_by_kode(
-                            kode_tender,
-                            slug,
-                            sleep_min,
-                            sleep_max,
-                            detail_statuses,
-                            missing_detail_only,
-                        )
+                        try:
+                            detail_result = run_db_retry(
+                                self.enrich_tender_by_kode,
+                                kode_tender,
+                                slug,
+                                sleep_min,
+                                sleep_max,
+                                detail_statuses,
+                                missing_detail_only,
+                            )
+                        except (InterfaceError, OperationalError) as exc:
+                            reconnect_db()
+                            detail_result = "failed"
+                            self.stderr.write(
+                                self.style.WARNING(
+                                    f"Detail DB error kode_tender={kode_tender} "
+                                    f"after {DB_RETRY_ATTEMPTS} attempts: {exc}"
+                                )
+                            )
+                        except Exception as exc:
+                            detail_result = "failed"
+                            self.stderr.write(
+                                self.style.WARNING(f"Detail failed kode_tender={kode_tender}: {exc}")
+                            )
                         detail_count += 1
                         if detail_result == "failed":
                             failed += 1
@@ -942,7 +1151,25 @@ class Command(BaseCommand):
         return response.json()
 
     def enrich_single_kode(self, kode_tender, slug, sleep_min, sleep_max, detail_statuses=None, missing_detail_only=False):
-        result = self.enrich_tender_by_kode(kode_tender, slug, sleep_min, sleep_max, detail_statuses, missing_detail_only)
+        try:
+            result = run_db_retry(
+                self.enrich_tender_by_kode,
+                kode_tender,
+                slug,
+                sleep_min,
+                sleep_max,
+                detail_statuses,
+                missing_detail_only,
+            )
+        except (InterfaceError, OperationalError) as exc:
+            reconnect_db()
+            self.stderr.write(
+                self.style.WARNING(
+                    f"Enrich DB error kode_tender={kode_tender} "
+                    f"after {DB_RETRY_ATTEMPTS} attempts: {exc}"
+                )
+            )
+            return 0, 0, 0, 1
         if result == "updated":
             return 0, 1, 0, 0
         if result == "skipped":
@@ -975,50 +1202,71 @@ class Command(BaseCommand):
         detail_statuses=None,
         missing_detail_only=False,
     ):
-        queryset = Tender.objects.all()
-        if detail_statuses:
-            queryset = queryset.filter(status__in=sorted(detail_statuses))
+        def process_once():
+            close_old_connections()
+            queryset = Tender.objects.all()
+            if detail_statuses:
+                queryset = queryset.filter(status__in=sorted(detail_statuses))
 
-        slug_filter = Q(detail_url__icontains=f"/{slug}/") | Q(lpse_detail_url__icontains=f"/{slug}/")
-        if model_has_field(Tender, "lpse_slug"):
-            slug_filter |= Q(lpse_slug=slug)
-        queryset = queryset.filter(slug_filter).order_by("id")
+            slug_filter = Q(detail_url__icontains=f"/{slug}/") | Q(lpse_detail_url__icontains=f"/{slug}/")
+            if model_has_field(Tender, "lpse_slug"):
+                slug_filter |= Q(lpse_slug=slug)
+            queryset = queryset.filter(slug_filter).order_by("id")
 
-        if model_has_field(Tender, "tahun_anggaran"):
-            requested_year = str(tahun)
-            year_filter = Q(tahun_anggaran__contains=requested_year)
-            legacy_filter = (
-                Q(tahun_anggaran__gt=requested_year)
-                & self.build_missing_detail_filter()
-            )
-            legacy_count = queryset.filter(legacy_filter).exclude(year_filter).count()
-            if legacy_count:
-                self.stdout.write(
+            if model_has_field(Tender, "tahun_anggaran"):
+                requested_year = str(tahun)
+                year_filter = Q(tahun_anggaran__contains=requested_year)
+                legacy_filter = (
+                    Q(tahun_anggaran__gt=requested_year)
+                    & self.build_missing_detail_filter()
+                )
+                legacy_count = queryset.filter(legacy_filter).exclude(year_filter).count()
+                if legacy_count:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"DETAIL legacy multi-year recovery slug={slug} "
+                            f"tahun={tahun} candidates={legacy_count}"
+                        )
+                    )
+                queryset = queryset.filter(year_filter | legacy_filter)
+
+            if missing_detail_only:
+                queryset = queryset.filter(self.build_missing_detail_filter())
+
+            if limit_details:
+                queryset = queryset[:limit_details]
+
+            updated = 0
+            skipped = 0
+            failed = 0
+            for tender in queryset.iterator(chunk_size=200):
+                result = self.enrich_tender_detail(tender, slug, sleep_min, sleep_max)
+                if result == "updated":
+                    updated += 1
+                elif result == "skipped":
+                    skipped += 1
+                else:
+                    failed += 1
+            return 0, updated, skipped, failed
+
+        for attempt in range(1, DB_RETRY_ATTEMPTS + 1):
+            try:
+                return process_once()
+            except (InterfaceError, OperationalError) as exc:
+                if attempt < DB_RETRY_ATTEMPTS:
+                    reconnect_db()
+                    self.stderr.write(
+                        self.style.WARNING(
+                            f"DB connection reset, restarting slug={slug}: {exc}"
+                        )
+                    )
+                    continue
+                self.stderr.write(
                     self.style.WARNING(
-                        f"DETAIL legacy multi-year recovery slug={slug} "
-                        f"tahun={tahun} candidates={legacy_count}"
+                        f"DB error slug={slug} after {DB_RETRY_ATTEMPTS} attempts: {exc}"
                     )
                 )
-            queryset = queryset.filter(year_filter | legacy_filter)
-
-        if missing_detail_only:
-            queryset = queryset.filter(self.build_missing_detail_filter())
-
-        if limit_details:
-            queryset = queryset[:limit_details]
-
-        updated = 0
-        skipped = 0
-        failed = 0
-        for tender in queryset:
-            result = self.enrich_tender_detail(tender, slug, sleep_min, sleep_max)
-            if result == "updated":
-                updated += 1
-            elif result == "skipped":
-                skipped += 1
-            else:
-                failed += 1
-        return 0, updated, skipped, failed
+                return 0, 0, 1, 0
 
     def build_missing_detail_filter(self):
         missing_filter = Q(pk__isnull=True)
@@ -1055,13 +1303,17 @@ class Command(BaseCommand):
         sleep_max,
         detail_statuses=None,
         missing_detail_only=False,
+        start_from=0,
+        on_slug_done=None,
     ):
         total_created = 0
         total_updated = 0
         total_skipped = 0
         total_failed = 0
 
-        for slug in slugs:
+        for idx, slug in enumerate(slugs):
+            if idx < start_from:
+                continue
             self.stdout.write(f"DETAIL START slug={slug} tahun={tahun}")
             created, updated, skipped, failed = self.enrich_existing_details(
                 slug,
@@ -1080,6 +1332,8 @@ class Command(BaseCommand):
                 f"DETAIL DONE slug={slug} created={created} updated={updated} "
                 f"skipped={skipped} failed={failed}"
             )
+            if on_slug_done:
+                on_slug_done(slug, created, updated, skipped, failed)
             time.sleep(random.uniform(sleep_min, sleep_max))
 
         return total_created, total_updated, total_skipped, total_failed, len(slugs)
@@ -1100,7 +1354,15 @@ class Command(BaseCommand):
         try:
             html = fetch_detail_html(self.session, detail_url)
             parsed = parse_detail_html(html, detail_url)
-            apply_detail_to_tender(tender, parsed)
+            run_db_retry(apply_detail_to_tender, tender, parsed)
+        except (InterfaceError, OperationalError) as exc:
+            reconnect_db()
+            self.stderr.write(
+                self.style.WARNING(
+                    f"Detail failed kode_tender={tender.kode_tender}: DB error: {exc}"
+                )
+            )
+            return "failed"
         except Exception as exc:
             self.stderr.write(self.style.WARNING(f"Detail failed kode_tender={tender.kode_tender}: {exc}"))
             return "failed"

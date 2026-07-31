@@ -225,8 +225,14 @@ if DATABASE_URL:
     DATABASES['default'] = dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require="neon.tech" in DATABASE_URL,
     )
+
+# Neon (and pooled Postgres proxies) drop idle/old server-side connections.
+# Health checks make Django ping pooled connections and discard dead ones
+# instead of reusing a socket the server already closed. Needed for
+# long-running management commands like scrape_spse_live.
+CONN_HEALTH_CHECKS = env_bool('CONN_HEALTH_CHECKS', default=bool(DATABASE_URL))
 
 
 # Password validation

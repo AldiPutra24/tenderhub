@@ -16,3 +16,4 @@ staticfiles/
 ~$*.xlsx
 *.tmp
 *.json
+*.sql

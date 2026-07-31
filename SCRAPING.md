@@ -499,6 +499,96 @@ Tahapan SPSE yang mengandung kata `batal` atau `gagal`, termasuk
 `Seleksi Batal`, `Tender Batal`, `Seleksi Gagal`, dan `Tender Gagal`,
 dinormalisasi menjadi status `FAILED`.
 
+## Reliability: PostgreSQL Neon dan Reconnect
+
+Command `scrape_spse_live` aman dijalankan berjam-jam (3–6 jam) di atas
+PostgreSQL Neon. Neon/proxy pool bisa menutup koneksi idle, sehingga
+koneksi lama bisa mati di tengah proses.
+
+Penanganan:
+
+- Setiap operasi database dibungkus retry khusus error koneksi:
+  - `InterfaceError` dan `OperationalError` → koneksi mati, otomatis
+    reconnect (`connection.close()` + `close_old_connections()`) lalu retry.
+  - `IntegrityError`, `DataError`, `ProgrammingError` → error logika, TIDAK
+    di-retry agar tidak menutupi bug.
+- Maksimal 3 retry dengan exponential backoff:
+  - retry 1 = 1 detik
+  - retry 2 = 2 detik
+  - retry 3 = 4 detik
+  - plus jitter acak 0–500 ms.
+- `close_old_connections()` dipanggil sebelum setiap batch page/slug agar
+  socket yang sudah mati dibuang, tidak meracuni row berikutnya.
+- `CONN_HEALTH_CHECKS` aktif otomatis ketika `DATABASE_URL` dipakai
+  (PostgreSQL). Django akan ping koneksi pooled dan membuang yang mati.
+- Jika satu row tetap gagal setelah retry, hanya row itu yang dihitung
+  `failed`; slug dan row berikutnya tetap jalan.
+
+## Checkpoint dan Resume
+
+Scraper menyimpan progress ke file JSON:
+
+```text
+cache/scrape_progress.json
+```
+
+Checkpoint berisi:
+
+- `mode`: `list`, `detail-only`, atau `then-detail-only`
+- `tahun`
+- `slugs`: daftar slug yang diproses
+- `phase`: `list` / `detail` / `done`
+- `last_slug`: slug terakhir yang selesai
+- `updated_at`: timestamp
+
+Checkpoint ditulis secara atomik (file `.tmp` lalu rename) dan di-flush ke
+disk SETELAH SETIAP slug selesai. Aman jika listrik mati atau Ctrl+C.
+
+### Melanjutkan Scrape yang Terhenti
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --sleep-min 2 --sleep-max 5 --then-detail-only --missing-detail-only --detail-status OPEN,ONGOING --resume
+```
+
+Saat startup dengan `--resume`, scraper menampilkan:
+
+```text
+Progress: 351/599
+Resume from: halmaheraselatankab
+```
+
+Dan melanjutkan dari slug setelah checkpoint terakhir.
+
+- Untuk mode `then-detail-only` yang terhenti di phase `detail`, resume
+  otomatis melewati phase list dan langsung lanjut detail.
+- Jika checkpoint tidak cocok dengan `mode`/`tahun`/daftar slug, scraper
+  memulai dari awal dengan peringatan.
+
+### Mulai Ulang dari Nol
+
+```bash
+python manage.py scrape_spse_live --all-slugs --tahun 2026 --sleep-min 2 --sleep-max 5 --then-detail-only --missing-detail-only --detail-status OPEN,ONGOING --reset-progress
+```
+
+Menghapus checkpoint dan memulai dari slug pertama.
+
+### Interupsi dengan Ctrl+C
+
+Saat `Ctrl+C` ditekan:
+
+- checkpoint terakhir di-flush ke disk
+- ditampilkan:
+
+```text
+Progress saved. Resume using --resume
+```
+
+- command keluar bersih tanpa traceback. Jalankan lagi dengan `--resume`
+  untuk melanjutkan dari posisi terakhir.
+
+Catatan: checkpoint/resume hanya berlaku untuk mode `--all-slugs`.
+Mode `--slug <satu>` atau `--kode-tender` tetap jalan tanpa checkpoint.
+
 ## Pengaturan Sleep
 
 Untuk scraping yang lebih pelan dan stabil:
