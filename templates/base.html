@@ -61,110 +61,202 @@
         *::before,
         *::after { box-sizing: border-box; }
         :root {
-            --primary: #01106F;
             --primary-red: #C80000;
+            --primary-red-hover: #9E0022;
             --primary-navy: #01106F;
-            --transition-red: #9E0022;
             --primary-purple: #5E0056;
-            --primary-hover: #9E0022;
-            --primary-soft: rgba(1, 16, 111, 0.07);
-            --accent: #C80000;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #C80000;
             --app-gradient: linear-gradient(120deg, rgb(200,0,0) 0%, rgb(158,0,34) 35%, rgb(94,0,86) 60%, rgb(1,16,111) 100%);
-            --surface: #ffffff;
+            --surface: #FFFFFF;
             --surface-muted: #F8FAFC;
+            --surface-raised: #FFFFFF;
             --border-subtle: #E2E8F0;
+            --border-strong: #CBD5E1;
             --text-primary: #0F172A;
             --text-secondary: #475569;
-            --text-muted: #64748b;
-            --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.08), 0 14px 34px rgba(15, 23, 42, 0.06);
-            --shadow-hover: 0 22px 48px rgba(15, 23, 42, 0.12);
+            --text-muted: #64748B;
+            --success: #047857;
+            --warning: #B45309;
+            --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-card: 0 10px 24px rgba(15, 23, 42, 0.06);
+            --shadow-hover: 0 14px 28px rgba(15, 23, 42, 0.10);
+            --focus-ring: 0 0 0 4px rgba(200, 0, 0, 0.14);
         }
-        body { background: var(--surface-muted); color: var(--text-primary); }
-        .primary { background: var(--primary-red); color: #fff; }
-        .primary-hover:hover { background: var(--primary-hover); color: #fff; }
-        .primary-soft { background: var(--primary-soft); color: var(--primary); }
-        .success { background: rgba(16, 185, 129, 0.1); color: #047857; border-color: rgba(16, 185, 129, 0.24); }
-        .warning { background: rgba(245, 158, 11, 0.12); color: #b45309; border-color: rgba(245, 158, 11, 0.28); }
-        .danger { background: rgba(200, 0, 0, 0.08); color: var(--danger); border-color: rgba(200, 0, 0, 0.2); }
-        .surface { background: var(--surface); }
-        .surface-muted { background: var(--surface-muted); }
+        html { scroll-behavior: smooth; }
+        body {
+            min-height: 100%;
+            background: var(--surface-muted);
+            color: var(--text-primary);
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            text-rendering: optimizeLegibility;
+        }
+        a { text-underline-offset: 4px; }
+        :focus-visible {
+            outline: 2px solid var(--primary-red);
+            outline-offset: 3px;
+        }
+        ::selection {
+            background: rgba(200, 0, 0, 0.14);
+            color: var(--text-primary);
+        }
+        .app-shell {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(1, 16, 111, 0.045), transparent 30rem),
+                var(--surface-muted);
+        }
+        .skip-link {
+            position: fixed;
+            left: 1rem;
+            top: 1rem;
+            z-index: 100;
+            transform: translateY(-150%);
+        }
+        .skip-link:focus {
+            transform: translateY(0);
+        }
+        .primary,
+        .bg-primary { background: var(--primary-red); color: #fff; }
+        .primary-hover:hover { background: var(--primary-red-hover); color: #fff; }
+        .primary-soft { background: rgba(1, 16, 111, 0.07); color: var(--primary-navy); }
+        .surface,
+        .bg-surface { background: var(--surface); }
+        .surface-muted,
+        .bg-surface-muted { background: var(--surface-muted); }
         .border-subtle { border-color: var(--border-subtle); }
-        .text-primary { color: var(--primary); }
-        .bg-primary { background-color: var(--primary-red); }
         .border-primary { border-color: var(--primary-red); }
+        .text-primary { color: var(--primary-navy); }
         .text-primary-ink { color: var(--text-primary); }
         .text-secondary { color: var(--text-secondary); }
         .text-muted { color: var(--text-muted); }
-        .bg-surface { background: var(--surface); }
-        .bg-surface-muted { background: var(--surface-muted); }
         .app-gradient { background: var(--app-gradient); }
         .app-card,
-        .app-panel {
+        .app-panel,
+        .app-surface {
             border: 1px solid var(--border-subtle);
             border-radius: 1rem;
-            background: var(--surface);
+            background: var(--surface-raised);
             box-shadow: var(--shadow-soft);
         }
         .app-card {
-            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
         }
         .app-card:hover {
-            border-color: rgba(1, 16, 111, 0.22);
+            border-color: rgba(1, 16, 111, 0.18);
             box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+        }
+        .app-nav-item,
+        .app-nav-subitem {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .app-nav-item {
+            gap: .75rem;
+            border-radius: .75rem;
+            padding: .625rem .75rem;
+            font-size: .875rem;
+            font-weight: 650;
+        }
+        .app-nav-subitem {
+            gap: .5rem;
+            border-radius: .75rem;
+            padding: .5rem .75rem;
+            font-size: .875rem;
+            font-weight: 650;
+        }
+        .app-nav-item:hover,
+        .app-nav-subitem:hover {
+            background: var(--surface-muted);
+            color: var(--primary-navy);
+        }
+        .app-nav-active {
+            background: var(--primary-red);
+            color: #fff;
+            box-shadow: var(--shadow-soft);
+        }
+        .app-nav-active:hover {
+            background: var(--primary-red-hover);
+            color: #fff;
+        }
+        .app-nav-subactive {
+            background: rgba(1, 16, 111, 0.07);
+            color: var(--primary-navy);
+        }
+        .btn-primary,
+        .app-btn-primary,
+        .btn-secondary,
+        .app-btn-secondary,
+        .btn-ghost,
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: .75rem;
+            font-weight: 650;
+            transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
         }
         .btn-primary,
         .app-btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: .75rem;
+            border: 1px solid var(--primary-red);
             background: var(--primary-red);
             color: #fff;
-            font-weight: 700;
-            box-shadow: 0 12px 24px rgba(200, 0, 0, 0.18);
-            transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+            box-shadow: var(--shadow-soft);
         }
         .btn-primary:hover,
         .app-btn-primary:hover {
-            background: var(--transition-red);
+            background: var(--primary-red-hover);
+            border-color: var(--primary-red-hover);
             color: #fff;
-            box-shadow: 0 18px 32px rgba(158, 0, 34, 0.22);
             transform: translateY(-1px);
-        }
-        .btn-primary:focus,
-        .app-btn-primary:focus {
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(200, 0, 0, 0.16), 0 12px 24px rgba(200, 0, 0, 0.18);
         }
         .btn-secondary,
         .app-btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             border: 1px solid var(--border-subtle);
-            border-radius: .75rem;
             background: #fff;
             color: var(--primary-navy);
-            font-weight: 700;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-            transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+            box-shadow: var(--shadow-soft);
         }
         .btn-secondary:hover,
         .app-btn-secondary:hover {
             border-color: var(--primary-red);
             background: var(--primary-red);
             color: #fff;
-            box-shadow: 0 12px 24px rgba(200, 0, 0, 0.14);
+        }
+        .btn-ghost {
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            background: var(--surface-muted);
+            color: var(--text-primary);
+        }
+        .btn-danger {
+            border: 1px solid rgba(200, 0, 0, 0.28);
+            background: #fff;
+            color: var(--primary-red);
+        }
+        .btn-danger:hover {
+            border-color: var(--primary-red);
+            background: rgba(200, 0, 0, 0.07);
+        }
+        .btn-primary:focus-visible,
+        .app-btn-primary:focus-visible,
+        .btn-secondary:focus-visible,
+        .app-btn-secondary:focus-visible,
+        .btn-ghost:focus-visible,
+        .btn-danger:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
         }
         .btn-primary:disabled,
-        .btn-primary.disabled {
-            opacity: 0.6;
+        .btn-primary.disabled,
+        .app-btn-primary:disabled,
+        .app-btn-primary.disabled {
             cursor: not-allowed;
+            opacity: .6;
             pointer-events: none;
+            transform: none;
         }
         .app-footer {
             border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -175,11 +267,11 @@
         .app-badge {
             display: inline-flex;
             align-items: center;
-            border-radius: 9999px;
             border: 1px solid var(--border-subtle);
+            border-radius: .75rem;
             padding: .25rem .625rem;
             font-size: .75rem;
-            font-weight: 700;
+            font-weight: 650;
             line-height: 1rem;
         }
         .app-badge-primary {
@@ -188,14 +280,25 @@
             color: var(--primary-navy);
         }
         .app-badge-red {
-            border-color: rgba(200, 0, 0, 0.16);
+            border-color: rgba(200, 0, 0, 0.18);
             background: rgba(200, 0, 0, 0.07);
-            color: var(--transition-red);
+            color: var(--primary-red-hover);
         }
-        .app-badge-success {
-            border-color: rgba(16, 185, 129, 0.22);
-            background: rgba(16, 185, 129, 0.10);
-            color: #047857;
+        .app-badge-success,
+        .success {
+            border-color: rgba(4, 120, 87, 0.22);
+            background: rgba(4, 120, 87, 0.08);
+            color: var(--success);
+        }
+        .warning {
+            border-color: rgba(180, 83, 9, 0.22);
+            background: rgba(180, 83, 9, 0.08);
+            color: var(--warning);
+        }
+        .danger {
+            border-color: rgba(200, 0, 0, 0.22);
+            background: rgba(200, 0, 0, 0.07);
+            color: var(--primary-red);
         }
         .app-badge-muted {
             border-color: var(--border-subtle);
@@ -204,9 +307,9 @@
         }
         .status-open,
         .status-ongoing {
-            border-color: rgba(16, 185, 129, 0.26) !important;
-            background-color: rgba(16, 185, 129, 0.12) !important;
-            color: #047857 !important;
+            border-color: rgba(4, 120, 87, 0.24) !important;
+            background-color: rgba(4, 120, 87, 0.08) !important;
+            color: var(--success) !important;
         }
         .status-finish {
             border-color: rgba(1, 16, 111, 0.20) !important;
@@ -215,24 +318,25 @@
         }
         .status-failed {
             border-color: rgba(200, 0, 0, 0.20) !important;
-            background-color: rgba(200, 0, 0, 0.08) !important;
+            background-color: rgba(200, 0, 0, 0.07) !important;
             color: var(--primary-red) !important;
         }
         .field-control {
             width: 100%;
             height: 2.75rem;
-            border-radius: 0.75rem;
             border: 1px solid var(--border-subtle);
+            border-radius: .75rem;
             background: #fff;
-            padding: 0 0.75rem;
-            font-size: 0.875rem;
+            padding: 0 .75rem;
             color: var(--text-primary);
+            font-size: .875rem;
             outline: none;
-            transition: box-shadow .15s ease, border-color .15s ease;
+            transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
         }
+        .field-control::placeholder { color: #94A3B8; }
         .field-control:focus {
             border-color: rgba(200, 0, 0, 0.46);
-            box-shadow: 0 0 0 4px rgba(200, 0, 0, 0.10);
+            box-shadow: var(--focus-ring);
         }
         input:focus,
         select:focus,
@@ -240,22 +344,27 @@
             border-color: rgba(200, 0, 0, 0.46) !important;
             --tw-ring-color: rgba(200, 0, 0, 0.12) !important;
         }
-        a { text-underline-offset: 4px; }
+        table { border-color: var(--border-subtle); }
+        thead.bg-slate-50 {
+            background-color: rgba(1, 16, 111, 0.05) !important;
+            color: var(--primary-navy) !important;
+        }
+        tr.hover\:bg-slate-50:hover { background-color: rgba(1, 16, 111, 0.035) !important; }
         .bg-blue-50 { background-color: rgba(1, 16, 111, 0.07) !important; }
         .text-blue-700,
         .text-cyan-700 { color: var(--primary-navy) !important; }
         .border-blue-200 { border-color: rgba(1, 16, 111, 0.18) !important; }
         .bg-blue-600,
         .bg-cyan-600 { background-color: var(--primary-navy) !important; }
-        .hover\:bg-blue-100:hover { background-color: rgba(1, 16, 111, 0.10) !important; }
-        .hover\:bg-blue-50\/60:hover { background-color: rgba(1, 16, 111, 0.07) !important; }
+        .hover\:bg-blue-100:hover,
+        .hover\:bg-blue-50\/60:hover { background-color: rgba(1, 16, 111, 0.08) !important; }
         .hover\:text-blue-700:hover { color: var(--primary-navy) !important; }
         .focus\:ring-blue-100:focus { --tw-ring-color: rgba(1, 16, 111, 0.12) !important; }
-        .bg-emerald-50 { background-color: rgba(200, 0, 0, 0.07) !important; }
+        .bg-emerald-50 { background-color: rgba(1, 16, 111, 0.07) !important; }
         .text-emerald-700,
-        .text-emerald-800 { color: var(--transition-red) !important; }
+        .text-emerald-800 { color: var(--primary-navy) !important; }
         .border-emerald-200,
-        .border-emerald-100 { border-color: rgba(200, 0, 0, 0.18) !important; }
+        .border-emerald-100 { border-color: rgba(1, 16, 111, 0.18) !important; }
         .bg-emerald-500,
         .bg-emerald-600 { background-color: var(--primary-red) !important; }
         .focus\:border-emerald-500:focus { border-color: rgba(200, 0, 0, 0.46) !important; }
@@ -263,12 +372,20 @@
         .bg-slate-950 { background-color: var(--primary-navy) !important; }
         a.bg-slate-950,
         button.bg-slate-950 { background-color: var(--primary-red) !important; }
-        .hover\:bg-slate-800:hover { background-color: var(--transition-red) !important; }
+        .hover\:bg-slate-800:hover { background-color: var(--primary-red-hover) !important; }
         .text-slate-950 { color: var(--text-primary) !important; }
-        thead.bg-slate-50 { background-color: rgba(1, 16, 111, 0.06) !important; color: var(--primary-navy) !important; }
-        tr.hover\:bg-slate-50:hover { background-color: rgba(200, 0, 0, 0.035) !important; }
-        .shadow-card,
+        .shadow-card { box-shadow: var(--shadow-card) !important; }
         .shadow-sm { box-shadow: var(--shadow-soft) !important; }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
         @media (max-width: 767px) {
             html,
             body,
@@ -315,27 +432,28 @@
 
 <body class="h-full bg-brand-bg text-brand-ink antialiased">
 {% block body %}
-<div class="min-h-screen" data-app-shell>
+<a href="#main-content" class="skip-link btn-primary px-4 py-2 text-sm shadow-sm">Lewati ke konten</a>
+<div class="app-shell" data-app-shell>
 
     <div hidden
          data-sidebar-overlay
          class="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden"></div>
 
-    <aside class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-subtle bg-white/95 shadow-soft backdrop-blur transition-transform duration-300 lg:translate-x-0"
+    <aside class="fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col border-r border-subtle bg-white/95 shadow-sm backdrop-blur transition-transform duration-300 lg:translate-x-0"
            data-sidebar>
         <div class="flex h-16 items-center gap-3 border-b border-subtle px-5">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg primary text-sm font-black shadow-sm">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl primary text-sm font-black shadow-sm">
                 GP
             </div>
             <div>
-                <p class="text-sm font-black tracking-tight text-primary-ink">GPFE PROC HUB</p>
-                <p class="text-xs font-semibold text-muted">Procurement Intelligence Platform</p>
+                <p class="text-sm font-semibold tracking-tight text-primary-ink">GPFE PROC HUB</p>
+                <p class="text-xs font-medium text-muted">Procurement Intelligence Platform</p>
             </div>
         </div>
 
-        <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-5">
+        <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-5" aria-label="Navigasi utama">
             <a href="/dashboard/"
-               class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition {% if request.resolver_match.url_name == 'dashboard' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+               class="app-nav-item group {% if request.resolver_match.url_name == 'dashboard' %}app-nav-active{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12.75h6.5v7.5h-6.5v-7.5ZM13.75 3.75h6.5v16.5h-6.5V3.75ZM3.75 3.75h6.5v5.5h-6.5v-5.5Z"/>
                 </svg>
@@ -345,7 +463,8 @@
             <div class="space-y-1">
                 <button type="button"
                         data-menu-toggle="tender-menu"
-                        class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' or request.resolver_match.url_name == 'saved_tenders' or request.resolver_match.url_name == 'saved_tenders_legacy' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}"
+                        class="app-nav-item group w-full text-left {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' or request.resolver_match.url_name == 'saved_tenders' or request.resolver_match.url_name == 'saved_tenders_legacy' %}app-nav-active{% endif %}"
+                        aria-controls="tender-menu-panel"
                         aria-expanded="{% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' or request.resolver_match.url_name == 'saved_tenders' or request.resolver_match.url_name == 'saved_tenders_legacy' %}true{% else %}false{% endif %}">
                     <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 6.75h14M5 12h14M5 17.25h9"/>
@@ -362,16 +481,17 @@
                     </svg>
                 </button>
 
-                <div data-menu-panel="tender-menu"
+                <div id="tender-menu-panel"
+                     data-menu-panel="tender-menu"
                      {% if not request.resolver_match.url_name == 'tender_list' and not request.resolver_match.url_name == 'tender_detail' and not request.resolver_match.url_name == 'tender_detail_legacy' and not request.resolver_match.url_name == 'saved_tenders' and not request.resolver_match.url_name == 'saved_tenders_legacy' %}hidden{% endif %}
                      class="ml-6 space-y-1 border-l border-subtle pl-3">
                     <a href="{% url 'tender_list' %}"
-                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                       class="app-nav-subitem {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' %}app-nav-subactive{% endif %}">
                         <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'tender_list' or request.resolver_match.url_name == 'tender_detail' or request.resolver_match.url_name == 'tender_detail_legacy' %}primary{% else %}bg-slate-300{% endif %}"></span>
                         Tender Explorer
                     </a>
                     <a href="{% url 'saved_tenders' %}"
-                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'saved_tenders' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                       class="app-nav-subitem {% if request.resolver_match.url_name == 'saved_tenders' %}app-nav-subactive{% endif %}">
                         <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'saved_tenders' %}primary{% else %}bg-slate-300{% endif %}"></span>
                         Bookmarks
                     </a>
@@ -381,7 +501,8 @@
             <div class="space-y-1">
                 <button type="button"
                         data-menu-toggle="lpse-menu"
-                        class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' or request.resolver_match.url_name == 'lpse_watchlist' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}"
+                        class="app-nav-item group w-full text-left {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' or request.resolver_match.url_name == 'lpse_watchlist' %}app-nav-active{% endif %}"
+                        aria-controls="lpse-menu-panel"
                         aria-expanded="{% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' or request.resolver_match.url_name == 'lpse_watchlist' %}true{% else %}false{% endif %}">
                     <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 20.25V7.75A2.25 2.25 0 0 1 7 5.5h10a2.25 2.25 0 0 1 2.25 2.25v12.5M8.75 5.5V3.75h6.5V5.5M3.5 20.25h17"/>
@@ -398,16 +519,17 @@
                     </svg>
                 </button>
 
-                <div data-menu-panel="lpse-menu"
+                <div id="lpse-menu-panel"
+                     data-menu-panel="lpse-menu"
                      {% if not request.resolver_match.url_name == 'lpse_list' and not request.resolver_match.url_name == 'lpse_detail' and not request.resolver_match.url_name == 'lpse_watchlist' %}hidden{% endif %}
                      class="ml-6 space-y-1 border-l border-subtle pl-3">
                     <a href="{% url 'lpse_list' %}"
-                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                       class="app-nav-subitem {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}app-nav-subactive{% endif %}">
                         <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'lpse_list' or request.resolver_match.url_name == 'lpse_detail' %}primary{% else %}bg-slate-300{% endif %}"></span>
                         Semua LPSE Data
                     </a>
                     <a href="{% url 'lpse_watchlist' %}"
-                       class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'lpse_watchlist' %}bg-surface-muted text-primary{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+                       class="app-nav-subitem {% if request.resolver_match.url_name == 'lpse_watchlist' %}app-nav-subactive{% endif %}">
                         <span class="h-1.5 w-1.5 rounded-full {% if request.resolver_match.url_name == 'lpse_watchlist' %}primary{% else %}bg-slate-300{% endif %}"></span>
                         Watchlist LPSE
                     </a>
@@ -415,7 +537,7 @@
             </div>
 
             <a href="{% url 'vendor_profile' %}"
-               class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition {% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'vendor_profile' %}primary shadow-card{% else %}text-secondary hover:bg-surface-muted hover:text-primary{% endif %}">
+               class="app-nav-item group {% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'vendor_profile' %}app-nav-active{% endif %}">
                 <svg class="h-5 w-5 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.75h4.5l.55 2.2a7.4 7.4 0 0 1 1.55.9l2.16-.67 2.25 3.9-1.62 1.57c.04.26.06.53.06.8s-.02.54-.06.8l1.62 1.57-2.25 3.9-2.16-.67a7.4 7.4 0 0 1-1.55.9l-.55 2.2h-4.5l-.55-2.2a7.4 7.4 0 0 1-1.55-.9l-2.16.67-2.25-3.9 1.62-1.57a5.4 5.4 0 0 1-.06-.8c0-.27.02-.54.06-.8L3.26 10.08l2.25-3.9 2.16.67a7.4 7.4 0 0 1 1.55-.9l.53-2.2Z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 14.75a2.75 2.75 0 1 0 0-5.5 2.75 2.75 0 0 0 0 5.5Z"/>
@@ -430,7 +552,7 @@
                 {% csrf_token %}
                 <button
                     type="submit"
-                    class="btn-secondary w-full px-3 py-2 text-left text-sm"
+                    class="btn-secondary w-full px-3 py-2 text-sm"
                 >
                     Logout
                 </button>
@@ -445,29 +567,34 @@
     </aside>
 
     <div class="lg:pl-72">
-        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur-xl">
-            <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur-xl">
+            <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
                 <button type="button"
                         data-sidebar-open
-                        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 lg:hidden"
+                        class="btn-ghost h-10 w-10 border border-slate-200 bg-white lg:hidden"
                         aria-label="Buka navigasi">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"/>
                     </svg>
                 </button>
 
+                <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold tracking-tight text-slate-950">GPFE PROC HUB</p>
+                    <p class="hidden text-xs font-medium text-slate-500 sm:block">Procurement workspace</p>
+                </div>
+
                 <div class="ml-auto flex items-center gap-2">
                     <div id="notification-bell" class="relative" data-notification>
                         <button type="button"
                                 data-notification-toggle
-                                class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+                                class="btn-ghost relative h-10 w-10 border border-slate-200 bg-white"
                                 aria-label="Notifikasi"
                                 aria-expanded="false">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.75a3.75 3.75 0 0 1-7.5 0M18.75 10.75a6.75 6.75 0 0 0-13.5 0c0 3.25-1.5 4.5-2.25 5.25h18c-.75-.75-2.25-2-2.25-5.25Z"/>
                             </svg>
                             {% if tender_notifications_count %}
-                            <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
+                            <span class="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-xl bg-red-600 px-1 text-[11px] font-semibold leading-none text-white ring-2 ring-white">
                                 {{ tender_notifications_count }}
                             </span>
                             {% endif %}
@@ -475,7 +602,7 @@
 
                         <div hidden
                              data-notification-menu
-                             class="absolute right-0 top-12 z-50 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-96">
+                             class="absolute right-0 top-12 z-50 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow sm:w-96">
                             <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
                                 <div>
                                     <p class="text-sm font-semibold text-slate-950">Notifikasi Tender Baru</p>
@@ -488,7 +615,7 @@
                                       hx-target="#notification-bell"
                                       hx-swap="outerHTML">
                                     {% csrf_token %}
-                                    <button type="submit" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
+                                    <button type="submit" class="btn-secondary px-2.5 py-1 text-xs">
                                         Tandai Semua Dibaca
                                     </button>
                                 </form>
@@ -504,12 +631,12 @@
                                         <span class="h-2 w-2 rounded-full bg-primary"></span>
                                         {% endif %}
                                         {% if notification.notification_type == "watchlist_lpse" %}
-                                        <span class="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{{ notification.label }}</span>
+                                        <span class="app-badge app-badge-primary">{{ notification.label }}</span>
                                         {% else %}
-                                        <span class="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">{{ notification.label }}</span>
+                                        <span class="app-badge app-badge-primary">{{ notification.label }}</span>
                                         {% endif %}
                                         {% if notification.score %}
-                                        <span class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">{{ notification.score }}%</span>
+                                        <span class="app-badge app-badge-muted">{{ notification.score }}%</span>
                                         {% endif %}
                                     </div>
                                     <h3 class="line-clamp-2 text-sm leading-5 text-slate-950 {% if notification.is_read %}font-medium{% else %}font-bold{% endif %}">
@@ -533,7 +660,7 @@
                                               hx-target="#notification-bell"
                                               hx-swap="outerHTML">
                                             {% csrf_token %}
-                                            <button type="submit" class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950" title="Tandai sudah dibaca">
+                                            <button type="submit" class="btn-secondary h-8 gap-1 px-2.5 text-xs" title="Tandai sudah dibaca">
                                                 <span aria-hidden="true">&#10003;</span>
                                                 Tandai sudah dibaca
                                             </button>
@@ -571,7 +698,7 @@
             </div>
         </header>
 
-        <main class="px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main-content" class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8" tabindex="-1">
             <div class="mx-auto max-w-7xl">
                 {% block content %}{% endblock %}
             </div>
@@ -583,15 +710,18 @@
          style="display: none;"
          class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
         <div data-tender-modal-panel
-             class="max-h-[86vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+             class="max-h-[86vh] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="tender-modal-title">
             <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
-                    <p class="text-sm font-semibold text-slate-950">Detail Tender</p>
+                    <p id="tender-modal-title" class="text-sm font-semibold text-slate-950">Detail Tender</p>
                     <p class="text-xs text-slate-500">Ringkasan paket dan tautan sumber SPSE</p>
                 </div>
                 <button type="button"
                         data-close-modal
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+                        class="btn-ghost h-9 w-9"
                         aria-label="Tutup modal">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m6 6 12 12M18 6 6 18"/>
