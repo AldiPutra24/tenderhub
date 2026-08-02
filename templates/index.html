@@ -120,19 +120,19 @@
                 <div class="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
                   <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Open</p>
-                    <p class="mt-1 text-2xl font-semibold text-slate-950">31</p>
+                    <p class="mt-1 text-2xl font-semibold text-slate-950" data-pop-count="31">31</p>
                   </div>
                   <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Avg peserta</p>
-                    <p class="mt-1 text-2xl font-semibold text-slate-950">30,2</p>
+                    <p class="mt-1 text-2xl font-semibold text-slate-950" data-pop-count="30.2">30,2</p>
                   </div>
                   <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Low comp.</p>
-                    <p class="mt-1 text-2xl font-semibold text-blue-700">4</p>
+                    <p class="mt-1 text-2xl font-semibold text-blue-700" data-pop-count="4">4</p>
                   </div>
                   <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                     <p class="text-xs font-bold text-slate-500">Instansi</p>
-                    <p class="mt-1 text-2xl font-semibold text-slate-950">5</p>
+                    <p class="mt-1 text-2xl font-semibold text-slate-950" data-pop-count="5">5</p>
                   </div>
                 </div>
 
@@ -217,9 +217,9 @@
       </div>
     </section>
 
-    <section class="app-gradient py-8 text-white" data-section>
-      <div class="mx-auto max-w-7xl px-6 text-white lg:px-8">
-        <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <section id="solusi" class="app-gradient py-20 text-white" data-section>
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="mb-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p class="text-sm font-semibold text-white/80">Bukan sekadar listing tender</p>
             <h2 class="mt-1 text-2xl font-semibold text-white">Ini adalah intelligence layer untuk pipeline tender pemerintah.</h2>
@@ -227,7 +227,7 @@
           <p class="text-sm font-semibold text-white/85">Monitor, filter, match, score, dan tindak lanjuti peluang yang paling masuk akal.</p>
         </div>
 
-        <div class="grid gap-3 lg:grid-cols-4">
+        <div class="mb-14 grid auto-rows-fr gap-3 lg:grid-cols-4">
           <div class="rounded-2xl border border-white/15 bg-white/10 p-4">
           <p class="text-sm font-semibold text-white/80">Tender monitoring system</p>
           <p class="mt-1 text-xs font-semibold text-white/85">Pantau semua tender dalam satu feed nasional.</p>
@@ -245,57 +245,55 @@
           <p class="mt-1 text-xs font-semibold text-white/85">Prioritas peluang sesuai profil perusahaan.</p>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section id="solusi" class="bg-white py-20" data-section>
-      <div class="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-2 lg:px-8">
-        <div>
-          <p class="text-sm font-semibold uppercase text-blue-700">Masalah User</p>
-          <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
-            Peluang tender sering lewat karena datanya tersebar.
-          </h2>
-          <div class="mt-8 space-y-4">
-            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
-              <p class="font-semibold text-slate-700">Harus buka banyak LPSE satu per satu.</p>
-            </div>
-            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
-              <p class="font-semibold text-slate-700">Sulit menemukan tender yang relevan.</p>
-            </div>
-            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
-              <p class="font-semibold text-slate-700">Informasi tersebar dan tidak terstruktur.</p>
-            </div>
-            <div class="flex gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-blue-600"></span>
-              <p class="font-semibold text-slate-700">Rawan telat ikut tender.</p>
+        <div class="grid gap-12 lg:grid-cols-2">
+          <div>
+            <p class="text-sm font-semibold uppercase text-white/80">Masalah User</p>
+            <h2 class="mt-3 text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              Peluang tender sering lewat karena datanya tersebar.
+            </h2>
+            <div class="mt-8 space-y-4">
+              <div class="flex gap-3 rounded-xl border border-white/15 bg-white/10 p-4">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-white"></span>
+                <p class="font-semibold text-white/90">Harus buka banyak LPSE satu per satu.</p>
+              </div>
+              <div class="flex gap-3 rounded-xl border border-white/15 bg-white/10 p-4">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-white"></span>
+                <p class="font-semibold text-white/90">Sulit menemukan tender yang relevan.</p>
+              </div>
+              <div class="flex gap-3 rounded-xl border border-white/15 bg-white/10 p-4">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-white"></span>
+                <p class="font-semibold text-white/90">Informasi tersebar dan tidak terstruktur.</p>
+              </div>
+              <div class="flex gap-3 rounded-xl border border-white/15 bg-white/10 p-4">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-xl bg-white"></span>
+                <p class="font-semibold text-white/90">Rawan telat ikut tender.</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="app-panel p-6">
-          <p class="text-sm font-semibold uppercase text-blue-700">Solusi Platform</p>
-          <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
-            Dari listing tender menjadi intelligence workflow.
-          </h2>
-          <div class="mt-8 grid gap-4 sm:grid-cols-2">
-            <div class="app-card p-5">
-              <p class="font-semibold text-slate-950">Agregasi data tender nasional</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">Data dari berbagai LPSE/SPSE disatukan ke dashboard pusat.</p>
-            </div>
-            <div class="app-card p-5">
-              <p class="font-semibold text-slate-950">Real-time monitoring</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">Feed tender baru dipantau agar tim tidak tertinggal jadwal.</p>
-            </div>
-            <div class="app-card p-5">
-              <p class="font-semibold text-slate-950">Smart filtering</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">Filter cepat berdasarkan wilayah, nilai, jenis, dan instansi.</p>
-            </div>
-            <div class="app-card p-5">
-              <p class="font-semibold text-slate-950">AI insight &amp; prioritization</p>
-              <p class="mt-2 text-sm leading-6 text-slate-600">Prioritaskan tender yang paling relevan dengan profil perusahaan.</p>
+          <div class="app-panel p-6">
+            <p class="text-sm font-semibold uppercase text-blue-700">Solusi Platform</p>
+            <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+              Dari listing tender menjadi intelligence workflow.
+            </h2>
+            <div class="mt-8 mb-8 grid auto-rows-fr gap-4 sm:grid-cols-2">
+              <div class="app-card p-5">
+                <p class="font-semibold text-slate-950">Agregasi data tender nasional</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Data dari berbagai LPSE/SPSE disatukan ke dashboard pusat.</p>
+              </div>
+              <div class="app-card p-5">
+                <p class="font-semibold text-slate-950">Real-time monitoring</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Feed tender baru dipantau agar tim tidak tertinggal jadwal.</p>
+              </div>
+              <div class="app-card p-5">
+                <p class="font-semibold text-slate-950">Smart filtering</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Filter cepat berdasarkan wilayah, nilai, jenis, dan instansi.</p>
+              </div>
+              <div class="app-card p-5">
+                <p class="font-semibold text-slate-950">AI insight &amp; prioritization</p>
+                <p class="mt-2 text-sm leading-6 text-slate-600">Prioritaskan tender yang paling relevan dengan profil perusahaan.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -311,7 +309,7 @@
           </h2>
         </div>
 
-        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div class="mt-10 grid auto-rows-fr gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <article class="app-card p-5">
             <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19h16M7 16V8m5 8V5m5 11v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -429,163 +427,163 @@
           </div>
         </div>
 
-        <div class="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          <article class="app-card p-5">
+        <div class="mt-10 grid auto-rows-fr gap-5 lg:grid-cols-2 xl:grid-cols-3">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10129999000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">Pengadaan Peralatan, Analisis, Pengiriman Passive Sampler 514 Kabupaten/Kota Tahun 2026</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">Pengadaan Peralatan, Analisis, Pengiriman Passive Sampler 514 Kabupaten/Kota Tahun 2026</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Lingkungan Hidup/Badan Pengendalian Lingkungan Hidup</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Jakarta Selatan - Jakarta Selatan (Kota)</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kementerian Lingkungan Hidup/Badan Pengendalian Lingkungan Hidup</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Jakarta Selatan - Jakarta Selatan (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Jasa Lainnya</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-blue-700">2 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 3.665.000.000,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 3.664.985.790,00</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10129999000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="app-card p-5">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10130002000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">EQU-5B IT Software Tender Ulang</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">EQU-5B IT Software Tender Ulang</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Pengadaan Barang</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-slate-950">17 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 6.319.723.667,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 6.319.723.667,00</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10130002000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="app-card p-5">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10127865000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">EQU-2B Radiology and Supporting Radiology Service Equipment's</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">EQU-2B Radiology and Supporting Radiology Service Equipment's</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Pengadaan Barang</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-slate-950">19 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 30.515.784.467,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 30.515.784.467,00</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10127865000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="app-card p-5">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10126649000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">Pengawasan Rekonstruksi Jaringan Distribusi Tenaga Listrik Universitas Tadulako</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">Pengawasan Rekonstruksi Jaringan Distribusi Tenaga Listrik Universitas Tadulako</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Jl. Soekarno Hatta No.KM. 9, Tondo, Palu</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Jl. Soekarno Hatta No.KM. 9, Tondo, Palu</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Jasa Konsultansi Konstruksi</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-blue-700">3 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Pagu Anggaran</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Pagu Anggaran</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 666.656.000,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 666.656.000,00</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Prakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10126649000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="app-card p-5">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10126072000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">Jasa Konsultansi Pengawasan Rehabilitasi Kantor DPRD Kabupaten Tulang Bawang</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">Jasa Konsultansi Pengawasan Rehabilitasi Kantor DPRD Kabupaten Tulang Bawang</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kab. Tulang Bawang</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Kab. Tulang Bawang - Tulang Bawang (Kab.)</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kab. Tulang Bawang</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kab. Tulang Bawang - Tulang Bawang (Kab.)</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Jasa Konsultansi Konstruksi</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-blue-700">4 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Kualitas dan Biaya</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Seleksi - Prakualifikasi Dua File - Kualitas dan Biaya</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 170.000.000,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 169.999.999,83</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Prakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10126072000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
             </div>
           </article>
 
-          <article class="app-card p-5">
+          <article class="app-card flex h-full flex-col p-5">
             <div class="flex items-start justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-semibold text-blue-700">Kode Tender 10127862000</p>
-                <h3 class="mt-2 text-lg font-semibold leading-6 text-slate-950">EQU-2A General Care and Laboratory Service Equipment</h3>
+                <h3 class="mt-2 line-clamp-2 min-h-12 text-lg font-semibold leading-6 text-slate-950">EQU-2A General Care and Laboratory Service Equipment</h3>
               </div>
-              <span class="app-badge status-open">OPEN</span>
+              <span class="app-badge status-open shrink-0">OPEN</span>
             </div>
-            <div class="mt-5 space-y-3 text-sm">
-              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
-              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
+            <div class="mt-5 flex flex-1 flex-col space-y-3 text-sm">
+              <div><p class="font-bold text-slate-500">Instansi</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Kementerian Pendidikan Tinggi, Sains, dan Teknologi</p></div>
+              <div><p class="font-bold text-slate-500">Lokasi Pekerjaan</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Universitas Lampung - Bandar Lampung (Kota)</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Jenis</p><p class="mt-1 font-semibold text-slate-950">Pengadaan Barang</p></div>
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-xs font-bold text-slate-500">Peserta</p><p class="mt-1 font-semibold text-slate-950">20 peserta</p></div>
               </div>
-              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
+              <div><p class="font-bold text-slate-500">Metode</p><p class="mt-1 line-clamp-2 min-h-10 font-semibold text-slate-800">Tender - Pascakualifikasi Satu File - Harga Terendah Sistem Gugur</p></div>
               <div class="grid grid-cols-2 gap-3">
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai Pagu</p><p class="mt-1 font-semibold text-slate-950">Rp. 37.595.610.084,00</p></div>
                 <div class="rounded-xl bg-blue-50 p-3"><p class="text-xs font-bold text-blue-700">Nilai HPS</p><p class="mt-1 font-semibold text-slate-950">Rp. 37.595.610.084,00</p></div>
               </div>
-              <div class="flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
                 <p class="text-xs font-semibold text-slate-500">Tahapan: Pengumuman Pascakualifikasi</p>
                 <a href="https://spse.inaproc.id/nasional/lelang/10127862000/pengumumanlelang" target="_blank" rel="noreferrer" class="app-btn-primary shrink-0 px-3 py-2 text-xs font-semibold">LPSE</a>
               </div>
@@ -604,7 +602,7 @@
             Mesin AI membantu tim tender membaca sinyal yang biasanya tersembunyi di dokumen panjang, jumlah peserta, nilai paket, dan profil instansi.
           </p>
 
-          <div class="mt-8 grid gap-3 sm:grid-cols-2">
+          <div class="mt-8 grid auto-rows-fr gap-3 sm:grid-cols-2">
             <div class="app-card p-4">
               <p class="font-semibold text-slate-950">Auto summary tender</p>
               <p class="mt-2 text-sm leading-6 text-slate-600">Tender panjang jadi ringkasan singkat dan siap dibagikan.</p>
@@ -688,7 +686,7 @@
           <h2 class="mt-3 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">Tiga langkah dari data nasional ke keputusan tender.</h2>
         </div>
 
-        <div class="mt-10 grid gap-5 lg:grid-cols-3">
+        <div class="mt-10 grid auto-rows-fr gap-5 lg:grid-cols-3">
           <article class="app-card bg-slate-50/70 p-6">
             <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-lg font-semibold text-white">1</span>
             <h3 class="mt-5 text-xl font-semibold text-slate-950">Ambil data tender nasional</h3>
@@ -1025,7 +1023,8 @@
         scale: 0.98,
         y: 16,
         duration: 0.8,
-        ease: "power2.out"
+        ease: "power2.out",
+        clearProps: "all"
       });
 
       document.querySelectorAll("[data-section]").forEach(function (section) {
@@ -1034,6 +1033,7 @@
           y: 24,
           duration: 0.7,
           ease: "power2.out",
+          clearProps: "all",
           scrollTrigger: {
             trigger: section,
             start: "top 82%",
@@ -1052,6 +1052,7 @@
           duration: 0.55,
           ease: "power2.out",
           stagger: 0.06,
+          clearProps: "all",
           scrollTrigger: {
             trigger: section,
             start: "top 78%",
@@ -1079,6 +1080,43 @@
         });
       });
 
+      document.querySelectorAll("[data-pop-count]").forEach(function (element) {
+        var raw = element.dataset.popCount || "0";
+        var target = Number(raw);
+        var isDecimal = raw.indexOf(".") !== -1;
+        var counter = { value: 0 };
+        var trigger = {
+          trigger: element,
+          start: "top 92%",
+          once: true
+        };
+
+        gsap.fromTo(
+          element,
+          { autoAlpha: 0, scale: 0.6 },
+          {
+            autoAlpha: 1,
+            scale: 1,
+            duration: 0.5,
+            ease: "back.out(1.8)",
+            clearProps: "all",
+            scrollTrigger: trigger
+          }
+        );
+
+        gsap.to(counter, {
+          value: target,
+          duration: 1.1,
+          ease: "power1.out",
+          scrollTrigger: trigger,
+          onUpdate: function () {
+            element.textContent = isDecimal
+              ? counter.value.toFixed(1).replace(".", ",")
+              : String(Math.round(counter.value));
+          }
+        });
+      });
+
       var ctaPanel = document.querySelector("[data-cta] .app-panel");
       if (ctaPanel) {
         gsap.from(ctaPanel, {
@@ -1086,6 +1124,7 @@
           y: 16,
           duration: 0.7,
           ease: "power2.out",
+          clearProps: "all",
           scrollTrigger: {
             trigger: ctaPanel,
             start: "top 84%",

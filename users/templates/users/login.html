@@ -3,64 +3,34 @@
 
 {% block title %}GPFE PROC HUB{% endblock %}
 
+{% block footer %}{% endblock %}
+
 {% block body %}
-<main class="min-h-screen bg-slate-50">
-    <div class="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        <section class="app-gradient relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.20),transparent_28%),radial-gradient(circle_at_70%_0%,rgba(255,255,255,0.16),transparent_26%)]"></div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3">
-                    <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-11 w-11 object-contain">
-                    <div>
-                        <p class="text-base font-semibold">GPFE PROC HUB</p>
-                        <p class="text-sm text-slate-400">AI Procurement Intelligence Platform</p>
-                    </div>
-                </div>
-            </div>
+<canvas id="c"
+        aria-hidden="true"
+        class="fixed inset-0 z-0 h-full w-full"
+        style="background:linear-gradient(120deg,rgb(200,0,0),rgb(158,0,34),rgb(94,0,86),rgb(1,16,111))"></canvas>
+<main class="relative min-h-screen">
+    <div class="relative z-10 flex min-h-screen items-center justify-center px-4 py-6 sm:px-6 lg:px-12">
+        <div class="w-full max-w-md">
 
-            <div class="relative z-10 max-w-xl">
-                <p class="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-                    SPSE / LPSE / INAPROC intelligence workspace
-                </p>
-                <h1 class="text-4xl font-semibold tracking-tight text-white">
-                    Temukan tender pemerintah yang paling relevan untuk bisnis Anda.
-                </h1>
-                <p class="mt-5 text-base leading-7 text-slate-300">
-                    GPFE PROC HUB membantu vendor menyaring peluang, menyimpan tender prioritas, dan membangun profil vendor yang lebih presisi.
-                </p>
-            </div>
-
-            <div class="relative z-10 grid grid-cols-3 gap-3 text-sm">
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p class="text-2xl font-semibold">AI</p>
-                    <p class="mt-1 text-slate-400">Match scoring</p>
-                </div>
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p class="text-2xl font-semibold">SPSE</p>
-                    <p class="mt-1 text-slate-400">Tender source</p>
-                </div>
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p class="text-2xl font-semibold">24/7</p>
-                    <p class="mt-1 text-slate-400">Monitoring</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-12">
-            <div class="w-full max-w-md">
-                <div class="mb-8 text-center lg:hidden">
-                    <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="mx-auto mb-4 h-12 w-12 object-contain">
-                    <h1 class="text-2xl font-semibold tracking-tight text-slate-950">GPFE PROC HUB</h1>
-                    <p class="mt-1 text-sm text-slate-500">AI Procurement Intelligence Platform</p>
-                </div>
-
-                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-                    <div class="mb-7">
-                        <p class="text-sm font-medium text-slate-500">AI Procurement Intelligence Platform untuk Tender Pemerintah Indonesia</p>
-                        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Masuk ke GPFE PROC HUB</h2>
+                <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft sm:p-7">
+                    <div class="mb-5 text-center">
+                        <div class="inline-flex items-center gap-3">
+                            <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-10 w-10 object-contain">
+                            <div class="text-left">
+                                <p class="text-base font-semibold text-slate-950">GPFE PROC HUB</p>
+                                <p class="text-sm text-slate-500">AI Procurement Intelligence Platform</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <form method="post" class="space-y-5">
+                    <div class="mb-5 text-center">
+                        <h2 class="text-xl font-semibold tracking-tight text-slate-950">Masuk ke <span class="text-primary-red">GPFE PROC HUB</span></h2>
+                        <div class="mx-auto mt-2.5 h-1 w-10 rounded-full app-gradient" aria-hidden="true"></div>
+                    </div>
+
+                    <form method="post" class="space-y-4">
                         {% csrf_token %}
 
                         {% include "components/messages.html" %}
@@ -88,6 +58,7 @@
                                    name="username"
                                    type="email"
                                    autocomplete="email"
+                                   required
                                    value="{{ form.username.value|default_if_none:'' }}"
                                    class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
                                    placeholder="nama@perusahaan.co.id">
@@ -105,6 +76,7 @@
                                    name="password"
                                    type="password"
                                    autocomplete="current-password"
+                                   required
                                    class="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200"
                                    placeholder="Masukkan kata sandi">
                             {% if form.password.errors %}
@@ -133,7 +105,7 @@
                         </button>
                     </form>
 
-                    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-center">
                         <p class="text-sm text-slate-600">
                             Belum punya akun?
                             <a href="{% url 'register' %}" class="font-semibold text-primary-red underline-offset-4 hover:underline">Daftar sebagai vendor</a>
@@ -145,9 +117,161 @@
                     </div>
                 </div>
             </div>
-        </section>
     </div>
 </main>
+<script>
+(function () {
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var c = document.getElementById("c");
+    if (reduced || !c) return;
+    var gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+    if (!gl) return;
+
+    var vs = "attribute vec4 p;void main(){gl_Position=p;}";
+    var fs = `
+    precision highp float;
+    uniform vec2 u_resolution;
+    uniform float u_time;
+    uniform vec2 u_mouse;
+
+    vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
+    vec2 mod289(vec2 x){return x-floor(x*(1./289.))*289.;}
+    vec3 permute(vec3 x){return mod289(((x*34.)+1.)*x);}
+    float snoise(vec2 v){
+        const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);
+        vec2 i=floor(v+dot(v,C.yy));
+        vec2 x0=v-i+dot(i,C.xx);
+        vec2 i1=(x0.x>x0.y)?vec2(1.,0.):vec2(0.,1.);
+        vec4 x12=x0.xyxy+C.xxzz;
+        x12.xy-=i1;
+        i=mod289(i);
+        vec3 pv=permute(permute(i.y+vec3(0.,i1.y,1.))+i.x+vec3(0.,i1.x,1.));
+        vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);
+        m=m*m;m=m*m;
+        vec3 x=2.*fract(pv*C.www)-1.;
+        vec3 h=abs(x)-.5;
+        vec3 ox=floor(x+.5);
+        vec3 a0=x-ox;
+        m*=1.79284291400159-.85373472095314*(a0*a0+h*h);
+        vec3 g;
+        g.x=a0.x*x0.x+h.x*x0.y;
+        g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+        return 130.*dot(m,g);
+    }
+
+    void main(){
+        vec2 st=gl_FragCoord.xy/u_resolution.xy;
+        vec2 asp=st; asp.x*=u_resolution.x/u_resolution.y;
+        float t=u_time*0.1620;
+
+        // Hover interaction: push fluid coordinates away from cursor (deflection)
+        vec2 m_asp = u_mouse;
+        m_asp.x *= u_resolution.x/u_resolution.y;
+        vec2 m_dir = asp - m_asp;
+        float m_dist = length(m_dir);
+        float m_influence = smoothstep(0.45, 0.0, m_dist);
+        vec2 warp_offset = m_dir * m_influence * 0.28;
+
+        vec2 uv=st;
+        float w1=snoise((asp - warp_offset)*1.8900+vec2(t*.4,t*.3));
+        float w2=snoise((asp - warp_offset)*2.5137-vec2(t*.2,t*.5));
+        uv.x+=w1*0.1600 - warp_offset.x;
+        uv.y+=w2*0.1600 - warp_offset.y;
+
+        vec3 cCyan  =vec3(0.7843,0.0000,0.0000);
+        vec3 cYellow=vec3(0.6196,0.0000,0.1333);
+        vec3 cOrange=vec3(0.3686,0.0000,0.3373);
+        vec3 cPurple=vec3(0.4007,0.1481,0.9059);
+        vec3 cBlue  =vec3(0.0039,0.0627,0.4353);
+
+        float n1=snoise(uv*1.2+vec2(t,0.))*.5+.5;
+        float n2=snoise(uv*1.5-vec2(0.,t*.6))*.5+.5;
+        float n3=snoise(uv*1.3+vec2(-t*.5,t*.3))*.5+.5;
+
+        vec3 bg=mix(cCyan,cBlue,clamp(uv.x+n1*.4,0.,1.));
+        bg=mix(bg,cYellow,smoothstep(.2,.9,n2*(1.2-uv.x)*uv.y));
+        bg=mix(bg,cPurple,smoothstep(.1,.8,n1*uv.x*(1.1-uv.y)));
+        bg=mix(bg,cOrange,smoothstep(.3,1.,n3*(1.-uv.y)*uv.x*1.5));
+
+        // Subtly lift color near cursor without oversaturating (reduced brightness)
+        bg += mix(cCyan, cYellow, sin(t)*0.5+0.5) * m_influence * 0.05;
+
+        float grain=fract(sin(dot(gl_FragCoord.xy+u_time*100.,vec2(12.9898,78.233)))*43758.5453123);
+        gl_FragColor=vec4(bg+(grain-.5)*0.0320,1.);
+    }
+  `;
+    function sh(t, src) {
+        var s = gl.createShader(t);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+    }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, -1, -1, -1, 1, 1, -1, 1]), gl.STATIC_DRAW);
+    var ap = gl.getAttribLocation(prog, "p");
+    var ur = gl.getUniformLocation(prog, "u_resolution");
+    var ut = gl.getUniformLocation(prog, "u_time");
+    var um = gl.getUniformLocation(prog, "u_mouse");
+    var mx = 0.5, my = 0.5, tx = 0.5, ty = 0.5;
+    window.addEventListener("mousemove", function (e) {
+        tx = e.clientX / window.innerWidth;
+        ty = 1 - e.clientY / window.innerHeight;
+    });
+    window.addEventListener("touchmove", function (e) {
+        if (e.touches.length) {
+            var t = e.touches[0];
+            tx = t.clientX / window.innerWidth;
+            ty = 1 - t.clientY / window.innerHeight;
+        }
+    }, { passive: true });
+    var t0 = Date.now();
+    function draw() {
+        if (c.width !== c.clientWidth || c.height !== c.clientHeight) {
+            c.width = c.clientWidth;
+            c.height = c.clientHeight;
+        }
+        gl.viewport(0, 0, c.width, c.height);
+        gl.useProgram(prog);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(ap);
+        gl.uniform2f(ur, c.width, c.height);
+        gl.uniform1f(ut, (Date.now() - t0) / 1000);
+        mx += (tx - mx) * 0.08;
+        my += (ty - my) * 0.08;
+        gl.uniform2f(um, mx, my);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
+<script>
+    (function () {
+        var form = document.querySelector("form");
+        var submit = document.querySelector("[data-login-submit]");
+        var username = document.getElementById("id_username");
+        var password = document.getElementById("id_password");
+        if (!form || !submit || !username || !password) return;
+
+        function update() {
+            var filled = username.value.trim() !== "" && password.value.trim() !== "";
+            var disabled = !filled || submit.dataset.lockout === "1";
+            submit.disabled = disabled;
+            submit.classList.toggle("cursor-not-allowed", disabled);
+            submit.classList.toggle("opacity-60", disabled);
+        }
+
+        form.addEventListener("input", update);
+        document.addEventListener("login:fields-check", update);
+        update();
+    })();
+</script>
 <script>
     (function () {
         var alertBox = document.querySelector("[data-lockout-alert]");
@@ -171,14 +295,14 @@
             if (remaining <= 0) {
                 if (finished) finished.classList.remove("hidden");
                 if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.classList.remove("cursor-not-allowed", "opacity-60");
+                    delete submitButton.dataset.lockout;
+                    document.dispatchEvent(new Event("login:fields-check"));
                 }
                 return;
             }
 
             if (submitButton) {
-                submitButton.disabled = true;
+                submitButton.dataset.lockout = "1";
                 submitButton.classList.add("cursor-not-allowed", "opacity-60");
             }
             remaining -= 1;
