@@ -64,7 +64,7 @@ PRODUCTION_CSRF_ORIGINS = [
 
 ALLOWED_HOSTS = env_list(
     'ALLOWED_HOSTS',
-    default=PRODUCTION_HOSTS if IS_PRODUCTION else ['localhost', '127.0.0.1', '[::1]', 'testserver'],
+    default=PRODUCTION_HOSTS if IS_PRODUCTION else ['192.168.1.11','localhost', '127.0.0.1', '[::1]', 'testserver'],
 )
 
 CSRF_TRUSTED_ORIGINS = env_list(

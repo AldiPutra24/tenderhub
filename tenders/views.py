@@ -105,7 +105,9 @@ def home(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
 
-    return render(request, "index.html")
+    tenders = Tender.objects.order_by("-created_at", "-id")[:6]
+    attach_match_data(request, tenders)
+    return render(request, "index.html", {"tenders": tenders})
 
 
 def get_vendor_profile(user):
