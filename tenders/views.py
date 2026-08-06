@@ -158,10 +158,30 @@ def get_filter_options():
         .distinct()
     )
 
+    # dropdown options driven by actual data, not hardcoded lists
+    status_values = set(
+        base_queryset.exclude(status="").values_list("status", flat=True).distinct()
+    )
+    jenis_values = set(
+        base_queryset.exclude(jenis_pengadaan="")
+        .values_list("jenis_pengadaan", flat=True)
+        .distinct()
+    )
+    # keep familiar order first, append any extras found in data
+    ordered_jenis = [
+        value for value in PROCUREMENT_TYPE_OPTIONS if value in jenis_values
+    ] + sorted(jenis_values - set(PROCUREMENT_TYPE_OPTIONS))
+    ordered_status = [
+        value
+        for value in ("OPEN", "ONGOING", "FINISH", "FAILED", "SELESAI")
+        if value in status_values
+    ] + sorted(status_values - {"OPEN", "ONGOING", "FINISH", "FAILED", "SELESAI"})
+
     return {
-        "jenis_pengadaan": PROCUREMENT_TYPE_OPTIONS,
-        "klpd_instansi": sorted(value for value in klpd_values if value)[:150],
-        "lpse": sorted(value for value in lpse_values if value)[:150],
+        "jenis_pengadaan": ordered_jenis,
+        "status": ordered_status,
+        "klpd_instansi": sorted(value for value in klpd_values if value),
+        "lpse": sorted(value for value in lpse_values if value),
         "tahun": get_year_options(base_queryset),
         "sort": SORT_OPTIONS,
     }
@@ -204,6 +224,9 @@ def get_lpse_tender_filter_options(queryset):
     }
 
 
+def get_multi_param(request, key):
+    return [v.strip() for v in request.GET.getlist(key) if v.strip()]
+
 def get_selected_filters(request, sort_options=None):
     sort_options = sort_options or SORT_OPTIONS
     sort = request.GET.get("sort") or "created_desc"
@@ -214,8 +237,8 @@ def get_selected_filters(request, sort_options=None):
         "q": request.GET.get("q", request.GET.get("tender", "")).strip(),
         "status": request.GET.get("status", "").strip(),
         "jenis_pengadaan": request.GET.get("jenis_pengadaan", "").strip(),
-        "klpd_instansi": request.GET.get("klpd_instansi", "").strip(),
-        "lpse": request.GET.get("lpse", "").strip(),
+        "klpd_instansi": get_multi_param(request, "klpd_instansi"),
+        "lpse": get_multi_param(request, "lpse"),
         "source": "operational",
         "tahun": get_selected_year_filter(request),
         "sort": sort,
@@ -269,13 +292,16 @@ def get_filtered_queryset(request, base_queryset=None, sort_options=None):
         tenders = tenders.filter(jenis_pengadaan=selected["jenis_pengadaan"])
 
     if selected["klpd_instansi"]:
-        tenders = tenders.filter(
-            Q(klpd_instansi=selected["klpd_instansi"])
-            | (Q(klpd_instansi="") & Q(instansi=selected["klpd_instansi"]))
-        )
+        q_instansi = Q()
+        for value in selected["klpd_instansi"]:
+            q_instansi |= Q(klpd_instansi=value) | (Q(klpd_instansi="") & Q(instansi=value))
+        tenders = tenders.filter(q_instansi)
 
     if selected["lpse"]:
-        tenders = tenders.filter(Q(lpse_name=selected["lpse"]) | Q(lpse_slug=selected["lpse"]))
+        q_lpse = Q()
+        for value in selected["lpse"]:
+            q_lpse |= Q(lpse_name=value) | Q(lpse_slug=value)
+        tenders = tenders.filter(q_lpse)
 
     if selected["tahun"]:
         tenders = tenders.filter(tahun_anggaran__contains=selected["tahun"])
@@ -495,6 +521,7 @@ def tender_list(request):
         "saved_ids": saved_ids,
         "filter_options": get_filter_options(),
         "selected_filters": tender_context["selected_filters"],
+        "explorer_meta": True,
         **{key: value for key, value in tender_context.items() if key not in {"tenders", "selected_filters"}},
     }
 
