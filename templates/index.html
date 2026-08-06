@@ -4,12 +4,16 @@
 
 {% block title %}GPFE PROC HUB{% endblock %}
 
+{% block extra_head %}
+<link rel="preload" as="image" href="/static/img/bg-hero.webp">
+{% endblock %}
+
 {% block body %}
 <a href="#main-content"></a>
 <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navigasi halaman utama">
       <a href="/" class="flex items-center gap-3">
-        <img src="{% static 'img/logo.png' %}" alt="GPFE PROC HUB" class="h-10 w-10 object-contain">
+        <img src="{% static 'img/logo.svg' %}" alt="GPFE PROC HUB" class="h-10 w-10 object-contain">
         <span>
           <span class="block text-sm font-bold text-slate-950">GPFE PROC HUB</span>
           <span class="block text-xs font-semibold text-slate-500">AI Procurement Intelligence Platform</span>
@@ -36,7 +40,7 @@
 
   <main id="main-content" tabindex="-1">
     <section id="hero" class="relative z-0 overflow-hidden bg-slate-950 bg-no-repeat text-white" data-hero
-         style="background-image: url('/static/img/bg-hero.png'); background-size: 100% 100%;">
+         style="background-image: url('/static/img/bg-hero.webp'); background-size: 100% 100%;">
       <div class="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:pb-24 lg:pt-20">
         <div>
           <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white">

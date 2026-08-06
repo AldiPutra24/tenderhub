@@ -8,13 +8,10 @@
     <meta property="og:title" content="GPFE PROC HUB">
     <title>{% block title %}GPFE PROC HUB{% endblock %}</title>
 
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
     <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon/android-chrome-192x192.png' %}">
-    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'favicon/android-chrome-512x512.png' %}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -475,6 +472,7 @@
         async
         defer>
     </script>
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body class="min-h-full bg-brand-bg text-brand-ink antialiased">
