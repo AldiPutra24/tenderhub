@@ -107,22 +107,44 @@
 
                     <div>
                         <label for="klpd-filter" class="mb-1.5 block text-sm font-bold text-secondary">Instansi</label>
-                        <select id="klpd-filter" name="klpd_instansi" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
-                            <option value="">Semua Instansi</option>
+                        <input id="klpd-filter"
+                               name="klpd_instansi"
+                               list="klpd-options"
+                               autocomplete="off"
+                               value="{{ selected_filters.klpd_instansi }}"
+                               placeholder="Ketik untuk cari instansi..."
+                               class="field-control"
+                               hx-get="{% url 'tender_list' %}"
+                               hx-target="#tender-list"
+                               hx-include="#tender-filter-form"
+                               hx-trigger="change"
+                               hx-indicator="#tender-loading">
+                        <datalist id="klpd-options">
                             {% for option in filter_options.klpd_instansi %}
-                            <option value="{{ option }}" {% if selected_filters.klpd_instansi == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
+                            <option value="{{ option }}"></option>
                             {% endfor %}
-                        </select>
+                        </datalist>
                     </div>
 
                     <div>
                         <label for="lpse-filter" class="mb-1.5 block text-sm font-bold text-secondary">LPSE</label>
-                        <select id="lpse-filter" name="lpse" class="field-control" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
-                            <option value="">Semua LPSE</option>
+                        <input id="lpse-filter"
+                               name="lpse"
+                               list="lpse-options"
+                               autocomplete="off"
+                               value="{{ selected_filters.lpse }}"
+                               placeholder="Ketik untuk cari LPSE..."
+                               class="field-control"
+                               hx-get="{% url 'tender_list' %}"
+                               hx-target="#tender-list"
+                               hx-include="#tender-filter-form"
+                               hx-trigger="change"
+                               hx-indicator="#tender-loading">
+                        <datalist id="lpse-options">
                             {% for option in filter_options.lpse %}
-                            <option value="{{ option }}" {% if selected_filters.lpse == option %}selected{% endif %}>{{ option|truncatechars:48 }}</option>
+                            <option value="{{ option }}"></option>
                             {% endfor %}
-                        </select>
+                        </datalist>
                     </div>
                 </div>
 
