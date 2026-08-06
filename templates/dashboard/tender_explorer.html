@@ -41,7 +41,7 @@
     }
 </style>
 <div class="space-y-6">
-    <section class="app-panel overflow-hidden" data-explorer-header>
+    <section class="app-panel relative z-40 overflow-hidden" data-explorer-header>
         <div class="h-1.5 app-gradient"></div>
         <div class="p-5 sm:p-6">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -83,8 +83,9 @@
                        hx-indicator="#tender-loading">
             </div>
         </div>
+    </form>
 
-        <div data-explorer-toolbar class="sticky top-16 z-40 -mx-4 border-y border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div data-explorer-toolbar class="sticky top-16 z-30 -mx-4 border-y border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
             <div class="flex flex-wrap items-end gap-3">
                 <div>
                     <label for="tahun-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tahun</label>
@@ -186,8 +187,6 @@
                 </div>
             </div>
         </div>
-
-    </form>
 
     <div id="tender-list">
         {% include "dashboard/tender_list.html" with explorer_meta=True %}

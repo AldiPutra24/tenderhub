@@ -168,64 +168,62 @@
         </div>
     </section>
 
-    <section class="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <aside class="lg:sticky lg:top-24 lg:self-start">
-            <form id="lpse-tender-filter-form" method="get" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <input type="hidden" name="page" value="1">
-                <div class="space-y-4">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Cari Tender</label>
-                        <input type="search" name="q" value="{{ selected_filters.q }}" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="keyup changed delay:400ms">
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
-                        <select name="status" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
-                            <option value="">Semua Status</option>
-                            <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
-                            <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
-                            <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
-                            <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Pengadaan</label>
-                        <select name="jenis_pengadaan" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
-                            <option value="">Semua Jenis</option>
-                            {% for option in filter_options.jenis_pengadaan %}
-                            <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Tahun</label>
-                        <select name="tahun"
-                                data-page-filter-submit
-                                class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200">
-                            <option value="">Semua Tahun</option>
-                            {% for option in filter_options.tahun %}
-                            <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Urutkan</label>
-                        <select name="sort" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
-                            {% for value, label in filter_options.sort.items %}
-                            <option value="{{ value }}" {% if selected_filters.sort == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">Tampilkan</label>
-                        <select name="per_page" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
-                            {% for option in allowed_per_page %}
-                            <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+    <section class="space-y-4">
+        <form id="lpse-tender-filter-form" method="get" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <input type="hidden" name="page" value="1">
+            <div class="flex flex-wrap items-end gap-3">
+                <div class="min-w-52 flex-1">
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Cari Tender</label>
+                    <input type="search" name="q" value="{{ selected_filters.q }}" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="keyup changed delay:400ms">
                 </div>
-            </form>
-        </aside>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+                    <select name="status" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
+                        <option value="">Semua Status</option>
+                        <option value="OPEN" {% if selected_filters.status == "OPEN" %}selected{% endif %}>OPEN</option>
+                        <option value="ONGOING" {% if selected_filters.status == "ONGOING" %}selected{% endif %}>ONGOING</option>
+                        <option value="FINISH" {% if selected_filters.status == "FINISH" %}selected{% endif %}>FINISH</option>
+                        <option value="FAILED" {% if selected_filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Jenis Pengadaan</label>
+                    <select name="jenis_pengadaan" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
+                        <option value="">Semua Jenis</option>
+                        {% for option in filter_options.jenis_pengadaan %}
+                        <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Tahun</label>
+                    <select name="tahun"
+                            data-page-filter-submit
+                            class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200">
+                        <option value="">Semua Tahun</option>
+                        {% for option in filter_options.tahun %}
+                        <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Urutkan</label>
+                    <select name="sort" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
+                        {% for value, label in filter_options.sort.items %}
+                        <option value="{{ value }}" {% if selected_filters.sort == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-slate-700">Tampilkan</label>
+                    <select name="per_page" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
+                        {% for option in allowed_per_page %}
+                        <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
         <div class="min-w-0">
             <div class="mb-4">
                 <h2 class="text-base font-semibold text-slate-950">Tender di LPSE Ini</h2>
