@@ -54,7 +54,6 @@
                             <select id="dashboard-tahun"
                                     name="tahun"
                                     class="h-10 min-w-32 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100">
-                                <option value="">Semua Tahun</option>
                                 {% for option in tahun_options %}
                                 <option value="{{ option }}" {% if selected_tahun == option %}selected{% endif %}>{{ option }}</option>
                                 {% endfor %}

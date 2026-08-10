@@ -200,7 +200,6 @@
                     <select name="tahun"
                             data-page-filter-submit
                             class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200">
-                        <option value="">Semua Tahun</option>
                         {% for option in filter_options.tahun %}
                         <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
                         {% endfor %}

@@ -90,7 +90,6 @@
                 <div>
                     <label for="tahun-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tahun</label>
                     <select id="tahun-filter" name="tahun" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                        <option value="">Semua Tahun</option>
                         {% for option in filter_options.tahun %}
                         <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
                         {% endfor %}

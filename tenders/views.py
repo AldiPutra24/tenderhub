@@ -207,8 +207,8 @@ def get_year_options(queryset=None):
 def get_selected_year_filter(request):
     selected_year = request.GET.get("tahun")
     if selected_year is None:
-        selected_year = request.GET.get("tahun_anggaran", "")
-    return selected_year.strip()
+        selected_year = request.GET.get("tahun_anggaran", str(timezone.localdate().year))
+    return selected_year.strip() or str(timezone.localdate().year)
 
 
 def get_lpse_tender_filter_options(queryset):
