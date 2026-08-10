@@ -12,7 +12,7 @@
         </div>
         <div class="flex items-center gap-2">
             <label for="sort-filter" class="text-sm font-semibold text-slate-500">Urutkan</label>
-            <select id="sort-filter" name="sort" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+            <select id="sort-filter" name="sort" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                 {% for value, label in filter_options.sort.items %}
                 <option value="{{ value }}" {% if selected_filters.sort == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}

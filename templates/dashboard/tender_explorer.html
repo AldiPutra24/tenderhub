@@ -78,7 +78,7 @@
                        class="field-control h-12 w-full rounded-xl pl-11 pr-4 text-sm shadow-sm"
                        hx-get="{% url 'tender_list' %}"
                        hx-target="#tender-list"
-                       hx-include="#tender-filter-form"
+                       hx-include="#tender-filter-form, [data-explorer-toolbar]"
                        hx-trigger="keyup changed delay:500ms"
                        hx-indicator="#tender-loading">
             </div>
@@ -89,7 +89,7 @@
             <div class="flex flex-wrap items-end gap-3">
                 <div>
                     <label for="tahun-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tahun</label>
-                    <select id="tahun-filter" name="tahun" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <select id="tahun-filter" name="tahun" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                         <option value="">Semua Tahun</option>
                         {% for option in filter_options.tahun %}
                         <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
@@ -99,7 +99,7 @@
 
                 <div>
                     <label for="status-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</label>
-                    <select id="status-filter" name="status" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <select id="status-filter" name="status" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                         <option value="">Semua Status</option>
                         {% for option in filter_options.status %}
                         <option value="{{ option }}" {% if selected_filters.status == option %}selected{% endif %}>{{ option }}</option>
@@ -110,7 +110,7 @@
                 <div>
                     <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Instansi</label>
                     <div class="multi-select relative" data-multi="klpd_instansi" data-search data-count="8">
-                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                             <span class="truncate" data-placeholder>Semua Instansi</span>
                             <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
@@ -136,7 +136,7 @@
 
                 <div>
                     <label for="jenis-pengadaan-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Jenis Pengadaan</label>
-                    <select id="jenis-pengadaan-filter" name="jenis_pengadaan" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <select id="jenis-pengadaan-filter" name="jenis_pengadaan" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                         <option value="">Semua Jenis</option>
                         {% for option in filter_options.jenis_pengadaan %}
                         <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
@@ -147,7 +147,7 @@
                 <div>
                     <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">LPSE</label>
                     <div class="multi-select relative" data-multi="lpse" data-search data-count="8">
-                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                             <span class="truncate" data-placeholder>Semua LPSE</span>
                             <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </button>
@@ -173,7 +173,7 @@
 
                 <div>
                     <label for="per-page-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Per Halaman</label>
-                    <select id="per-page-filter" name="per_page" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <select id="per-page-filter" name="per_page" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
                         {% for option in allowed_per_page %}
                         <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
                         {% endfor %}
