@@ -173,9 +173,9 @@ def get_filter_options():
     ] + sorted(jenis_values - set(PROCUREMENT_TYPE_OPTIONS))
     ordered_status = [
         value
-        for value in ("OPEN", "ONGOING", "FINISH", "FAILED", "SELESAI")
+        for value in ("OPEN", "ONGOING", "FINISH", "FAILED")
         if value in status_values
-    ] + sorted(status_values - {"OPEN", "ONGOING", "FINISH", "FAILED", "SELESAI"})
+    ] + sorted(status_values - {"OPEN", "ONGOING", "FINISH", "FAILED"})
 
     return {
         "jenis_pengadaan": ordered_jenis,
@@ -236,7 +236,7 @@ def get_selected_filters(request, sort_options=None):
     return {
         "q": request.GET.get("q", request.GET.get("tender", "")).strip(),
         "status": request.GET.get("status", "").strip(),
-        "jenis_pengadaan": request.GET.get("jenis_pengadaan", "").strip(),
+        "jenis_pengadaan": get_multi_param(request, "jenis_pengadaan"),
         "klpd_instansi": get_multi_param(request, "klpd_instansi"),
         "lpse": get_multi_param(request, "lpse"),
         "source": "operational",
@@ -289,7 +289,10 @@ def get_filtered_queryset(request, base_queryset=None, sort_options=None):
         tenders = tenders.filter(status=selected["status"])
 
     if selected["jenis_pengadaan"]:
-        tenders = tenders.filter(jenis_pengadaan=selected["jenis_pengadaan"])
+        q_jenis = Q()
+        for value in selected["jenis_pengadaan"]:
+            q_jenis |= Q(jenis_pengadaan=value)
+        tenders = tenders.filter(q_jenis)
 
     if selected["klpd_instansi"]:
         q_instansi = Q()

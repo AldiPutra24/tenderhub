@@ -61,131 +61,137 @@
         </div>
     </section>
 
-    <form id="tender-filter-form" class="space-y-4">
+    <form id="tender-filter-form" data-explorer-toolbar class="sticky top-16 z-30 -mx-4 border-y border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <input type="hidden" name="page" value="1">
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="min-w-56 flex-1">
+                <label for="tender-search" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Cari</label>
+                <div class="relative">
+                    <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17.5 10.75a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z"/>
+                    </svg>
+                    <input id="tender-search"
+                           type="text"
+                           name="q"
+                           value="{{ selected_filters.q }}"
+                           placeholder="Cari nama paket, kode tender, instansi..."
+                           class="field-control h-10 w-full rounded-xl pl-9 pr-4 text-sm shadow-sm"
+                           hx-get="{% url 'tender_list' %}"
+                           hx-target="#tender-list"
+                           hx-include="#tender-filter-form"
+                           hx-trigger="keyup changed delay:500ms"
+                           hx-indicator="#tender-loading">
+                </div>
+            </div>
 
-        <div data-explorer-search>
-            <label for="tender-search" class="sr-only">Cari Tender</label>
-            <div class="relative">
-                <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M17.5 10.75a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z"/>
-                </svg>
-                <input id="tender-search"
-                       type="text"
-                       name="q"
-                       value="{{ selected_filters.q }}"
-                       placeholder="Cari nama paket, kode tender, instansi..."
-                       class="field-control h-12 w-full rounded-xl pl-11 pr-4 text-sm shadow-sm"
-                       hx-get="{% url 'tender_list' %}"
-                       hx-target="#tender-list"
-                       hx-include="#tender-filter-form, [data-explorer-toolbar]"
-                       hx-trigger="keyup changed delay:500ms"
-                       hx-indicator="#tender-loading">
+            <div>
+                <label for="tahun-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tahun</label>
+                <select id="tahun-filter" name="tahun" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    {% for option in filter_options.tahun %}
+                    <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="status-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</label>
+                <select id="status-filter" name="status" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <option value="">Semua Status</option>
+                    {% for option in filter_options.status %}
+                    <option value="{{ option }}" {% if selected_filters.status == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Instansi</label>
+                <div class="multi-select relative" data-multi="klpd_instansi" data-search data-count="8">
+                    <button type="button" class="field-control flex h-10 w-44 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                        <span class="truncate" data-placeholder>Semua Instansi</span>
+                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="multi-options absolute left-0 right-0 z-30 mt-1 hidden max-h-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox" aria-multiselectable="true">
+                        <div class="border-b border-slate-100 p-2" data-search-wrap>
+                            <input type="search" placeholder="Cari Instansi..." class="field-control !py-1.5 text-sm" data-search-input autocomplete="off">
+                        </div>
+                        <div class="max-h-56 overflow-y-auto p-1.5" data-options>
+                            {% for option in filter_options.klpd_instansi %}
+                            <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
+                                <input type="checkbox" name="klpd_instansi" value="{{ option }}" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500" {% if option in selected_filters.klpd_instansi %}checked{% endif %}>
+                                <span class="truncate text-slate-700">{{ option|truncatechars:48 }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Jenis Pengadaan</label>
+                <div class="multi-select relative" data-multi="jenis_pengadaan" data-search data-count="8">
+                    <button type="button" class="field-control flex h-10 w-44 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                        <span class="truncate" data-placeholder>Semua Jenis</span>
+                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="multi-options absolute left-0 right-0 z-30 mt-1 hidden max-h-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox" aria-multiselectable="true">
+                        <div class="border-b border-slate-100 p-2" data-search-wrap>
+                            <input type="search" placeholder="Cari Jenis Pengadaan..." class="field-control !py-1.5 text-sm" data-search-input autocomplete="off">
+                        </div>
+                        <div class="max-h-56 overflow-y-auto p-1.5" data-options>
+                            {% for option in filter_options.jenis_pengadaan %}
+                            <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
+                                <input type="checkbox" name="jenis_pengadaan" value="{{ option }}" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500" {% if option in selected_filters.jenis_pengadaan %}checked{% endif %}>
+                                <span class="truncate text-slate-700">{{ option|truncatechars:48 }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">LPSE</label>
+                <div class="multi-select relative" data-multi="lpse" data-search data-count="8">
+                    <button type="button" class="field-control flex h-10 w-44 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                        <span class="truncate" data-placeholder>Semua LPSE</span>
+                        <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <div class="multi-options absolute left-0 right-0 z-30 mt-1 hidden max-h-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox" aria-multiselectable="true">
+                        <div class="border-b border-slate-100 p-2" data-search-wrap>
+                            <input type="search" placeholder="Cari LPSE..." class="field-control !py-1.5 text-sm" data-search-input autocomplete="off">
+                        </div>
+                        <div class="max-h-56 overflow-y-auto p-1.5" data-options>
+                            {% for option in filter_options.lpse %}
+                            <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
+                                <input type="checkbox" name="lpse" value="{{ option }}" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500" {% if option in selected_filters.lpse %}checked{% endif %}>
+                                <span class="truncate text-slate-700">{{ option|truncatechars:48 }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="per-page-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Per Halaman</label>
+                <select id="per-page-filter" name="per_page" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    {% for option in allowed_per_page %}
+                    <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ml-auto self-end">
+                <button type="button" data-reset-filters data-current-year="{% now 'Y' %}" class="btn-secondary flex h-10 w-10 items-center justify-center rounded-xl reset-icon-btn" title="Reset Filter" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form" hx-trigger="change" hx-indicator="#tender-loading">
+                    <svg width="20" height="20" viewBox="0 0 620 620" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M142.705 513.58C126.401 533.421 96.7833 536.491 79.6014 517.404C61.843 497.677 46.6483 475.702 34.4318 451.993C15.0949 414.466 3.62675 373.385 0.73045 331.268C-2.16585 289.151 3.57073 246.887 17.5885 207.066C31.6062 167.245 53.6097 130.706 82.2499 99.691C110.89 68.6757 145.563 43.8369 184.144 26.6976C222.724 9.55837 264.399 0.479787 306.613 0.0185061C348.826 -0.442774 390.69 7.72297 429.635 24.0151C454.241 34.3081 477.354 47.7076 498.43 63.8414C518.823 79.4515 518.117 109.219 499.635 127.05V127.05C481.153 144.88 451.912 143.839 430.559 129.571C418.982 121.836 406.657 115.212 393.745 109.811C366.483 98.4061 337.179 92.6901 307.629 93.013C278.079 93.3359 248.907 99.6909 221.901 111.688C194.894 123.686 170.623 141.073 150.575 162.784C130.527 184.494 115.124 210.071 105.312 237.946C95.4995 265.821 91.4839 295.406 93.5113 324.888C95.5387 354.369 103.566 383.126 117.102 409.395C123.513 421.837 131.096 433.596 139.727 444.522C155.648 464.673 159.01 493.739 142.705 513.58V513.58Z" fill="black"/>
+                        <path d="M573.5 310C599.181 310 620.357 330.934 616.519 356.327C608.303 410.691 585.722 462.191 550.729 505.319C505.915 560.551 443.472 598.693 373.873 613.348C304.274 628.003 231.752 618.279 168.472 585.808C119.059 560.452 77.6284 522.43 48.1873 475.995C34.4358 454.306 45.3724 426.61 68.8731 416.255V416.255C92.3738 405.899 119.458 416.969 134.575 437.73C154.439 465.011 180.526 487.464 210.93 503.065C255.227 525.795 305.992 532.602 354.711 522.344C403.431 512.085 447.141 485.386 478.51 446.724C500.042 420.186 514.86 389.121 522.037 356.146C527.499 331.052 547.819 310 573.5 310V310Z" fill="#5D5D5D"/>
+                        <path d="M422.034 234.5H541.534C560.201 233 597.534 220.4 597.534 182V55C597.034 41.8333 590.134 15.4 566.534 15H537.034C527.034 15.1667 506.934 20.4 506.534 40C506.134 59.6 506.368 70.5 506.534 73.5V96L490.534 128.5L427.034 142C444.534 137 468.034 130 422.034 142C376.035 154 377.868 195 384.534 214C392.534 234.5 422.034 234.5 422.034 234.5Z" fill="black"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </form>
-
-    <div data-explorer-toolbar class="sticky top-16 z-30 -mx-4 border-y border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-            <div class="flex flex-wrap items-end gap-3">
-                <div>
-                    <label for="tahun-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Tahun</label>
-                    <select id="tahun-filter" name="tahun" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                        {% for option in filter_options.tahun %}
-                        <option value="{{ option }}" {% if selected_filters.tahun == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label for="status-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Status</label>
-                    <select id="status-filter" name="status" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                        <option value="">Semua Status</option>
-                        {% for option in filter_options.status %}
-                        <option value="{{ option }}" {% if selected_filters.status == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Instansi</label>
-                    <div class="multi-select relative" data-multi="klpd_instansi" data-search data-count="8">
-                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                            <span class="truncate" data-placeholder>Semua Instansi</span>
-                            <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                        <div class="multi-options absolute left-0 right-0 z-30 mt-1 hidden max-h-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox" aria-multiselectable="true">
-                            <div class="border-b border-slate-100 p-2" data-search-wrap>
-                                <input type="search" placeholder="Cari Instansi..." class="field-control !py-1.5 text-sm" data-search-input autocomplete="off">
-                            </div>
-                            <div class="max-h-56 overflow-y-auto p-1.5" data-options>
-                                <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
-                                    <input type="checkbox" name="klpd_instansi" value="__all__" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500">
-                                    <span class="font-semibold text-slate-800">Semua Instansi</span>
-                                </label>
-                                {% for option in filter_options.klpd_instansi %}
-                                <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
-                                    <input type="checkbox" name="klpd_instansi" value="{{ option }}" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500" {% if option in selected_filters.klpd_instansi %}checked{% endif %}>
-                                    <span class="truncate text-slate-700">{{ option|truncatechars:48 }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="jenis-pengadaan-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Jenis Pengadaan</label>
-                    <select id="jenis-pengadaan-filter" name="jenis_pengadaan" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                        <option value="">Semua Jenis</option>
-                        {% for option in filter_options.jenis_pengadaan %}
-                        <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">LPSE</label>
-                    <div class="multi-select relative" data-multi="lpse" data-search data-count="8">
-                        <button type="button" class="field-control flex h-10 w-56 items-center justify-between gap-2 rounded-xl text-left text-sm" aria-haspopup="listbox" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                            <span class="truncate" data-placeholder>Semua LPSE</span>
-                            <svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </button>
-                        <div class="multi-options absolute left-0 right-0 z-30 mt-1 hidden max-h-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg" role="listbox" aria-multiselectable="true">
-                            <div class="border-b border-slate-100 p-2" data-search-wrap>
-                                <input type="search" placeholder="Cari LPSE..." class="field-control !py-1.5 text-sm" data-search-input autocomplete="off">
-                            </div>
-                            <div class="max-h-56 overflow-y-auto p-1.5" data-options>
-                                <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
-                                    <input type="checkbox" name="lpse" value="__all__" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500">
-                                    <span class="font-semibold text-slate-800">Semua LPSE</span>
-                                </label>
-                                {% for option in filter_options.lpse %}
-                                <label class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50" data-opt>
-                                    <input type="checkbox" name="lpse" value="{{ option }}" class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500" {% if option in selected_filters.lpse %}checked{% endif %}>
-                                    <span class="truncate text-slate-700">{{ option|truncatechars:48 }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="per-page-filter" class="mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-500">Per Halaman</label>
-                    <select id="per-page-filter" name="per_page" class="field-control h-10 rounded-xl text-sm" hx-get="{% url 'tender_list' %}" hx-target="#tender-list" hx-include="#tender-filter-form, [data-explorer-toolbar]" hx-trigger="change" hx-indicator="#tender-loading">
-                        {% for option in allowed_per_page %}
-                        <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="ml-auto self-end">
-                    <a href="{% url 'tender_list' %}" class="btn-secondary h-10 whitespace-nowrap px-4 text-sm">
-                        Reset Filter
-                    </a>
-                </div>
-            </div>
-        </div>
 
     <div id="tender-list">
         {% include "dashboard/tender_list.html" with explorer_meta=True %}
@@ -204,6 +210,29 @@
         }
     }
 
+    var resetBtn = document.querySelector("[data-reset-filters]");
+    if (resetBtn) {
+        resetBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // clear semua kontrol form lalu biarkan htmx memuat ulang dengan params kosong
+            var currentYear = resetBtn.getAttribute("data-current-year");
+            document.querySelectorAll("#tender-filter-form input, #tender-filter-form select").forEach(function (el) {
+                if (el.type === "checkbox") { el.checked = false; }
+                else if (el.type === "hidden") { /* keep hidden page=1 */ }
+                else if (el.name === "tahun" && currentYear) { el.value = currentYear; }
+                else { el.value = ""; }
+            });
+            document.querySelectorAll("[data-multi]").forEach(function (root) {
+                var p = root.querySelector("[data-placeholder]");
+                var n = root.getAttribute("data-multi");
+                if (p) { p.textContent = n === "lpse" ? "Semua LPSE" : n === "jenis_pengadaan" ? "Semua Jenis" : "Semua Instansi"; }
+            });
+            // hx-include #tender-filter-form butuh event change pada elemen ber-hx
+            triggerHx(resetBtn);
+        });
+    }
+
     document.querySelectorAll("[data-multi]").forEach(function (root) {
         var name = root.getAttribute("data-multi");
         var button = root.querySelector("button");
@@ -214,28 +243,16 @@
 
         function getSelected() {
             return Array.from(root.querySelectorAll('input[type="checkbox"]:checked'))
-                .map(function (cb) { return cb.value; })
-                .filter(function (v) { return v !== "__all__"; });
+                .map(function (cb) { return cb.value; });
         }
 
         function updateLabel() {
             var sel = getSelected();
             placeholder.textContent = sel.length
                 ? sel.length + " terpilih"
-                : (name === "lpse" ? "Semua LPSE" : "Semua Instansi");
-        }
-
-        function syncAllCheckbox() {
-            var all = root.querySelector('input[value="__all__"]');
-            if (!all) return;
-            var others = Array.from(root.querySelectorAll('input[type="checkbox"]:not([value="__all__"])'));
-            if (others.length && others.every(function (cb) { return cb.checked; })) {
-                all.checked = true;
-            } else if (getSelected().length === 0) {
-                all.checked = true;
-            } else {
-                all.checked = false;
-            }
+                : (name === "lpse" ? "Semua LPSE"
+                    : name === "jenis_pengadaan" ? "Semua Jenis"
+                    : "Semua Instansi");
         }
 
         function doSearch() {
@@ -247,7 +264,6 @@
 
         function refresh() {
             updateLabel();
-            syncAllCheckbox();
             triggerHx(button);
         }
 
@@ -257,25 +273,9 @@
         }
 
         updateLabel();
-        syncAllCheckbox();
 
         root.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
             cb.addEventListener("change", function () {
-                if (cb.value === "__all__") {
-                    root.querySelectorAll('input[type="checkbox"]:not([value="__all__"])').forEach(function (o) {
-                        o.checked = cb.checked;
-                    });
-                } else {
-                    var others = Array.from(root.querySelectorAll('input[type="checkbox"]:not([value="__all__"])'));
-                    var sel = getSelected();
-                    if (cb.checked && others.every(function (o) { return o.checked; })) {
-                        root.querySelector('input[value="__all__"]').checked = true;
-                    } else if (!cb.checked && sel.length === 0) {
-                        root.querySelector('input[value="__all__"]').checked = true;
-                    } else {
-                        root.querySelector('input[value="__all__"]').checked = false;
-                    }
-                }
                 refresh();
             });
         });
@@ -303,19 +303,6 @@
         }
     });
 
-    if (window.htmx) {
-        // "__all__" is a UI-only sentinel — never send it to the backend
-        document.body.addEventListener("htmx:configRequest", function (e) {
-            var params = e.detail.parameters;
-            Object.keys(params).forEach(function (key) {
-                var vals = Array.isArray(params[key]) ? params[key] : [params[key]];
-                var filtered = vals.filter(function (v) { return v !== "__all__"; });
-                if (filtered.length !== vals.length) {
-                    params[key] = filtered.length === 1 ? filtered[0] : filtered;
-                }
-            });
-        });
-    }
 })();
 </script>
 {% endblock %}

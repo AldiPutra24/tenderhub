@@ -191,7 +191,7 @@
                     <select name="jenis_pengadaan" class="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:ring-4 focus:ring-slate-200" hx-get="{{ tender_list_url }}" hx-target="#lpse-tender-list" hx-include="#lpse-tender-filter-form" hx-trigger="change">
                         <option value="">Semua Jenis</option>
                         {% for option in filter_options.jenis_pengadaan %}
-                        <option value="{{ option }}" {% if selected_filters.jenis_pengadaan == option %}selected{% endif %}>{{ option }}</option>
+                        <option value="{{ option }}" {% if option in selected_filters.jenis_pengadaan %}selected{% endif %}>{{ option }}</option>
                         {% endfor %}
                     </select>
                 </div>
