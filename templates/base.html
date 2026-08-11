@@ -478,6 +478,15 @@
             0% { transform: translate(0, 0); }
             100% { transform: translate(24px, 0); }
         }
+        @keyframes pulse-red {
+            0% { border-color: var(--border-subtle); box-shadow: var(--shadow-soft); transform: translateY(0); }
+            50% { border-color: rgba(200, 0, 0, 0.35); box-shadow: 0 8px 32px rgba(200, 0, 0, 0.14); transform: translateY(-6px); }
+            100% { border-color: var(--border-subtle); box-shadow: var(--shadow-soft); transform: translateY(0); }
+        }
+        .animate-pulse-red {
+            animation: pulse-red 2s ease-in-out infinite;
+            will-change: transform, box-shadow, border-color;
+        }
     </style>
     <script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
