@@ -17,3 +17,4 @@ staticfiles/
 *.tmp
 *.json
 *.sql
+data-structure.md
