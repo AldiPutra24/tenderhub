@@ -200,6 +200,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'tenders.context_processors.tender_notifications',
                 "core.context_processors.turnstile",
+                "core.context_processors.site_root",
             ],
         },
     },

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load tender_format %}
+
+{% block title %}{{ t.nama_paket|default:t.kode_tender }} - GPFE PROC HUB{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+{% include "dashboard/tender_detail.html" %}
+{% endblock %}

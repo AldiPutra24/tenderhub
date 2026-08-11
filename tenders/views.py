@@ -538,7 +538,35 @@ def tender_list(request):
 def tender_detail(request, pk):
     tender = get_object_or_404(Tender, id=pk)
     tender.match_data = get_match_data(request, tender)
-    return render(request, "dashboard/tender_detail.html", {"t": tender})
+    meta_description = build_tender_description(tender)
+    context = {"t": tender, "meta_description": meta_description}
+    if request.headers.get("HX-Request"):
+        return render(request, "dashboard/tender_detail.html", context)
+    return render(request, "dashboard/tender_detail_page.html", context)
+
+
+def build_tender_description(tender):
+    nama = tender.nama_paket or ""
+    instansi = tender.klpd_instansi or tender.instansi or ""
+    status = tender.status or ""
+    nilai = ""
+    if tender.nilai_pagu:
+        nilai = f" Pagu Rp{format(tender.nilai_pagu, ',').replace(',', '.')}."
+
+    parts = []
+    if nama:
+        parts.append(nama[:120].strip())
+    if instansi:
+        parts.append(f"Instansi: {instansi}.")
+    if status:
+        parts.append(f"Status: {status}.")
+    if nilai:
+        parts.append(nilai.strip())
+
+    base = " ".join(parts)
+    suffix = "GPFE PROC HUB — Platform Intelijen Pengadaan berbasis AI."
+    desc = f"{base.rstrip('.')} — {suffix}" if base else suffix
+    return desc[:160].rstrip()
 
 
 def get_per_page_from_params(params):
