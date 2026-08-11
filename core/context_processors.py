@@ -8,4 +8,8 @@ def turnstile(request):
 def site_root(request):
     scheme = request.scheme
     host = request.get_host()
-    return {"SITE_ROOT_URL": f"{scheme}://{host}"}
+    canonical = f"{scheme}://{host}{request.path}"
+    return {
+        "SITE_ROOT_URL": f"{scheme}://{host}",
+        "CANONICAL_URL": canonical,
+    }
