@@ -2,11 +2,22 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
-from django.db import IntegrityError
-from django.db.models import Case, CharField, Count, F, Q, Sum, Value, When
+from django.db import IntegrityError, connection
+from django.db.models import (
+    Case,
+    CharField,
+    Count,
+    F,
+    Func,
+    Max,
+    Q,
+    Sum,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce, Length, Lower, NullIf, StrIndex, Substr
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
@@ -86,6 +97,7 @@ def apply_source_filter(queryset, source):
 ALLOWED_PER_PAGE = [15, 25, 50, 100]
 DEFAULT_PER_PAGE = 25
 LPSE_WATCHLIST_LIMIT = 5
+LPSE_UNKNOWN_NAME = "LPSE Tidak Diketahui"
 
 
 LOGIN_REQUIRED_MATCH = {
@@ -601,30 +613,24 @@ def get_watchlisted_slugs(user):
 
 def build_lpse_list_context(request, params=None):
     params = params or get_lpse_request_params(request)
-    entries = build_lpse_entries()
     query_value = params.get("q", "")
     query = query_value.strip().casefold()
     sort = params.get("sort") or "total_desc"
     per_page = get_per_page_from_params(params)
     page = get_page_number_from_params(params)
-
-    if query:
-        entries = [
-            entry for entry in entries
-            if query in entry["lpse_name"].casefold() or query in entry["slug"].casefold()
-        ]
+    grouped_rows = build_lpse_grouped_rows(search_query=query)
 
     if sort == "hps_desc":
-        entries.sort(key=lambda entry: entry["total_hps"] or 0, reverse=True)
+        grouped_rows = grouped_rows.order_by(F("total_hps").desc(nulls_last=True), "-total_paket")
     elif sort == "open_desc":
-        entries.sort(key=lambda entry: entry["paket_open"] or 0, reverse=True)
+        grouped_rows = grouped_rows.order_by(F("paket_open").desc(nulls_last=True), "-total_paket")
     elif sort == "name_asc":
-        entries.sort(key=lambda entry: entry["lpse_name"].casefold())
+        grouped_rows = grouped_rows.order_by(F("lpse_name").asc())
     else:
         sort = "total_desc"
-        entries.sort(key=lambda entry: entry["total_paket"] or 0, reverse=True)
+        grouped_rows = grouped_rows.order_by(F("total_paket").desc())
 
-    paginator = Paginator(entries, per_page)
+    paginator = Paginator(grouped_rows, per_page)
     page_obj = paginator.get_page(page)
     pagination_params = {
         key: params.get(key)
@@ -634,11 +640,13 @@ def build_lpse_list_context(request, params=None):
     pagination_params["per_page"] = str(per_page)
 
     watchlisted_slugs = get_watchlisted_slugs(request.user)
-    for entry in page_obj.object_list:
-        entry["is_watchlisted"] = entry["slug"] in watchlisted_slugs
+    entries = [
+        finalize_lpse_entry(entry, watchlisted_slugs)
+        for entry in page_obj.object_list
+    ]
 
     return {
-        "lpse_entries": page_obj.object_list,
+        "lpse_entries": entries,
         "page_obj": page_obj,
         "paginator": paginator,
         "per_page": per_page,
@@ -666,9 +674,16 @@ def lpse_list_view(request):
 
 
 def get_lpse_entry_or_404(slug):
-    for entry in build_lpse_entries():
-        if entry["slug"] == slug:
-            return entry
+    # Django melarang .first() pada queryset agregasi tanpa ordering;
+    # urutkan deterministik lalu ambil satu-satunya grup yang cocok.
+    entry = (
+        build_lpse_grouped_rows()
+        .filter(group_key=slug)
+        .order_by("-total_paket")
+        .first()
+    )
+    if entry is not None:
+        return finalize_lpse_entry(entry)
 
     raise Http404("LPSE tidak ditemukan")
 
@@ -679,13 +694,16 @@ def build_lpse_watchlist_context(request):
         .only("lpse_slug", "lpse_name", "created_at")
         .order_by("-created_at")
     )
-    entries_by_slug = {entry["slug"]: entry for entry in build_lpse_entries()}
+    entries_by_slug = {
+        row["group_key"]: row
+        for row in build_lpse_grouped_rows()
+    }
     watchlist_entries = []
 
     for watchlist in watchlists:
         entry = entries_by_slug.get(watchlist.lpse_slug)
         if entry:
-            item = entry.copy()
+            item = finalize_lpse_entry(entry)
         else:
             item = {
                 "slug": watchlist.lpse_slug,
@@ -772,68 +790,178 @@ def remove_lpse_watchlist(request, slug):
     return render_lpse_watchlist_mutation_response(request)
 
 
-def build_lpse_entries():
-    groups = {}
-    field_names = {field.name for field in Tender._meta.get_fields()}
-    values = [
-        "id",
-        "lpse_name",
-        "detail_url",
-        "lpse_detail_url",
-        "status",
-        "nilai_hps",
-        "nilai_pagu",
-        "tanggal_pembuatan",
-    ]
-    if "lpse_slug" in field_names:
-        values.append("lpse_slug")
+def get_lpse_url_slug_expression():
+    """Slug hasil inferensi dari URL detail (fallback saat lpse_slug kosong).
 
-    for tender in get_operational_queryset().values(*values):
-        slug = tender.get("lpse_slug") or infer_slug_from_urls(tender.get("detail_url"), tender.get("lpse_detail_url"))
-        lpse_name = tender.get("lpse_name") or slug or "LPSE Tidak Diketahui"
-        key = slug or slugify(lpse_name) or f"lpse-{tender['id']}"
-
-        group = groups.setdefault(
-            key,
-            {
-                "slug": key,
-                "real_slug": slug,
-                "lpse_name": lpse_name,
-                "total_paket": 0,
-                "total_hps": 0,
-                "total_pagu": 0,
-                "paket_open": 0,
-                "paket_ongoing": 0,
-                "paket_finish": 0,
-                "paket_failed": 0,
-                "latest_tender_date": None,
-            },
+    Setara Python lama: infer_slug_from_urls(detail_url, lpse_detail_url)
+    dengan regex r"spse\\.inaproc\\.id/([^/]+)/lelang/". Dieksekusi di SQL
+    sekali per grup di subquery, bukan per baris di Python.
+    """
+    if connection.vendor == "postgresql":
+        # SUBSTRING(url FROM 'regex') mengembalikan NULL bila tidak match,
+        # jadi semantiknya persis regex Python lama (wajib ada /lelang/).
+        pattern = Value("spse.inaproc.id/([^/]+)/lelang/")
+        return Coalesce(
+            Func(F("detail_url"), pattern, function="SUBSTRING", output_field=CharField()),
+            Func(F("lpse_detail_url"), pattern, function="SUBSTRING", output_field=CharField()),
+            Value(""),
+            output_field=CharField(),
         )
-        if not group["real_slug"] and slug:
-            group["real_slug"] = slug
-            group["slug"] = slug
-        if group["lpse_name"] == "LPSE Tidak Diketahui" and lpse_name:
-            group["lpse_name"] = lpse_name
 
-        group["total_paket"] += 1
-        group["total_hps"] += tender.get("nilai_hps") or 0
-        group["total_pagu"] += tender.get("nilai_pagu") or 0
+    # SQLite (dev): aproksimasi tanpa regex. Baris dev punya lpse_slug
+    # terisi, jadi cabang ini praktis tidak pernah menentukan grouping.
+    marker = Value("spse.inaproc.id/")
+    marker_len = Length(marker)
 
-        status = tender.get("status")
-        if status == "OPEN":
-            group["paket_open"] += 1
-        elif status == "ONGOING":
-            group["paket_ongoing"] += 1
-        elif status == "FINISH":
-            group["paket_finish"] += 1
-        elif status == "FAILED":
-            group["paket_failed"] += 1
+    def slug_from(url_field):
+        start = StrIndex(url_field, marker)
+        # Guard NULL: baris tanpa URL menghasilkan NULL (bukan error),
+        # lalu Coalesce di bawah mencoba URL berikutnya.
+        rest = Substr(url_field, Coalesce(start, Value(0)) + marker_len)
+        end = StrIndex(rest, Value("/"))
+        return Substr(
+            rest,
+            Value(1),
+            Coalesce(NullIf(end, Value(0)), Value(1)) - Value(1),
+        )
 
-        date_value = tender.get("tanggal_pembuatan")
-        if date_value and (not group["latest_tender_date"] or date_value > group["latest_tender_date"]):
-            group["latest_tender_date"] = date_value
+    return Coalesce(
+        slug_from(F("detail_url")),
+        slug_from(F("lpse_detail_url")),
+        Value(""),
+        output_field=CharField(),
+    )
 
-    return list(groups.values())
+
+def get_slugified_name_expression():
+    """Aproksimasi slugify(lpse_name) di level SQL (lower + dashed)."""
+    lowered = Lower(F("lpse_name"))
+    if connection.vendor == "postgresql":
+        dashed = Func(
+            lowered,
+            Value("[^a-z0-9]+"),
+            Value("-"),
+            Value("g"),
+            function="REGEXP_REPLACE",
+            output_field=CharField(),
+        )
+        return Func(
+            dashed,
+            Value("^-+|-+$"),
+            Value(""),
+            Value("g"),
+            function="REGEXP_REPLACE",
+            output_field=CharField(),
+        )
+    # SQLite: REPLACE tidak mendukung regex, tapi TRIM(x, chars) mendukung.
+    for pattern, replacement in (
+        (" ", "-"), ("!", "-"), ('"', "-"), ("#", "-"), ("$", "-"),
+        ("%", "-"), ("&", "-"), ("'", "-"), ("(", "-"), (")", "-"),
+        ("*", "-"), ("+", "-"), (",", "-"), (".", "-"), ("/", "-"),
+        (":", "-"), (";", "-"), ("<", "-"), ("=", "-"), (">", "-"),
+        ("?", "-"), ("@", "-"), ("[", "-"), ("\\", "-"), ("]", "-"),
+        ("^", "-"), ("_", "-"), ("`", "-"), ("{", "-"), ("|", "-"),
+        ("}", "-"), ("~", "-"), ("\t", "-"), ("\n", "-"), ("\r", "-"),
+    ):
+        lowered = Func(
+            lowered,
+            Value(pattern),
+            Value(replacement),
+            function="REPLACE",
+            output_field=CharField(),
+        )
+    return Func(lowered, Value("-"), function="TRIM", output_field=CharField())
+
+
+def get_lpse_group_key_expression():
+    """Kunci grup LPSE setara logic lama.
+
+    Kelompokkan berdasarkan lpse_slug; bila kosong pakai slug hasil inferensi
+    URL; bila tetap kosong pakai slugify(lpse_name); bila nama juga kosong,
+    fallback "lpse-tidak-diketahui" (setara jalur lama lewat label
+    "LPSE Tidak Diketahui").
+    """
+    last_resort_key = Case(
+        When(lpse_name__gt="", then=NullIf(get_slugified_name_expression(), Value(""))),
+        default=Value("lpse-tidak-diketahui"),
+        output_field=CharField(),
+    )
+    return Coalesce(
+        NullIf(F("lpse_slug"), Value("")),
+        NullIf(get_lpse_url_slug_expression(), Value("")),
+        last_resort_key,
+        Value(""),
+        output_field=CharField(),
+    )
+
+
+def finalize_lpse_entry(entry, watchlisted_slugs=None):
+    """Samakan bentuk baris agregasi dengan dict entry versi lama."""
+    entry = dict(entry)
+    entry["slug"] = entry["group_key"]
+    entry["real_slug"] = entry["real_slug"] or ""
+    entry["total_hps"] = entry["total_hps"] or 0
+    entry["total_pagu"] = entry["total_pagu"] or 0
+    if watchlisted_slugs is not None:
+        entry["is_watchlisted"] = entry["slug"] in watchlisted_slugs
+    return entry
+
+
+def build_lpse_grouped_rows(search_query=""):
+    """Satu query GROUP BY PostgreSQL: agregasi per LPSE.
+
+    Filtering/search/sort/pagination dikerjakan database; Python hanya
+    menerima baris agregasi yang benar-benar ditampilkan.
+    """
+    queryset = get_operational_queryset()
+    if search_query:
+        # Search diterapkan SEBELUM GROUP BY, pada level baris Tender —
+        # sama seperti behavior lama yang memfilter grup berdasarkan
+        # nama LPSE/slug. Pencarian slug juga mengenai baris yang slug-nya
+        # hanya tersedia via URL detail (fallback dipertahankan).
+        queryset = queryset.filter(
+            Q(lpse_name__icontains=search_query)
+            | Q(lpse_slug__icontains=search_query)
+            | Q(detail_url__icontains=search_query)
+            | Q(lpse_detail_url__icontains=search_query)
+        )
+    return (
+        queryset
+        .annotate(
+            group_key=get_lpse_group_key_expression(),
+            url_slug=get_lpse_url_slug_expression(),
+        )
+        .values("group_key", "url_slug")
+        .annotate(
+            real_slug=Max("lpse_slug"),
+            lpse_name=Case(
+                When(lpse_name__gt="", then=Max("lpse_name")),
+                default=Value(LPSE_UNKNOWN_NAME),
+                output_field=CharField(),
+            ),
+            total_paket=Count("id"),
+            total_hps=Sum("nilai_hps"),
+            total_pagu=Sum("nilai_pagu"),
+            paket_open=Count("id", filter=Q(status="OPEN")),
+            paket_ongoing=Count("id", filter=Q(status="ONGOING")),
+            paket_finish=Count("id", filter=Q(status="FINISH")),
+            paket_failed=Count("id", filter=Q(status="FAILED")),
+            latest_tender_date=Max("tanggal_pembuatan"),
+        )
+    )
+
+
+def build_lpse_entries():
+    """Agregasi LPSE langsung di PostgreSQL (satu GROUP BY).
+
+    Menggantikan iterasi Python atas seluruh baris Tender yang membuat
+    worker Gunicorn timeout pada /lpse. Fallback lama dipertahankan:
+    - slug: lpse_slug; bila kosong diambil dari URL detail (di SQL); bila
+      tetap kosong dipakai slugify(lpse_name).
+    - lpse_name: lpse_name; bila kosong fallback ke slug, lalu label
+      "LPSE Tidak Diketahui".
+    """
+    return [finalize_lpse_entry(row) for row in build_lpse_grouped_rows()]
 
 
 def infer_slug_from_urls(*urls):
