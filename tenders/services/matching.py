@@ -1,6 +1,9 @@
 import re
 from decimal import Decimal, InvalidOperation
 
+from django.db.models import Case, CharField, F, Func, IntegerField, Q, Value, When
+from django.db.models.functions import Concat, Coalesce
+
 
 PROFILE_INCOMPLETE_MATCH = {
     "score": 0,
@@ -188,4 +191,112 @@ def calculate_tender_match(tender, vendor_profile):
         "reasons": reasons,
         "missing": missing,
         "requires_profile": False,
+    }
+
+
+_MATCH_STOPWORDS = {
+    "dan", "atau", "yang", "untuk", "jasa", "pengadaan", "pekerjaan",
+    "bidang", "usaha", "pt", "cv",
+}
+
+
+def _match_keywords(value):
+    """Kata kunci (>=3 huruf, bukan stopword) untuk pencocokan skor."""
+    text = normalize_text(value)
+    if not text:
+        return []
+    return [word for word in text.split() if len(word) >= 3 and word not in _MATCH_STOPWORDS]
+
+
+def _sql_normalized(expression):
+    """Normalisasi teks di SQL setara normalize_text(): lower + buang non-alfanumerik."""
+    lowered = Func(expression, function="LOWER", output_field=CharField())
+    return Func(
+        lowered,
+        Value("[^a-z0-9\\s]+"),
+        Value(" "),
+        Value("g"),
+        function="REGEXP_REPLACE",
+        output_field=CharField(),
+    )
+
+
+def _sql_contains_score(target_alias, keywords, points):
+    """Case SQL: beri `points` bila salah satu keyword muncul di kolom target."""
+    score = Value(0, output_field=IntegerField())
+    for keyword in keywords[:20]:
+        score = Case(
+            When(condition=Q(**{f"{target_alias}__icontains": keyword}), then=Value(points)),
+            default=score,
+            output_field=IntegerField(),
+        )
+    return score
+
+
+def build_vendor_match_annotations(vendor_profile):
+    """Anotasi Django untuk menghitung skor AI Match di PostgreSQL.
+
+    Setara komponen skor calculate_tender_match(): bidang usaha 35,
+    jenis pengadaan 25, lokasi 20, range nilai proyek 20. Dipakai untuk
+    ORDER BY match_desc/match_asc sehingga filter+sort+pagination tetap
+    sepenuhnya di database; detail label/reasons tetap dihitung Python
+    hanya untuk tender pada halaman yang tampil.
+    """
+    if not vendor_profile:
+        return None
+
+    business_target = _sql_normalized(
+        Concat(
+            Coalesce(F("nama_paket"), Value("")),
+            Value(" "),
+            Coalesce(F("jenis_pengadaan"), Value("")),
+        )
+    )
+    type_target = _sql_normalized(Coalesce(F("jenis_pengadaan"), Value("")))
+    location_target = _sql_normalized(Coalesce(F("lokasi_pekerjaan"), Value("")))
+
+    business_score = _sql_contains_score("match_business_target", _match_keywords(getattr(vendor_profile, "business_field", "")), 35)
+
+    type_keywords = []
+    for pref in safe_list(getattr(vendor_profile, "preferred_procurement_types", "")):
+        type_keywords.extend(_match_keywords(pref))
+    type_score = _sql_contains_score("match_type_target", type_keywords, 25)
+
+    location_prefs = list(safe_list(getattr(vendor_profile, "preferred_locations", "")))
+    for field in ("province_name", "city_name", "international_location", "province", "city_or_regency", "country"):
+        location_prefs.extend(safe_list(getattr(vendor_profile, field, "")))
+    location_keywords = []
+    for pref in location_prefs:
+        location_keywords.extend(_match_keywords(pref))
+    location_score = _sql_contains_score("match_location_target", location_keywords, 20)
+
+    tender_value = Coalesce("nilai_hps", "nilai_pagu")
+    min_value = safe_number(getattr(vendor_profile, "min_project_value", None))
+    max_value = safe_number(getattr(vendor_profile, "max_project_value", None))
+    value_score = Value(0, output_field=IntegerField())
+    if min_value is not None and max_value is not None:
+        value_score = Case(
+            When(condition=Q(match_tender_value__gte=min_value, match_tender_value__lte=max_value), then=Value(20)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    elif min_value is not None:
+        value_score = Case(
+            When(condition=Q(match_tender_value__gte=min_value), then=Value(20)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    elif max_value is not None:
+        value_score = Case(
+            When(condition=Q(match_tender_value__lte=max_value), then=Value(20)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+
+    return {
+        "match_business_target": business_target,
+        "match_type_target": type_target,
+        "match_location_target": location_target,
+        "match_tender_value": tender_value,
+        "match_score": business_score + type_score + location_score + value_score,
     }

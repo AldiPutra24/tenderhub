@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, connection
@@ -25,7 +26,7 @@ from django.views.decorators.http import require_POST
 
 from .models import LPSEWatchlist, Tender, TenderBookmark
 from .services import lpse_analytics
-from .services.matching import calculate_tender_match
+from .services.matching import build_vendor_match_annotations, calculate_tender_match
 from .services.notifications import get_notifications, get_unread_count, mark_all_read, mark_notification_read
 from .year_utils import extract_budget_years
 
@@ -99,6 +100,11 @@ DEFAULT_PER_PAGE = 25
 LPSE_WATCHLIST_LIMIT = 5
 LPSE_UNKNOWN_NAME = "LPSE Tidak Diketahui"
 
+# Default filter explorer tender: OPEN + AI Match tertinggi. Hanya dipakai
+# bila URL tidak membawa parameter eksplisit (pilihan user tidak di-override).
+DEFAULT_TENDER_STATUS = "OPEN"
+DEFAULT_TENDER_SORT = "match_desc"
+
 
 LOGIN_REQUIRED_MATCH = {
     "score": None,
@@ -139,8 +145,9 @@ def get_match_data(request, tender):
     return calculate_tender_match(tender, get_vendor_profile(request.user))
 
 
-def attach_match_data(request, tenders):
-    vendor_profile = get_vendor_profile(request.user)
+def attach_match_data(request, tenders, vendor_profile=None):
+    if vendor_profile is None:
+        vendor_profile = get_vendor_profile(request.user)
 
     for tender in tenders:
         if request.user.is_authenticated:
@@ -151,7 +158,15 @@ def attach_match_data(request, tenders):
     return tenders
 
 
+FILTER_OPTIONS_CACHE_KEY = "tenders:filter_options:v1"
+FILTER_OPTIONS_CACHE_SECONDS = 600
+
+
 def get_filter_options():
+    cached = cache.get(FILTER_OPTIONS_CACHE_KEY)
+    if cached is not None:
+        return cached
+
     base_queryset = get_operational_queryset()
     klpd_values = set(
         base_queryset.exclude(klpd_instansi="")
@@ -189,7 +204,7 @@ def get_filter_options():
         if value in status_values
     ] + sorted(status_values - {"OPEN", "ONGOING", "FINISH", "FAILED"})
 
-    return {
+    options = {
         "jenis_pengadaan": ordered_jenis,
         "status": ordered_status,
         "klpd_instansi": sorted(value for value in klpd_values if value),
@@ -197,6 +212,11 @@ def get_filter_options():
         "tahun": get_year_options(base_queryset),
         "sort": SORT_OPTIONS,
     }
+    # Dropdown options berubah hanya saat data baru diimport; 10 menit cache
+    # menghilangkan 5+ full-scan DISTINCT per request (termasuk tiap keystroke
+    # HTMX) tanpa mengubah behavior UI.
+    cache.set(FILTER_OPTIONS_CACHE_KEY, options, FILTER_OPTIONS_CACHE_SECONDS)
+    return options
 
 
 def get_year_options(queryset=None):
@@ -241,13 +261,22 @@ def get_multi_param(request, key):
 
 def get_selected_filters(request, sort_options=None):
     sort_options = sort_options or SORT_OPTIONS
-    sort = request.GET.get("sort") or "created_desc"
+    sort = request.GET.get("sort")
+    if not sort:
+        # Default hanya untuk explorer tender, bukan LPSE detail (yang punya
+        # set sort sendiri dan tidak membawa default ini).
+        sort = DEFAULT_TENDER_SORT if sort_options is SORT_OPTIONS else ""
     if sort not in sort_options:
         sort = "created_desc"
 
+    status = request.GET.get("status", "").strip()
+    if not status and sort_options is SORT_OPTIONS:
+        # Default status OPEN hanya bila URL tidak membawa ?status=.
+        status = DEFAULT_TENDER_STATUS
+
     return {
         "q": request.GET.get("q", request.GET.get("tender", "")).strip(),
-        "status": request.GET.get("status", "").strip(),
+        "status": status,
         "jenis_pengadaan": get_multi_param(request, "jenis_pengadaan"),
         "klpd_instansi": get_multi_param(request, "klpd_instansi"),
         "lpse": get_multi_param(request, "lpse"),
@@ -346,22 +375,40 @@ def get_paginated_tenders(request, base_queryset=None, sort_options=None, tender
     page = get_page_number(request)
     sort = selected["sort"]
 
+    # Kolom raw_data (dump JSON hingga 16 KB/baris) dan dokumen (hingga 4.5 KB)
+    # tidak dipakai template list/card. Tanpa defer, rata-rata ~2.4 KB per baris
+    # ikut ditransfer dari DB di setiap request (termasuk tiap keystroke HTMX).
+    if base_queryset is None:
+        tenders = tenders.defer("raw_data", "dokumen")
+
+    vendor_profile = get_vendor_profile(request.user)
+    match_annotations = build_vendor_match_annotations(vendor_profile)
+
     if sort in ("match_desc", "match_asc"):
-        tenders = list(apply_db_sort(tenders, "created_desc"))
-        attach_match_data(request, tenders)
-        tenders.sort(
-            key=lambda tender: tender.match_data.get("score") or 0,
-            reverse=(sort == "match_desc"),
-        )
+        # Skor AI Match dihitung PostgreSQL (setara calculate_tender_match)
+        # sehingga ORDER BY + LIMIT/OFFSET tetap di database. Detail label/
+        # reasons dihitung Python hanya untuk tender pada halaman tampil.
+        if match_annotations:
+            tenders = tenders.annotate(**match_annotations)
+            score_order = F("match_score").desc() if sort == "match_desc" else F("match_score").asc()
+            # Tiebreaker deterministik: terbaru dulu bila skor sama.
+            tenders = tenders.order_by(
+                score_order,
+                F("tanggal_pembuatan").desc(nulls_last=True),
+                "-id",
+            )
+        else:
+            tenders = apply_db_sort(tenders, "created_desc")
         paginator = Paginator(tenders, per_page)
         page_obj = paginator.get_page(page)
         page_tenders = list(page_obj.object_list)
+        attach_match_data(request, page_tenders, vendor_profile)
     else:
         tenders = apply_db_sort(tenders, sort)
         paginator = Paginator(tenders, per_page)
         page_obj = paginator.get_page(page)
         page_tenders = list(page_obj.object_list)
-        attach_match_data(request, page_tenders)
+        attach_match_data(request, page_tenders, vendor_profile)
 
     return {
         "tenders": page_tenders,
